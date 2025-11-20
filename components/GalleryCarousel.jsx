@@ -1,64 +1,66 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const GalleryCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const carouselRef = useRef(null);
+  const router = useRouter();
 
   const galleryImages = [
     {
       id: 1,
-      gradient: "from-purple-500 via-pink-500 to-red-500",
+      gradient: "from-amber-500 via-orange-500 to-red-500",
       prompt: "Cyberpunk cityscape at neon-lit night",
       style: "Digital Art",
       model: "DALL-E 3"
     },
     {
       id: 2,
-      gradient: "from-blue-500 via-cyan-500 to-teal-500",
+      gradient: "from-orange-500 via-red-500 to-pink-500",
       prompt: "Serene mountain landscape with aurora borealis",
       style: "Photorealistic",
       model: "Midjourney"
     },
     {
       id: 3,
-      gradient: "from-green-500 via-emerald-500 to-cyan-500",
+      gradient: "from-yellow-500 via-amber-500 to-orange-500",
       prompt: "Abstract geometric patterns in motion",
       style: "Abstract",
       model: "Stable Diffusion"
     },
     {
       id: 4,
-      gradient: "from-orange-500 via-red-500 to-pink-500",
+      gradient: "from-amber-500 via-orange-500 to-red-500",
       prompt: "Vintage robot in steampunk laboratory",
       style: "Steampunk",
       model: "DALL-E 3"
     },
     {
       id: 5,
-      gradient: "from-indigo-500 via-purple-500 to-pink-500",
+      gradient: "from-orange-600 via-amber-600 to-yellow-500",
       prompt: "Ethereal portrait with flowing light effects",
       style: "Portrait",
       model: "Midjourney"
     },
     {
       id: 6,
-      gradient: "from-yellow-500 via-orange-500 to-red-500",
+      gradient: "from-amber-500 via-yellow-500 to-orange-500",
       prompt: "Futuristic space station orbiting alien planet",
       style: "Sci-Fi",
       model: "Stable Diffusion"
     },
     {
       id: 7,
-      gradient: "from-teal-500 via-blue-500 to-purple-500",
+      gradient: "from-orange-500 via-amber-500 to-yellow-500",
       prompt: "Mystical forest with bioluminescent creatures",
       style: "Fantasy",
       model: "DALL-E 3"
     },
     {
       id: 8,
-      gradient: "from-rose-500 via-pink-500 to-purple-500",
+      gradient: "from-red-500 via-orange-500 to-amber-500",
       prompt: "Art deco architecture in golden hour",
       style: "Architecture",
       model: "Midjourney"
@@ -89,22 +91,22 @@ const GalleryCarousel = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 relative overflow-hidden">
+    <section className="py-20 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-3/4 left-1/3 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-3/4 left-1/3 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse"></div>
       </div>
 
       <div className="container mx-auto px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
-            <svg className="w-4 h-4 text-purple-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-amber-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span className="text-sm font-semibold text-purple-200">AI Generated Gallery</span>
+            <span className="text-sm font-semibold text-amber-200">AI Generated Gallery</span>
           </div>
           
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
@@ -142,7 +144,7 @@ const GalleryCarousel = () => {
                   <span className="px-3 py-1 text-xs font-semibold bg-white/20 backdrop-blur-sm text-white rounded-full">
                     {galleryImages[currentIndex].style}
                   </span>
-                  <span className="px-3 py-1 text-xs font-medium bg-purple-500/30 backdrop-blur-sm text-purple-200 rounded-full">
+                  <span className="px-3 py-1 text-xs font-medium bg-amber-500/30 backdrop-blur-sm text-amber-200 rounded-full">
                     {galleryImages[currentIndex].model}
                   </span>
                 </div>
@@ -201,7 +203,7 @@ const GalleryCarousel = () => {
         {/* Gallery Stats */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           <div className="text-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -211,7 +213,7 @@ const GalleryCarousel = () => {
           </div>
 
           <div className="text-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -221,7 +223,7 @@ const GalleryCarousel = () => {
           </div>
 
           <div className="text-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
@@ -233,7 +235,7 @@ const GalleryCarousel = () => {
 
         {/* CTA Section */}
         <div className="text-center">
-          <button className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
+          <button className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>

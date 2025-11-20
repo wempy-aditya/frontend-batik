@@ -1,8 +1,10 @@
 "use client";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const DatasetsPreview = () => {
   const [hoveredDataset, setHoveredDataset] = useState(null);
+  const router = useRouter();
 
   const datasets = [
     {
@@ -15,7 +17,7 @@ const DatasetsPreview = () => {
       accessType: "Public",
       downloadCount: "250K+",
       lastUpdated: "2024-01-15",
-      previewGradient: "from-blue-500 to-purple-500",
+      previewGradient: "from-amber-500 to-orange-500",
       accessColor: "bg-green-100 text-green-800"
     },
     {
@@ -28,7 +30,7 @@ const DatasetsPreview = () => {
       accessType: "Registered",
       downloadCount: "125K+",
       lastUpdated: "2023-11-20",
-      previewGradient: "from-purple-500 to-pink-500",
+      previewGradient: "from-orange-500 to-red-500",
       accessColor: "bg-blue-100 text-blue-800"
     },
     {
@@ -41,8 +43,8 @@ const DatasetsPreview = () => {
       accessType: "Premium",
       downloadCount: "45K+",
       lastUpdated: "2024-02-10",
-      previewGradient: "from-orange-500 to-red-500",
-      accessColor: "bg-purple-100 text-purple-800"
+      previewGradient: "from-yellow-500 to-amber-500",
+      accessColor: "bg-amber-100 text-amber-800"
     }
   ];
 
@@ -163,9 +165,12 @@ const DatasetsPreview = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-2">
-                    <button className={`w-full py-3 px-4 bg-gradient-to-r ${dataset.previewGradient} text-white font-semibold rounded-xl transition-all duration-300 transform ${
-                      hoveredDataset === dataset.id ? 'scale-105 shadow-lg' : 'hover:scale-105'
-                    }`}>
+                    <button 
+                      onClick={() => window.location.href = `/datasets/${dataset.id}/download`}
+                      className={`w-full py-3 px-4 bg-gradient-to-r ${dataset.previewGradient} text-white font-semibold rounded-xl transition-all duration-300 transform ${
+                        hoveredDataset === dataset.id ? 'scale-105 shadow-lg' : 'hover:scale-105'
+                      }`}
+                    >
                       <div className="flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -174,7 +179,10 @@ const DatasetsPreview = () => {
                       </div>
                     </button>
                     
-                    <button className="w-full py-2 px-4 text-gray-700 font-medium text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                    <button 
+                      onClick={() => window.location.href = `/datasets/${dataset.id}`}
+                      className="w-full py-2 px-4 text-gray-700 font-medium text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                    >
                       View Documentation
                     </button>
                   </div>
@@ -193,7 +201,10 @@ const DatasetsPreview = () => {
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
               We can help you create, annotate, and validate custom datasets tailored to your specific research needs.
             </p>
-            <button className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+            <button 
+              onClick={() => window.location.href = '/contact'}
+              className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+            >
               <span>Contact Our Team</span>
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -201,7 +212,13 @@ const DatasetsPreview = () => {
             </button>
           </div>
 
-          <button className="group inline-flex items-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl border border-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:bg-gray-50">
+          <button 
+            onClick={() => {
+              console.log('Navigating to datasets page');
+              window.location.href = '/datasets';
+            }}
+            className="group inline-flex items-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl border border-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:bg-gray-50"
+          >
             <span>Browse All Datasets</span>
             <svg className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

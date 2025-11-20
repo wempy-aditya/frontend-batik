@@ -1,8 +1,10 @@
 "use client";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const ResearchSection = () => {
   const [hoveredPaper, setHoveredPaper] = useState(null);
+  const router = useRouter();
 
   const publications = [
     {
@@ -202,7 +204,10 @@ const ResearchSection = () => {
 
         {/* View All Button */}
         <div className="text-center">
-          <button className="group inline-flex items-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl border border-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:bg-gray-50">
+          <button 
+            onClick={() => window.location.href = '/publications'}
+            className="group inline-flex items-center px-8 py-4 bg-white text-gray-900 font-semibold rounded-xl border border-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:bg-gray-50"
+          >
             <span>View All Publications</span>
             <svg className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

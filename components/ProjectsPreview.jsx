@@ -1,8 +1,10 @@
 "use client";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const ProjectsPreview = () => {
   const [hoveredProject, setHoveredProject] = useState(null);
+  const router = useRouter();
 
   const projects = [
     {
@@ -10,7 +12,7 @@ const ProjectsPreview = () => {
       title: "Neural Style Transfer",
       description: "Transform artistic styles using advanced neural networks. Create stunning artwork by combining content and style images through deep learning algorithms.",
       technologies: ["TensorFlow", "VGG-19", "Neural Networks", "Style Transfer"],
-      thumbnail: "from-purple-500 to-pink-500",
+      thumbnail: "from-amber-500 to-orange-500",
       category: "Generative AI",
       status: "Active"
     },
@@ -19,7 +21,7 @@ const ProjectsPreview = () => {
       title: "Object Detection & Segmentation",
       description: "Real-time object detection and instance segmentation using YOLO and Mask R-CNN architectures for precise image analysis.",
       technologies: ["YOLO", "Mask R-CNN", "OpenCV", "PyTorch"],
-      thumbnail: "from-blue-500 to-cyan-500",
+      thumbnail: "from-orange-500 to-red-500",
       category: "Computer Vision",
       status: "Completed"
     },
@@ -28,14 +30,14 @@ const ProjectsPreview = () => {
       title: "Image Super-Resolution",
       description: "Enhance image quality and resolution using ESRGAN and SRCNN models. Upscale images while preserving fine details and textures.",
       technologies: ["ESRGAN", "SRCNN", "GANs", "Image Enhancement"],
-      thumbnail: "from-green-500 to-emerald-500",
+      thumbnail: "from-yellow-500 to-amber-500",
       category: "Enhancement",
       status: "Beta"
     }
   ];
 
   return (
-    <section className="py-32 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    <section className="py-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 relative overflow-hidden">
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0"
@@ -48,27 +50,27 @@ const ProjectsPreview = () => {
 
       {/* Floating Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-3/4 left-3/4 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-3/4 left-3/4 w-48 h-48 bg-yellow-500/10 rounded-full blur-3xl animate-pulse"></div>
       </div>
 
       <div className="container mx-auto px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
-            <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <span className="text-sm font-semibold text-purple-200">Featured Projects</span>
+            <span className="text-sm font-semibold text-amber-200">Featured Projects</span>
           </div>
           
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
-            <span className="bg-gradient-to-r from-white via-purple-200 to-blue-200 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
               Innovative
             </span>
             <br />
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
               AI Projects
             </span>
           </h2>
@@ -131,7 +133,7 @@ const ProjectsPreview = () => {
 
                 {/* Content */}
                 <div className="p-8">
-                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-purple-200 transition-colors duration-500">
+                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-amber-200 transition-colors duration-500">
                     {project.title}
                   </h3>
                   
@@ -144,7 +146,7 @@ const ProjectsPreview = () => {
                     {project.technologies.map((tech, techIndex) => (
                       <span
                         key={techIndex}
-                        className="px-3 py-1 text-xs font-semibold text-purple-200 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105"
+                        className="px-3 py-1 text-xs font-semibold text-amber-200 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 hover:bg-white/20 transition-all duration-300 hover:scale-105"
                       >
                         {tech}
                       </span>
@@ -152,16 +154,21 @@ const ProjectsPreview = () => {
                   </div>
 
                   {/* Action Button */}
-                  <button className={`group relative w-full py-4 px-6 bg-gradient-to-r ${project.thumbnail} text-white font-bold rounded-2xl transition-all duration-500 transform hover:scale-105 overflow-hidden`}>
-                    <span className="relative z-10 flex items-center justify-center gap-3">
+                  <button 
+                    onClick={() => window.location.href = `/projects/${project.id}`}
+                    className={`w-full py-4 px-6 bg-gradient-to-r ${project.thumbnail} text-white font-bold rounded-2xl transition-all duration-300 hover:opacity-90 cursor-pointer`}
+                    style={{ 
+                      zIndex: 9999,
+                      position: 'relative',
+                      pointerEvents: 'auto'
+                    }}
+                  >
+                    <span className="flex items-center justify-center gap-3">
                       <span>Explore Project</span>
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </span>
-                    
-                    {/* Standard Button Animation */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"></div>
                   </button>
                 </div>
 
@@ -179,22 +186,29 @@ const ProjectsPreview = () => {
 
         {/* Enhanced CTA Section */}
         <div className="text-center mt-20">
-          <div className="relative inline-block group">
-            <button className="relative px-12 py-6 bg-white/10 backdrop-blur-sm text-white font-bold text-lg rounded-2xl border border-white/20 transition-all duration-500 transform hover:scale-110 hover:bg-white/20 overflow-hidden">
-              <span className="relative z-10 flex items-center gap-3">
-                View All Projects
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-              
-              {/* Standard Shimmer Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-2xl"></div>
-            </button>
-            
-            {/* Glow Effect */}
-            <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500 scale-110"></div>
-          </div>
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = '/projects';
+            }}
+            onMouseOver={() => console.log('Projects button hovered')}
+            className="px-12 py-6 bg-white/10 backdrop-blur-sm text-white font-bold text-lg rounded-2xl border border-white/20 transition-all duration-300 hover:bg-white/20 cursor-pointer"
+            style={{ 
+              zIndex: 9999,
+              position: 'relative',
+              pointerEvents: 'auto',
+              border: 'none',
+              outline: 'none'
+            }}
+          >
+            <span className="flex items-center gap-3">
+              View All Projects
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </span>
+          </button>
         </div>
       </div>
     </section>
