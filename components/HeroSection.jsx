@@ -7,7 +7,7 @@ const HeroSection = () => {
   const router = useRouter();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-900 via-orange-800 to-amber-900">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-900 via-orange-800 to-amber-900 pt-20">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20">
         <div 

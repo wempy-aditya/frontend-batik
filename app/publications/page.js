@@ -230,7 +230,7 @@ export default function PublicationsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50">
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div 
@@ -252,7 +252,7 @@ export default function PublicationsPage() {
           <div className="mb-8">
             <div 
               onClick={() => window.location.href = '/'}
-              className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center gap-2 cursor-pointer inline-block"
+              className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center gap-2 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
