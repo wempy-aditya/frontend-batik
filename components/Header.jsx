@@ -25,6 +25,13 @@ const Header = () => {
     { name: "Features", path: "/features" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
+    { name: "Home", path: "/" },
+    { name: "Projects", path: "/projects" },
+    { name: "Datasets", path: "/datasets" },
+    { name: "Publications", path: "/publications" },
+    { name: "Features", path: "/features" },
+    { name: "Creator Studio", path: "/test-api" },
+    { name: "Advanced Studio", path: "/advanced-batik" },
   ];
 
   const isActive = (path) => pathname === path;
@@ -102,14 +109,15 @@ const Header = () => {
           {/* CTA Button */}
           <div className="hidden lg:flex items-center gap-4">
             <button
-              onClick={() => router.push("/demo")}
+              // onClick={() => router.push("/demo")}
+              onClick={() => router.push("/test-api")}
               className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
                 isScrolled
                   ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl"
                   : "bg-white text-amber-900 hover:bg-amber-50"
               }`}
             >
-              Try Demo
+              Create Batik
             </button>
           </div>
 
@@ -174,12 +182,13 @@ const Header = () => {
             ))}
             <button
               onClick={() => {
-                router.push("/demo");
+                //router.push("/demo");
+                router.push("/test-api");
                 setIsMobileMenuOpen(false);
               }}
               className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-semibold shadow-lg"
             >
-              Try Demo
+              Create Batik
             </button>
           </div>
         </div>
