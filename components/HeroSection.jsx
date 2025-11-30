@@ -1,6 +1,6 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const HeroSection = () => {
   const [hoverButton, setHoverButton] = useState(null);
@@ -10,10 +10,10 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-900 via-orange-800 to-amber-900 pt-20">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20">
-        <div 
+        <div
           className="absolute inset-0 bg-repeat"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C7A3C' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C7A3C' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         ></div>
       </div>
@@ -31,43 +31,66 @@ const HeroSection = () => {
           <div className="text-center lg:text-left space-y-8">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent leading-tight">
-                Advanced AI Image 
+                Advanced AI Image
                 <span className="block bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
                   Processing Platform
                 </span>
               </h1>
-              
+
               <p className="text-xl md:text-2xl text-gray-300 max-w-2xl leading-relaxed">
-                Experience Image Retrieval, Classification, and Generative AI — all in one place.
-                Unlock the power of cutting-edge computer vision technology.
+                Experience Image Retrieval, Classification, and Generative AI —
+                all in one place. Unlock the power of cutting-edge computer
+                vision technology.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button 
-                onClick={() => router.push('/features')}
-                onMouseEnter={() => setHoverButton('explore')}
+              <button
+                onClick={() => router.push("/features")}
+                onMouseEnter={() => setHoverButton("explore")}
                 onMouseLeave={() => setHoverButton(null)}
                 className="group relative px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/25"
               >
                 <div className="flex items-center justify-center gap-2">
                   <span>Explore Projects</span>
-                  <svg className={`w-4 h-4 transition-transform duration-300 ${hoverButton === 'explore' ? 'translate-x-1' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      hoverButton === "explore" ? "translate-x-1" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300 -z-10"></div>
               </button>
 
-              <button 
-                onClick={() => router.push('/demo')}
-                onMouseEnter={() => setHoverButton('demo')}
+              <button
+                onClick={() => router.push("/demo")}
+                onMouseEnter={() => setHoverButton("demo")}
                 onMouseLeave={() => setHoverButton(null)}
                 className="group px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-white/20 hover:shadow-xl"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   <span>Try Demo</span>
                 </div>
@@ -77,15 +100,21 @@ const HeroSection = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">50K+</div>
+                <div className="text-2xl md:text-3xl font-bold text-white">
+                  50K+
+                </div>
                 <div className="text-sm text-gray-400">Images Processed</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">99.2%</div>
+                <div className="text-2xl md:text-3xl font-bold text-white">
+                  99.2%
+                </div>
                 <div className="text-sm text-gray-400">Accuracy Rate</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">15+</div>
+                <div className="text-2xl md:text-3xl font-bold text-white">
+                  15+
+                </div>
                 <div className="text-sm text-gray-400">AI Models</div>
               </div>
             </div>
@@ -109,13 +138,16 @@ const HeroSection = () => {
                 {/* Mock Gallery Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   {[1, 2, 3, 4].map((i) => (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className={`aspect-square bg-gradient-to-br ${
-                        i === 1 ? 'from-purple-400 to-pink-400' :
-                        i === 2 ? 'from-blue-400 to-cyan-400' :
-                        i === 3 ? 'from-green-400 to-emerald-400' :
-                        'from-orange-400 to-red-400'
+                        i === 1
+                          ? "from-purple-400 to-pink-400"
+                          : i === 2
+                          ? "from-blue-400 to-cyan-400"
+                          : i === 3
+                          ? "from-green-400 to-emerald-400"
+                          : "from-orange-400 to-red-400"
                       } rounded-xl opacity-80 animate-pulse`}
                       style={{ animationDelay: `${i * 200}ms` }}
                     />

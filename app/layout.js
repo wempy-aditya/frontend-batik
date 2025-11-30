@@ -8,7 +8,8 @@ const inter = Inter({
 
 export const metadata = {
   title: "AI Vision Lab - Advanced Image Processing Platform",
-  description: "Experience Image Retrieval, Classification, and Generative AI — all in one place. Unlock the power of cutting-edge computer vision technology.",
+  description:
+    "Experience Image Retrieval, Classification, and Generative AI — all in one place. Unlock the power of cutting-edge computer vision technology.",
 };
 
 export default function RootLayout({ children }) {
