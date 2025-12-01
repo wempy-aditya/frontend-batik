@@ -688,10 +688,7 @@ export default function ProjectDetailPage() {
           {/* Tabs */}
           <div className="mb-12">
             <div className="flex flex-wrap gap-4 border-b-2 border-gray-200">
-              {[
-                "overview",
-                "technologies",
-              ].map((tab) => (
+              {["overview", "technologies"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -719,7 +716,7 @@ export default function ProjectDetailPage() {
                   <p className="text-lg text-gray-700 leading-relaxed mb-8">
                     {project.fullDescription}
                   </p>
-                  
+
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">
                     Key Achievements
                   </h3>
@@ -772,9 +769,6 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
             )}
-
-
-
           </div>
 
           {/* CTA Section */}
