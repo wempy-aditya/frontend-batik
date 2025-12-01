@@ -172,28 +172,6 @@ export default function AboutPage() {
               researchers and developers worldwide.
             </p>
           </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-              <div className="text-4xl font-bold text-amber-400 mb-2">1M+</div>
-              <div className="text-gray-300">Active Users</div>
-            </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-              <div className="text-4xl font-bold text-amber-400 mb-2">500+</div>
-              <div className="text-gray-300">Research Papers</div>
-            </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-              <div className="text-4xl font-bold text-amber-400 mb-2">50+</div>
-              <div className="text-gray-300">AI Models</div>
-            </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-              <div className="text-4xl font-bold text-amber-400 mb-2">
-                100K+
-              </div>
-              <div className="text-gray-300">Datasets</div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -311,7 +289,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-20 relative">
+      <section className="py-20 relative hidden">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-6">

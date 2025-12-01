@@ -563,8 +563,8 @@ export default function ProjectsPage() {
                 </div>
                 <div
                   onClick={() => {
-                    console.log("Navigating to research page");
-                    window.location.href = "/research";
+                    console.log("Navigating to publications page");
+                    window.location.href = "/publications";
                   }}
                   className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300 cursor-pointer"
                 >
