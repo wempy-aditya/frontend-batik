@@ -3,7 +3,6 @@ import ProjectsPreview from "../components/ProjectsPreview";
 import DatasetsPreview from "../components/DatasetsPreview";
 import ResearchSection from "../components/ResearchSection";
 import GalleryCarousel from "../components/GalleryCarousel";
-import Footer from "../components/Footer";
 
 export default function Home() {
   return (
@@ -22,9 +21,6 @@ export default function Home() {
 
       {/* Gallery Carousel */}
       <GalleryCarousel />
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }
