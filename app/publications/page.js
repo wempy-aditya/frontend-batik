@@ -638,14 +638,6 @@ export default function PublicationsPage() {
                             {paper.doi}
                           </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-semibold text-gray-700">
-                            PDF Size:
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {paper.pdfSize}
-                          </div>
-                        </div>
                       </div>
 
                       {/* Actions */}

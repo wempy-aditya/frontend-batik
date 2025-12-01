@@ -219,183 +219,10 @@ export default function ContactPage() {
       {/* Main Contact Form Section */}
       <section className="py-12 relative">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
-              <h2 className="text-3xl font-bold text-white mb-6">
-                Send us a Message
-              </h2>
-
-              {submitStatus === "success" && (
-                <div className="mb-6 p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300">
-                  <div className="flex items-center">
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    Thank you! Your message has been sent successfully.
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Your Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                  >
-                    <option value="general" className="bg-stone-900">
-                      General Inquiry
-                    </option>
-                    <option value="research" className="bg-stone-900">
-                      Research Collaboration
-                    </option>
-                    <option value="enterprise" className="bg-stone-900">
-                      Enterprise Solutions
-                    </option>
-                    <option value="support" className="bg-stone-900">
-                      Technical Support
-                    </option>
-                    <option value="partnership" className="bg-stone-900">
-                      Partnership
-                    </option>
-                    <option value="other" className="bg-stone-900">
-                      Other
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Subject *
-                  </label>
-                  <input
-                    type="text"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
-                    placeholder="How can we help you?"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Message *
-                  </label>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                    rows="6"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300 resize-none"
-                    placeholder="Tell us more about your inquiry..."
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Sending...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                        />
-                      </svg>
-                      Send Message
-                    </span>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* Right Column */}
+          <div className="max-w-2xl mx-auto">
             <div className="space-y-8">
               {/* FAQ Section */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
+              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8 hidden">
                 <h3 className="text-2xl font-bold text-white mb-6">
                   Frequently Asked Questions
                 </h3>
@@ -414,70 +241,73 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Social Media */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
-                <h3 className="text-2xl font-bold text-white mb-6">
-                  Connect With Us
-                </h3>
-                <p className="text-gray-300 mb-6">
-                  Follow us on social media for the latest updates, research
-                  insights, and community discussions.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  {socialLinks.map((social, index) => (
-                    <a
-                      key={index}
-                      href={social.link}
-                      className={`flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl transition-all duration-300 transform hover:scale-110 ${social.color}`}
-                      title={social.name}
-                    >
+              {/* Social Media & Office - Horizontal Layout */}
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Social Media */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
+                  <h3 className="text-2xl font-bold text-white mb-6">
+                    Connect With Us
+                  </h3>
+                  <p className="text-gray-300 mb-6">
+                    Follow us on social media for the latest updates, research
+                    insights, and community discussions.
+                  </p>
+                  <div className="flex flex-wrap gap-4">
+                    {socialLinks.map((social, index) => (
+                      <a
+                        key={index}
+                        href={social.link}
+                        className={`flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl transition-all duration-300 transform hover:scale-110 ${social.color}`}
+                        title={social.name}
+                      >
+                        <svg
+                          className="w-6 h-6 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d={social.icon} />
+                        </svg>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Map Placeholder */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
+                  <h3 className="text-2xl font-bold text-white mb-6">
+                    Visit Our Office
+                  </h3>
+                  <div className="aspect-video bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-20">
+                      <div
+                        className="w-full h-full"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                          backgroundSize: "60px 60px",
+                        }}
+                      ></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
                       <svg
-                        className="w-6 h-6 text-white"
-                        fill="currentColor"
+                        className="w-16 h-16 text-white"
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path d={social.icon} />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
                       </svg>
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              {/* Map Placeholder */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
-                <h3 className="text-2xl font-bold text-white mb-6">
-                  Visit Our Office
-                </h3>
-                <div className="aspect-video bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-20">
-                    <div
-                      className="w-full h-full"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                        backgroundSize: "60px 60px",
-                      }}
-                    ></div>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg
-                      className="w-16 h-16 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
+                    </div>
                   </div>
                 </div>
               </div>

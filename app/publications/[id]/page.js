@@ -546,7 +546,7 @@ export default function PublicationDetailPage() {
                 </div>
 
                 {/* Publication Meta Info */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                   <div>
                     <div className="text-sm text-gray-400 mb-1">
                       Published In
@@ -567,12 +567,6 @@ export default function PublicationDetailPage() {
                       {publication.pages}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">PDF Size</div>
-                    <div className="text-sm font-semibold text-white">
-                      {publication.pdfSize}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -589,7 +583,7 @@ export default function PublicationDetailPage() {
               {/* Tabs */}
               <div className="mb-8">
                 <div className="flex flex-wrap gap-4 border-b-2 border-gray-200">
-                  {["abstract", "content", "figures", "references"].map(
+                  {["abstract", "content"].map(
                     (tab) => (
                       <button
                         key={tab}
@@ -675,80 +669,10 @@ export default function PublicationDetailPage() {
                         {publication.conclusions}
                       </p>
                     </div>
-
-                    {publication.funding && (
-                      <div className="bg-blue-50 rounded-2xl p-6 border-l-4 border-blue-500">
-                        <h4 className="text-lg font-bold text-gray-900 mb-2">
-                          Funding
-                        </h4>
-                        <p className="text-gray-700">{publication.funding}</p>
-                      </div>
-                    )}
-
-                    {publication.acknowledgments && (
-                      <div className="bg-green-50 rounded-2xl p-6 border-l-4 border-green-500">
-                        <h4 className="text-lg font-bold text-gray-900 mb-2">
-                          Acknowledgments
-                        </h4>
-                        <p className="text-gray-700">
-                          {publication.acknowledgments}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
 
-                {/* Figures Tab */}
-                {activeTab === "figures" && (
-                  <div className="space-y-8">
-                    <div>
-                      <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                        Figures & Visualizations
-                      </h2>
-                      <p className="text-gray-600 mb-8">
-                        Key figures and visualizations from the paper
-                      </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {publication.figures.map((figure) => (
-                        <div
-                          key={figure.id}
-                          className="bg-gradient-to-br from-slate-100 to-gray-100 rounded-2xl p-6 border-2 border-gray-200 hover:border-blue-400 transition-all duration-300"
-                        >
-                          <div className="aspect-video bg-gradient-to-br from-blue-200 to-purple-200 rounded-xl mb-4 flex items-center justify-center">
-                            <svg
-                              className="w-16 h-16 text-gray-400"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </div>
-                          <div className="text-sm font-semibold text-gray-900 mb-1">
-                            Figure {figure.id}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {figure.caption}
-                          </div>
-                          <div className="mt-2">
-                            <span className="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded-full">
-                              {figure.type}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* References Tab */}
+                {/* References Tab - Removed */}
                 {activeTab === "references" && (
                   <div className="space-y-8">
                     <div>
@@ -817,25 +741,6 @@ export default function PublicationDetailPage() {
                           />
                         </svg>
                         <span>Download PDF</span>
-                      </div>
-                    </button>
-
-                    <button className="w-full py-3 px-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300">
-                      <div className="flex items-center justify-center gap-2">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                          />
-                        </svg>
-                        <span>Save to Library</span>
                       </div>
                     </button>
 
@@ -934,35 +839,6 @@ export default function PublicationDetailPage() {
                       <div className="text-sm text-gray-600">
                         {publication.status}
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metrics */}
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl shadow-xl p-6 border-2 border-blue-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    Metrics
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Citations
-                      </span>
-                      <span className="text-2xl font-bold text-blue-600">
-                        {publication.citations}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Impact
-                      </span>
-                      <span
-                        className={`px-3 py-1 text-sm font-medium rounded-full ${getImpactColor(
-                          publication.impact
-                        )}`}
-                      >
-                        {publication.impact}
-                      </span>
                     </div>
                   </div>
                 </div>

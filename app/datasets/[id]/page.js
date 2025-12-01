@@ -47,12 +47,12 @@ export default function DatasetDetailPage() {
         "Deep Learning Research",
       ],
       technicalSpecs: {
-        imageFormat: "JPEG (RGB)",
-        resolution: "Variable (224x224 to 1920x1080)",
-        annotationFormat: "XML (PASCAL VOC style)",
-        fileStructure: "Hierarchical directory structure",
-        compression: "Standard JPEG compression",
-        colorSpace: "sRGB",
+        format: "Image Dataset",
+        type: "Classification & Recognition",
+        license: "Academic Use",
+        access: "Public",
+        lastUpdate: "January 2024",
+        version: "2024.1",
       },
       statistics: {
         avgImagesPerCategory: "710",
@@ -179,12 +179,12 @@ export default function DatasetDetailPage() {
         "Multi-Task Learning",
       ],
       technicalSpecs: {
-        imageFormat: "JPEG (RGB)",
-        resolution: "640x480 minimum",
-        annotationFormat: "JSON (COCO format)",
-        fileStructure: "Train/Val/Test splits",
-        compression: "High-quality JPEG",
-        colorSpace: "sRGB",
+        format: "Image Dataset",
+        type: "Object Detection & Segmentation",
+        license: "CC BY 4.0",
+        access: "Registered Users",
+        lastUpdate: "November 2023",
+        version: "2023.2",
       },
       statistics: {
         avgImagesPerCategory: "2200",
@@ -290,13 +290,8 @@ export default function DatasetDetailPage() {
     },
     {
       id: "technical",
-      name: "Technical Details",
+      name: "Metadata",
       icon: "M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4",
-    },
-    {
-      id: "download",
-      name: "Download",
-      icon: "M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4",
     },
   ];
 
@@ -391,7 +386,7 @@ export default function DatasetDetailPage() {
               </p>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <div className="text-3xl font-bold text-white">
                     {dataset.samples}
@@ -409,12 +404,6 @@ export default function DatasetDetailPage() {
                     {dataset.categories}
                   </div>
                   <div className="text-white/80 text-sm">Categories</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <div className="text-3xl font-bold text-white">
-                    {dataset.downloadCount}
-                  </div>
-                  <div className="text-white/80 text-sm">Downloads</div>
                 </div>
               </div>
             </div>
@@ -588,29 +577,6 @@ export default function DatasetDetailPage() {
                     </div>
                   </div>
 
-                  {/* Statistics */}
-                  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                      Dataset Statistics
-                    </h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {Object.entries(dataset.statistics).map(
-                        ([key, value]) => (
-                          <div
-                            key={key}
-                            className="flex justify-between items-center p-4 bg-gray-50 rounded-xl"
-                          >
-                            <span className="text-gray-600 capitalize">
-                              {key.replace(/([A-Z])/g, " $1").trim()}
-                            </span>
-                            <span className="text-xl font-bold text-gray-900">
-                              {value}
-                            </span>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Sidebar */}
@@ -708,12 +674,6 @@ export default function DatasetDetailPage() {
                       <h3 className="font-bold text-gray-900 mb-2">
                         {sample.category}
                       </h3>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Confidence:</span>
-                        <span className="font-semibold text-green-600">
-                          {sample.confidence}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -721,12 +681,12 @@ export default function DatasetDetailPage() {
             </div>
           )}
 
-          {/* Technical Tab */}
+          {/* Metadata Tab */}
           {activeTab === "technical" && (
             <div className="space-y-8">
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Technical Specifications
+                  Dataset Metadata
                 </h2>
                 <div className="space-y-4">
                   {Object.entries(dataset.technicalSpecs).map(
@@ -744,251 +704,10 @@ export default function DatasetDetailPage() {
                   )}
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">
-                    File Structure
-                  </h3>
-                  <div className="bg-gray-900 rounded-xl p-6 text-green-400 font-mono text-sm">
-                    <div>dataset/</div>
-                    <div className="ml-4">├── train/</div>
-                    <div className="ml-8">├── images/</div>
-                    <div className="ml-8">└── annotations/</div>
-                    <div className="ml-4">├── val/</div>
-                    <div className="ml-8">├── images/</div>
-                    <div className="ml-8">└── annotations/</div>
-                    <div className="ml-4">├── test/</div>
-                    <div className="ml-8">└── images/</div>
-                    <div className="ml-4">└── README.md</div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">
-                    System Requirements
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="w-5 h-5 text-blue-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-                        />
-                      </svg>
-                      <div>
-                        <div className="font-semibold text-gray-900">
-                          Storage Space
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          Minimum {dataset.size} available
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="w-5 h-5 text-blue-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                      <div>
-                        <div className="font-semibold text-gray-900">RAM</div>
-                        <div className="text-sm text-gray-600">
-                          Recommended 16GB+
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <svg
-                        className="w-5 h-5 text-blue-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <div>
-                        <div className="font-semibold text-gray-900">
-                          Python Version
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          3.8 or higher
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
-          {/* Download Tab */}
-          {activeTab === "download" && (
-            <div className="space-y-8">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Download Options
-                </h2>
-                <p className="text-gray-600 text-lg">
-                  Choose the package that fits your needs
-                </p>
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                {dataset.downloadOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-xl transition-all duration-300"
-                  >
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                          {option.type}
-                        </h3>
-                        <p className="text-gray-600">{option.format} format</p>
-                      </div>
-                      <div className="text-3xl font-bold text-blue-600">
-                        {option.size}
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <svg
-                          className="w-4 h-4 text-green-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        {option.speed}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <svg
-                          className="w-4 h-4 text-green-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        Resume support
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <svg
-                          className="w-4 h-4 text-green-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        Checksum verification
-                      </div>
-                    </div>
-
-                    <button
-                      className={`w-full px-6 py-4 bg-gradient-to-r ${dataset.gradient} text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                          />
-                        </svg>
-                        Download {option.type}
-                      </div>
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Download Instructions */}
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Download Instructions
-                </h3>
-                <ol className="space-y-3 text-gray-700">
-                  <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      1
-                    </span>
-                    <span>
-                      Select your desired download package from the options
-                      above
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      2
-                    </span>
-                    <span>
-                      Sign in to your account (required for {dataset.accessType}{" "}
-                      datasets)
-                    </span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      3
-                    </span>
-                    <span>Accept the license terms and conditions</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                      4
-                    </span>
-                    <span>
-                      Click download and wait for the process to complete
-                    </span>
-                  </li>
-                </ol>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
@@ -1039,14 +758,6 @@ export default function DatasetDetailPage() {
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
                   {selectedSample.category}
                 </h3>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">
-                    Classification Confidence
-                  </span>
-                  <span className="text-xl font-bold text-green-600">
-                    {selectedSample.confidence}
-                  </span>
-                </div>
               </div>
             </div>
           </div>

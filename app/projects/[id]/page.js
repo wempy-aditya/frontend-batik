@@ -676,34 +676,6 @@ export default function ProjectDetailPage() {
                 <p className="text-xl text-gray-300 leading-relaxed mb-8">
                   {project.description}
                 </p>
-
-                {/* Project Meta Info */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Duration</div>
-                    <div className="text-lg font-semibold text-white">
-                      {project.duration}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Team Size</div>
-                    <div className="text-lg font-semibold text-white">
-                      {project.team} members
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Impact</div>
-                    <div className="text-lg font-semibold text-white">
-                      {project.impact}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-400 mb-1">Started</div>
-                    <div className="text-lg font-semibold text-white">
-                      {project.startDate}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -719,9 +691,6 @@ export default function ProjectDetailPage() {
               {[
                 "overview",
                 "technologies",
-                "challenges",
-                "achievements",
-                "gallery",
               ].map((tab) => (
                 <button
                   key={tab}
@@ -747,89 +716,16 @@ export default function ProjectDetailPage() {
                   <h2 className="text-3xl font-bold text-gray-900 mb-6">
                     Project Overview
                   </h2>
-                  <p className="text-lg text-gray-700 leading-relaxed">
+                  <p className="text-lg text-gray-700 leading-relaxed mb-8">
                     {project.fullDescription}
                   </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <svg
-                        className="w-6 h-6 text-amber-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Key Features
-                    </h3>
-                    <ul className="space-y-3">
-                      {project.technologies.map((tech, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <svg
-                            className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 7l5 5m0 0l-5 5m5-5H6"
-                            />
-                          </svg>
-                          <span className="text-gray-700">{tech}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <svg
-                        className="w-6 h-6 text-orange-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                      Future Work
-                    </h3>
-                    <ul className="space-y-3">
-                      {project.futureWork.map((item, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <svg
-                            className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M13 7l5 5m0 0l-5 5m5-5H6"
-                            />
-                          </svg>
-                          <span className="text-gray-700">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    Key Achievements
+                  </h3>
+                  <p className="text-lg text-gray-700 leading-relaxed">
+                    {project.achievements.join(". ")}.
+                  </p>
                 </div>
               </div>
             )}
@@ -877,124 +773,8 @@ export default function ProjectDetailPage() {
               </div>
             )}
 
-            {/* Challenges Tab */}
-            {activeTab === "challenges" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                    Challenges & Solutions
-                  </h2>
-                  <p className="text-lg text-gray-700 mb-8">
-                    Every groundbreaking project faces unique challenges. Here's
-                    how we addressed them.
-                  </p>
-                </div>
 
-                <div className="space-y-6">
-                  {project.challenges.map((challenge, index) => (
-                    <div
-                      key={index}
-                      className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 border-l-4 border-orange-500"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center flex-shrink-0">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            Challenge
-                          </h3>
-                          <p className="text-gray-700">{challenge}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Achievements Tab */}
-            {activeTab === "achievements" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                    Key Achievements
-                  </h2>
-                  <p className="text-lg text-gray-700 mb-8">
-                    Milestones and accomplishments that define the success of
-                    this project.
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  {project.achievements.map((achievement, index) => (
-                    <div
-                      key={index}
-                      className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border-2 border-green-200 hover:border-green-400 transition-all duration-300 hover:shadow-lg"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-gray-800 font-medium">
-                            {achievement}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Gallery Tab */}
-            {activeTab === "gallery" && (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                    Project Gallery
-                  </h2>
-                  <p className="text-lg text-gray-700 mb-8">
-                    Visual showcase of the project's capabilities and results.
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  {project.gallery.map((item, index) => (
-                    <div
-                      key={index}
-                      className="relative h-64 rounded-2xl overflow-hidden group cursor-pointer"
-                    >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${item.gradient} transition-all duration-500 group-hover:scale-110`}
-                      >
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div className="bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full">
-                          <span className="text-gray-900 font-semibold">
-                            View Image {index + 1}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* CTA Section */}

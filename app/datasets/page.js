@@ -716,7 +716,7 @@ export default function DatasetsPage() {
                     Contact Our Team
                   </button>
                   <button
-                    onClick={() => (window.location.href = "/services")}
+                    onClick={() => (window.location.href = "/projects")}
                     className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
                   >
                     View Services
