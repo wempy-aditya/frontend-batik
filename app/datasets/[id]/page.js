@@ -576,7 +576,6 @@ export default function DatasetDetailPage() {
                       ))}
                     </div>
                   </div>
-
                 </div>
 
                 {/* Sidebar */}
@@ -706,8 +705,6 @@ export default function DatasetDetailPage() {
               </div>
             </div>
           )}
-
-
         </div>
       </section>
 

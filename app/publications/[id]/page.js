@@ -583,21 +583,19 @@ export default function PublicationDetailPage() {
               {/* Tabs */}
               <div className="mb-8">
                 <div className="flex flex-wrap gap-4 border-b-2 border-gray-200">
-                  {["abstract", "content"].map(
-                    (tab) => (
-                      <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-3 font-semibold transition-all duration-300 border-b-2 ${
-                          activeTab === tab
-                            ? "border-blue-500 text-blue-600"
-                            : "border-transparent text-gray-600 hover:text-blue-600"
-                        }`}
-                      >
-                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                      </button>
-                    )
-                  )}
+                  {["abstract", "content"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-6 py-3 font-semibold transition-all duration-300 border-b-2 ${
+                        activeTab === tab
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-600 hover:text-blue-600"
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
                 </div>
               </div>
 

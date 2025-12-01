@@ -1,0 +1,430 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function NewsPage() {
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const router = useRouter();
+
+  const categories = [
+    { id: "all", name: "All News", count: 12 },
+    { id: "research", name: "Research", count: 4 },
+    { id: "product", name: "Product Updates", count: 3 },
+    { id: "company", name: "Company News", count: 3 },
+    { id: "events", name: "Events", count: 2 },
+  ];
+
+  const newsArticles = [
+    {
+      id: 1,
+      title: "AI Vision Lab Launches Advanced Neural Style Transfer Model",
+      excerpt:
+        "Our new neural style transfer model achieves 60% faster processing times while maintaining exceptional output quality. The breakthrough comes from optimized architecture and innovative training techniques.",
+      category: "product",
+      date: "2024-01-15",
+      author: "Dr. Sarah Chen",
+      readTime: "5 min read",
+      image: "from-amber-500 to-orange-500",
+      featured: true,
+    },
+    {
+      id: 2,
+      title: "Research Paper Accepted at CVPR 2024",
+      excerpt:
+        "Our groundbreaking research on real-time object detection has been accepted for presentation at the Computer Vision and Pattern Recognition conference. This marks our third consecutive year of CVPR publications.",
+      category: "research",
+      date: "2024-01-12",
+      author: "Dr. Michael Zhang",
+      readTime: "4 min read",
+      image: "from-blue-500 to-indigo-500",
+      featured: true,
+    },
+    {
+      id: 3,
+      title: "AI Vision Lab Opens New Research Facility",
+      excerpt:
+        "We're excited to announce the opening of our state-of-the-art research facility in Silicon Valley. The 50,000 sq ft space will house our growing team of AI researchers and engineers.",
+      category: "company",
+      date: "2024-01-10",
+      author: "Emma Rodriguez",
+      readTime: "3 min read",
+      image: "from-green-500 to-teal-500",
+      featured: false,
+    },
+    {
+      id: 4,
+      title: "New Dataset Release: ImageNet-2024",
+      excerpt:
+        "We're releasing ImageNet-2024, featuring 14.2 million annotated images across 20,000+ categories. This comprehensive dataset represents our largest release to date.",
+      category: "product",
+      date: "2024-01-08",
+      author: "Dr. James Wilson",
+      readTime: "6 min read",
+      image: "from-purple-500 to-pink-500",
+      featured: false,
+    },
+    {
+      id: 5,
+      title: "AI Vision Lab Wins Best Innovation Award",
+      excerpt:
+        "Our facial recognition system with privacy-first design has been recognized with the Best Innovation Award at the Global AI Summit 2024.",
+      category: "company",
+      date: "2024-01-05",
+      author: "Lisa Anderson",
+      readTime: "4 min read",
+      image: "from-yellow-500 to-orange-500",
+      featured: false,
+    },
+    {
+      id: 6,
+      title: "Breakthrough in Medical Image Analysis",
+      excerpt:
+        "Our AI-powered diagnostic tool achieved 95% accuracy in detecting early-stage cancers from medical imaging. This advancement could revolutionize early disease detection.",
+      category: "research",
+      date: "2024-01-03",
+      author: "Dr. Rachel Kim",
+      readTime: "7 min read",
+      image: "from-red-500 to-pink-500",
+      featured: false,
+    },
+    {
+      id: 7,
+      title: "Upcoming Webinar: Future of Computer Vision",
+      excerpt:
+        "Join our expert panel discussion on the future of computer vision and AI. Register now for exclusive insights and live Q&A session with our research team.",
+      category: "events",
+      date: "2024-01-02",
+      author: "Marketing Team",
+      readTime: "2 min read",
+      image: "from-indigo-500 to-purple-500",
+      featured: false,
+    },
+    {
+      id: 8,
+      title: "Partnership with Leading Universities",
+      excerpt:
+        "AI Vision Lab announces research partnerships with MIT, Stanford, and CMU to advance computer vision research and education.",
+      category: "company",
+      date: "2023-12-28",
+      author: "John Smith",
+      readTime: "5 min read",
+      image: "from-teal-500 to-green-500",
+      featured: false,
+    },
+    {
+      id: 9,
+      title: "New API Release: Real-Time Style Transfer",
+      excerpt:
+        "Developers can now integrate our real-time style transfer capabilities into their applications with our new API. Documentation and SDKs available now.",
+      category: "product",
+      date: "2023-12-25",
+      author: "Dev Team",
+      readTime: "4 min read",
+      image: "from-orange-500 to-red-500",
+      featured: false,
+    },
+    {
+      id: 10,
+      title: "AI Ethics Workshop Series Announced",
+      excerpt:
+        "We're launching a quarterly workshop series focused on ethical AI development and responsible computer vision applications.",
+      category: "events",
+      date: "2023-12-20",
+      author: "Dr. Sarah Chen",
+      readTime: "3 min read",
+      image: "from-cyan-500 to-blue-500",
+      featured: false,
+    },
+    {
+      id: 11,
+      title: "Advanced 3D Reconstruction Model Released",
+      excerpt:
+        "Our latest 3D object reconstruction model can now create detailed 3D models from just 5 images, reducing requirements by 50%.",
+      category: "research",
+      date: "2023-12-18",
+      author: "Dr. Michael Zhang",
+      readTime: "6 min read",
+      image: "from-pink-500 to-rose-500",
+      featured: false,
+    },
+    {
+      id: 12,
+      title: "Year in Review: 2023 Achievements",
+      excerpt:
+        "Looking back at our remarkable achievements in 2023 - from breakthrough research to product launches and community growth.",
+      category: "company",
+      date: "2023-12-15",
+      author: "Emma Rodriguez",
+      readTime: "8 min read",
+      image: "from-amber-600 to-yellow-500",
+      featured: false,
+    },
+  ];
+
+  const filteredNews =
+    selectedCategory === "all"
+      ? newsArticles
+      : newsArticles.filter((article) => article.category === selectedCategory);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Hero Section */}
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0 bg-repeat"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+        </div>
+
+        <div className="container mx-auto px-6 lg:px-8 relative z-10">
+          {/* Breadcrumb */}
+          <div className="flex items-center text-sm text-amber-200 mb-8">
+            <button
+              onClick={() => router.push("/")}
+              className="hover:text-white transition-colors"
+            >
+              Home
+            </button>
+            <svg
+              className="w-4 h-4 mx-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <span className="text-white">News</span>
+          </div>
+
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
+              <svg
+                className="w-4 h-4 text-amber-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                />
+              </svg>
+              <span className="text-sm font-semibold text-amber-200">
+                Latest Updates & Announcements
+              </span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+              <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
+                News & Updates
+              </span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
+              Stay informed about our latest research, product updates, and
+              company announcements. Discover what's happening at AI Vision Lab.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* News Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6 lg:px-8">
+          {/* Category Filter */}
+          <div className="mb-12">
+            <div className="flex flex-wrap justify-center gap-4">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
+                    selectedCategory === category.id
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                  }`}
+                >
+                  {category.name}
+                  <span className="ml-2 text-sm opacity-75">
+                    ({category.count})
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Featured News */}
+          {selectedCategory === "all" && (
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold text-gray-900 mb-8">
+                Featured Stories
+              </h2>
+              <div className="grid lg:grid-cols-2 gap-8">
+                {newsArticles
+                  .filter((article) => article.featured)
+                  .map((article) => (
+                    <div
+                      key={article.id}
+                      className="group relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                    >
+                      <div
+                        className={`h-64 bg-gradient-to-br ${article.image} relative`}
+                      >
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                        <div className="absolute top-4 left-4">
+                          <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-full capitalize">
+                            {article.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-8">
+                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                          <span>{formatDate(article.date)}</span>
+                          <span>•</span>
+                          <span>{article.readTime}</span>
+                        </div>
+
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-amber-600 transition-colors">
+                          {article.title}
+                        </h3>
+
+                        <p className="text-gray-600 leading-relaxed mb-6">
+                          {article.excerpt}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full flex items-center justify-center text-white font-bold">
+                              {article.author.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900">
+                                {article.author}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => router.push(`/news/${article.id}`)}
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300"
+                          >
+                            Read More
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* All News Grid */}
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">
+              {selectedCategory === "all" ? "All News" : "Filtered News"}
+            </h2>
+            <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+              {filteredNews
+                .filter(
+                  (article) => !article.featured || selectedCategory !== "all"
+                )
+                .map((article) => (
+                  <div
+                    key={article.id}
+                    className="group bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                  >
+                    <div
+                      className={`h-48 bg-gradient-to-br ${article.image} relative`}
+                    >
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                      <div className="absolute top-4 left-4">
+                        <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-semibold rounded-full capitalize">
+                          {article.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                        <span>{formatDate(article.date)}</span>
+                        <span>•</span>
+                        <span>{article.readTime}</span>
+                      </div>
+
+                      <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2">
+                        {article.title}
+                      </h3>
+
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
+                        {article.excerpt}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="text-xs text-gray-600">
+                          By {article.author}
+                        </div>
+                        <button 
+                          onClick={() => router.push(`/news/${article.id}`)}
+                          className="text-amber-600 hover:text-amber-700 font-semibold text-sm"
+                        >
+                          Read →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+
+          {/* Newsletter CTA */}
+          <div className="mt-20 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 rounded-3xl p-12 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Subscribe to Our Newsletter
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Get the latest news, research updates, and announcements delivered
+              directly to your inbox.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-xl mx-auto">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-6 py-4 rounded-xl border-2 border-white/20 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400"
+              />
+              <button className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
