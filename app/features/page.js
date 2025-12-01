@@ -343,26 +343,27 @@ export default function FeaturesPage() {
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
-          <div className="mb-8">
+          <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
               onClick={() => router.push("/")}
-              className="text-amber-200 hover:text-white transition-colors duration-300 flex items-center gap-2 cursor-pointer"
+              className="hover:text-white transition-colors"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              Back to Home
+              Home
             </button>
+            <svg
+              className="w-4 h-4 mx-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <span className="text-white">Features</span>
           </div>
 
           <div className="text-center max-w-4xl mx-auto">

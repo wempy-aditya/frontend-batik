@@ -22,16 +22,8 @@ const Header = () => {
     { name: "Projects", path: "/projects" },
     { name: "Datasets", path: "/datasets" },
     { name: "Publications", path: "/publications" },
-    { name: "Features", path: "/features" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
-    { name: "Home", path: "/" },
-    { name: "Projects", path: "/projects" },
-    { name: "Datasets", path: "/datasets" },
-    { name: "Publications", path: "/publications" },
-    { name: "Features", path: "/features" },
-    { name: "Creator Studio", path: "/test-api" },
-    { name: "Advanced Studio", path: "/advanced-batik" },
   ];
 
   const isActive = (path) => pathname === path;
