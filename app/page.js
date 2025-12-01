@@ -1,5 +1,4 @@
 import HeroSection from "../components/HeroSection";
-import FeatureCards from "../components/FeatureCards";
 import ProjectsPreview from "../components/ProjectsPreview";
 import DatasetsPreview from "../components/DatasetsPreview";
 import ResearchSection from "../components/ResearchSection";
@@ -11,22 +10,19 @@ export default function Home() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <HeroSection />
-      
-      {/* Features Overview */}
-      <FeatureCards />
-      
+
       {/* Projects Preview */}
       <ProjectsPreview />
-      
+
       {/* Datasets Preview */}
       <DatasetsPreview />
-      
+
       {/* Research Section */}
       <ResearchSection />
-      
+
       {/* Gallery Carousel */}
       <GalleryCarousel />
-      
+
       {/* Footer */}
       <Footer />
     </div>

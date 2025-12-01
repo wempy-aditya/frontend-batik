@@ -345,26 +345,27 @@ export default function PublicationsPage() {
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
-          <div className="mb-8">
-            <div
+          <div className="flex items-center text-sm text-gray-300 mb-8">
+            <button
               onClick={() => (window.location.href = "/")}
-              className="text-gray-300 hover:text-white transition-colors duration-300 flex items-center gap-2 cursor-pointer"
+              className="hover:text-white transition-colors"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              Back to Home
-            </div>
+              Home
+            </button>
+            <svg
+              className="w-4 h-4 mx-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            <span className="text-white">Publications</span>
           </div>
 
           <div className="text-center max-w-4xl mx-auto">
