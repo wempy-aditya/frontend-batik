@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -13,8 +14,22 @@ const Header = () => {
       setIsScrolled(window.scrollY > 20);
     };
 
+    // Check authentication status
+    const checkAuth = () => {
+      const token = localStorage.getItem('access_token');
+      setIsAuthenticated(!!token);
+    };
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    checkAuth();
+
+    // Listen for storage changes (logout from dashboard)
+    window.addEventListener("storage", checkAuth);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("storage", checkAuth);
+    };
   }, []);
 
   const navItems = [
@@ -100,11 +115,11 @@ const Header = () => {
           </div>
 
           {/* CTA Button */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
             <button
               // onClick={() => router.push("/demo")}
               onClick={() => router.push("/test-api")}
-              className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
+              className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
                 isScrolled
                   ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl"
                   : "bg-white text-amber-900 hover:bg-amber-50"
@@ -112,6 +127,36 @@ const Header = () => {
             >
               Create Batik
             </button>
+
+            {isAuthenticated ? (
+              <button
+                onClick={() => router.push("/dashboard")}
+                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
+                  isScrolled
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg hover:shadow-xl"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
+                  isScrolled
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Admin Login
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -183,6 +228,34 @@ const Header = () => {
             >
               Create Batik
             </button>
+
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  router.push("/dashboard");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  router.push("/login");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Admin Login
+              </button>
+            )}
           </div>
         </div>
       </nav>
