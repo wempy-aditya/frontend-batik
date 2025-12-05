@@ -10,7 +10,8 @@ export default function NewsDetailPage() {
     {
       id: 1,
       title: "AI Vision Lab Launches Advanced Neural Style Transfer Model",
-      excerpt: "Our new neural style transfer model achieves 60% faster processing times while maintaining exceptional output quality. The breakthrough comes from optimized architecture and innovative training techniques.",
+      excerpt:
+        "Our new neural style transfer model achieves 60% faster processing times while maintaining exceptional output quality. The breakthrough comes from optimized architecture and innovative training techniques.",
       fullContent: `
         <p>We are thrilled to announce the launch of our latest breakthrough in neural style transfer technology. After months of intensive research and development, our team has successfully created a model that achieves 60% faster processing times while maintaining exceptional output quality.</p>
 
@@ -57,7 +58,8 @@ export default function NewsDetailPage() {
     {
       id: 2,
       title: "Research Paper Accepted at CVPR 2024",
-      excerpt: "Our groundbreaking research on real-time object detection has been accepted for presentation at the Computer Vision and Pattern Recognition conference. This marks our third consecutive year of CVPR publications.",
+      excerpt:
+        "Our groundbreaking research on real-time object detection has been accepted for presentation at the Computer Vision and Pattern Recognition conference. This marks our third consecutive year of CVPR publications.",
       fullContent: `
         <p>We are proud to announce that our research paper on real-time object detection has been accepted for presentation at CVPR 2024, one of the most prestigious conferences in computer vision. This achievement marks our third consecutive year of publishing at this premier venue.</p>
 
@@ -96,7 +98,8 @@ export default function NewsDetailPage() {
     {
       id: 3,
       title: "AI Vision Lab Opens New Research Facility",
-      excerpt: "We're excited to announce the opening of our state-of-the-art research facility in Silicon Valley. The 50,000 sq ft space will house our growing team of AI researchers and engineers.",
+      excerpt:
+        "We're excited to announce the opening of our state-of-the-art research facility in Silicon Valley. The 50,000 sq ft space will house our growing team of AI researchers and engineers.",
       fullContent: `
         <p>Today marks a significant milestone in our company's history as we officially open our new state-of-the-art research facility in Silicon Valley. This 50,000 square foot campus represents our commitment to advancing AI research and innovation.</p>
 
@@ -135,7 +138,8 @@ export default function NewsDetailPage() {
     {
       id: 4,
       title: "New Dataset Release: ImageNet-2024",
-      excerpt: "We're releasing ImageNet-2024, featuring 14.2 million annotated images across 20,000+ categories. This comprehensive dataset represents our largest release to date.",
+      excerpt:
+        "We're releasing ImageNet-2024, featuring 14.2 million annotated images across 20,000+ categories. This comprehensive dataset represents our largest release to date.",
       fullContent: `
         <p>We are excited to announce the release of ImageNet-2024, the latest and most comprehensive iteration of our flagship dataset. With 14.2 million carefully annotated images spanning over 20,000 categories, this represents our largest and most ambitious dataset release to date.</p>
 
@@ -180,7 +184,8 @@ export default function NewsDetailPage() {
     {
       id: 5,
       title: "AI Vision Lab Wins Best Innovation Award",
-      excerpt: "Our facial recognition system with privacy-first design has been recognized with the Best Innovation Award at the Global AI Summit 2024.",
+      excerpt:
+        "Our facial recognition system with privacy-first design has been recognized with the Best Innovation Award at the Global AI Summit 2024.",
       fullContent: `
         <p>We are honored to announce that our privacy-first facial recognition system has been awarded the Best Innovation Award at the Global AI Summit 2024. This prestigious recognition validates our commitment to developing AI technology that respects user privacy while delivering exceptional performance.</p>
 
@@ -220,7 +225,8 @@ export default function NewsDetailPage() {
     {
       id: 6,
       title: "Breakthrough in Medical Image Analysis",
-      excerpt: "Our AI-powered diagnostic tool achieved 95% accuracy in detecting early-stage cancers from medical imaging. This advancement could revolutionize early disease detection.",
+      excerpt:
+        "Our AI-powered diagnostic tool achieved 95% accuracy in detecting early-stage cancers from medical imaging. This advancement could revolutionize early disease detection.",
       fullContent: `
         <p>We are proud to announce a major breakthrough in medical image analysis. Our AI-powered diagnostic tool has achieved 95% accuracy in detecting early-stage cancers from medical imaging, potentially revolutionizing early disease detection and improving patient outcomes.</p>
 
@@ -262,7 +268,8 @@ export default function NewsDetailPage() {
     {
       id: 7,
       title: "Upcoming Webinar: Future of Computer Vision",
-      excerpt: "Join our expert panel discussion on the future of computer vision and AI. Register now for exclusive insights and live Q&A session with our research team.",
+      excerpt:
+        "Join our expert panel discussion on the future of computer vision and AI. Register now for exclusive insights and live Q&A session with our research team.",
       fullContent: `
         <p>Mark your calendars! We're hosting an exclusive webinar featuring our expert panel discussing the future of computer vision and artificial intelligence. This is a unique opportunity to gain insights from leading researchers and engage directly with our team.</p>
 
@@ -327,7 +334,8 @@ export default function NewsDetailPage() {
     {
       id: 8,
       title: "Partnership with Leading Universities",
-      excerpt: "AI Vision Lab announces research partnerships with MIT, Stanford, and CMU to advance computer vision research and education.",
+      excerpt:
+        "AI Vision Lab announces research partnerships with MIT, Stanford, and CMU to advance computer vision research and education.",
       fullContent: `
         <p>We are thrilled to announce strategic research partnerships with three of the world's leading universities: Massachusetts Institute of Technology (MIT), Stanford University, and Carnegie Mellon University (CMU). These collaborations will advance computer vision research and education.</p>
 
@@ -383,7 +391,8 @@ export default function NewsDetailPage() {
     {
       id: 9,
       title: "New API Release: Real-Time Style Transfer",
-      excerpt: "Developers can now integrate our real-time style transfer capabilities into their applications with our new API. Documentation and SDKs available now.",
+      excerpt:
+        "Developers can now integrate our real-time style transfer capabilities into their applications with our new API. Documentation and SDKs available now.",
       fullContent: `
         <p>We're excited to announce the release of our Real-Time Style Transfer API, enabling developers to easily integrate advanced neural style transfer capabilities into their applications. This powerful API brings artistic image transformation to any platform.</p>
 
@@ -452,7 +461,8 @@ export default function NewsDetailPage() {
     {
       id: 10,
       title: "AI Ethics Workshop Series Announced",
-      excerpt: "We're launching a quarterly workshop series focused on ethical AI development and responsible computer vision applications.",
+      excerpt:
+        "We're launching a quarterly workshop series focused on ethical AI development and responsible computer vision applications.",
       fullContent: `
         <p>We are pleased to announce the launch of our AI Ethics Workshop Series, a quarterly program focused on ethical AI development and responsible deployment of computer vision technologies. This initiative reflects our commitment to advancing AI in a way that benefits society.</p>
 
@@ -527,7 +537,8 @@ export default function NewsDetailPage() {
     {
       id: 11,
       title: "Advanced 3D Reconstruction Model Released",
-      excerpt: "Our latest 3D object reconstruction model can now create detailed 3D models from just 5 images, reducing requirements by 50%.",
+      excerpt:
+        "Our latest 3D object reconstruction model can now create detailed 3D models from just 5 images, reducing requirements by 50%.",
       fullContent: `
         <p>We're excited to unveil our latest breakthrough in 3D reconstruction technology. Our new model can create highly detailed 3D models from just 5 images, representing a 50% reduction in image requirements compared to previous methods.</p>
 
@@ -586,12 +597,18 @@ export default function NewsDetailPage() {
       authorRole: "Senior Research Engineer",
       readTime: "6 min read",
       image: "from-pink-500 to-rose-500",
-      tags: ["3D Reconstruction", "Computer Vision", "Neural Networks", "Research"],
+      tags: [
+        "3D Reconstruction",
+        "Computer Vision",
+        "Neural Networks",
+        "Research",
+      ],
     },
     {
       id: 12,
       title: "Year in Review: 2023 Achievements",
-      excerpt: "Looking back at our remarkable achievements in 2023 - from breakthrough research to product launches and community growth.",
+      excerpt:
+        "Looking back at our remarkable achievements in 2023 - from breakthrough research to product launches and community growth.",
       fullContent: `
         <p>As we close out 2023, we want to take a moment to reflect on an extraordinary year of achievements, innovation, and growth. From groundbreaking research to successful product launches, 2023 has been transformative for AI Vision Lab.</p>
 

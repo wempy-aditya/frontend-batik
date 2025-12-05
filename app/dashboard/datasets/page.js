@@ -403,129 +403,144 @@ export default function ManageDatasetsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
         <div className="text-center">
-          <svg className="w-16 h-16 text-amber-600 animate-spin mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <p className="text-amber-700 font-semibold">Loading Datasets...</p>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl animate-pulse"></div>
+            <div className="absolute inset-2 bg-white rounded-xl"></div>
+            <svg className="absolute inset-0 w-full h-full p-5 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-slate-700 font-medium text-lg">Loading Datasets...</p>
+          <p className="text-slate-500 text-sm mt-2">Please wait</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
       {/* Page Header */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-sm p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Datasets Management</h1>
-            <p className="text-sm sm:text-base text-gray-600">Manage your research datasets</p>
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
+                Datasets
+              </h1>
+              <p className="text-slate-600 mt-1 text-sm sm:text-base">Manage your research datasets</p>
+            </div>
+            <button
+              onClick={() => openModal('create')}
+              className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Add Dataset</span>
+              </div>
+            </button>
           </div>
-          <button
-            onClick={() => openModal('create')}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="hidden sm:inline">Add Dataset</span>
-          </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
-            {error}
+          <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200/60 rounded-2xl text-red-700 flex items-start gap-3 shadow-sm">
+            <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Datasets Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {datasets.map((dataset) => (
             <div
               key={dataset.id}
-              className="bg-white/95 backdrop-blur-sm rounded-2xl border border-amber-200 shadow-sm hover:shadow-md transition-all overflow-hidden"
+              className="group bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
             >
               {/* Dataset Header */}
-              <div className="relative p-6 bg-gradient-to-br from-amber-50 to-orange-50">
+              <div className="relative p-6 bg-white border-b border-slate-200">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{dataset.name}</h3>
-                    <p className="text-sm text-amber-600 bg-amber-100 px-2 py-1 rounded-lg mb-2 font-mono">
+                    <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 text-lg group-hover:text-amber-700 transition-colors">{dataset.name}</h3>
+                    <p className="text-sm text-amber-700 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5 rounded-xl font-mono font-medium mb-2 inline-block border border-amber-200">
                       {dataset.slug}
                     </p>
-                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{dataset.description}</p>
+                    <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">{dataset.description}</p>
                   </div>
                   <div className="ml-4 flex flex-col gap-2">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(dataset.status)}`}>
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-xl ${getStatusBadge(dataset.status)}`}>
                       {dataset.status}
                     </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getAccessBadge(dataset.access_level)}`}>
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-xl ${getAccessBadge(dataset.access_level)}`}>
                       {dataset.access_level}
                     </span>
                   </div>
                 </div>
 
                 {/* Dataset Stats */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Samples</p>
-                    <p className="font-semibold text-gray-900">{dataset.samples?.toLocaleString() || 0}</p>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-xs text-slate-500 mb-1 font-medium">Samples</p>
+                    <p className="font-bold text-slate-900">{dataset.samples?.toLocaleString() || 0}</p>
                   </div>
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Size</p>
-                    <p className="font-semibold text-gray-900">{formatFileSize(dataset.size || 0)}</p>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-xs text-slate-500 mb-1 font-medium">Size</p>
+                    <p className="font-bold text-slate-900">{formatFileSize(dataset.size || 0)}</p>
                   </div>
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Version</p>
-                    <p className="font-semibold text-gray-900">{dataset.version || 'N/A'}</p>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-xs text-slate-500 mb-1 font-medium">Version</p>
+                    <p className="font-bold text-slate-900">{dataset.version || 'N/A'}</p>
                   </div>
-                  <div className="bg-white/60 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Downloads</p>
-                    <p className="font-semibold text-gray-900">{dataset.download_count || 0}</p>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-xs text-slate-500 mb-1 font-medium">Downloads</p>
+                    <p className="font-bold text-slate-900">{dataset.download_count || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-6 bg-white">
                 {/* Key Features */}
                 <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-2">Key Features:</p>
-                  <div className="flex flex-wrap gap-1">
+                  <p className="text-xs font-bold text-slate-700 mb-2">Key Features</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {dataset.key_features?.slice(0, 3).map((feature, index) => (
-                      <span key={index} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md">
+                      <span key={index} className="text-xs bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-2.5 py-1 rounded-lg font-medium border border-blue-200">
                         {feature}
                       </span>
                     ))}
                     {dataset.key_features?.length > 3 && (
-                      <span className="text-xs text-gray-500">+{dataset.key_features.length - 3} more</span>
+                      <span className="text-xs text-slate-500 font-medium">+{dataset.key_features.length - 3} more</span>
                     )}
                   </div>
                 </div>
 
                 {/* Use Cases */}
                 <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-2">Use Cases:</p>
-                  <div className="flex flex-wrap gap-1">
+                  <p className="text-xs font-bold text-slate-700 mb-2">Use Cases</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {dataset.use_cases?.slice(0, 2).map((useCase, index) => (
-                      <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+                      <span key={index} className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
                         {useCase}
                       </span>
                     ))}
                     {dataset.use_cases?.length > 2 && (
-                      <span className="text-xs text-gray-500">+{dataset.use_cases.length - 2} more</span>
+                      <span className="text-xs text-slate-500 font-medium">+{dataset.use_cases.length - 2} more</span>
                     )}
                   </div>
                 </div>
 
                 {/* Meta Info */}
-                <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
-                  <span>Created: {new Date(dataset.created_at).toLocaleDateString()}</span>
-                  <span className="bg-gray-100 px-2 py-1 rounded">
+                <div className="flex justify-between items-center text-xs text-slate-500 pb-4 mb-4 border-b border-slate-100">
+                  <span>{new Date(dataset.created_at).toLocaleDateString()}</span>
+                  <span className="bg-slate-100/80 backdrop-blur-sm px-2.5 py-1 rounded-lg font-medium">
                     {dataset.format || 'JSON'}
                   </span>
                 </div>
@@ -534,88 +549,103 @@ export default function ManageDatasetsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openModal('view', dataset)}
-                    className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm"
-                    title="View Details"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
+                    View
                   </button>
                   <button
                     onClick={() => openModal('edit', dataset)}
-                    className="flex-1 p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors text-sm"
-                    title="Edit Dataset"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
+                    Edit
                   </button>
                   <button
                     onClick={() => openCategoryModal(dataset)}
-                    className="flex-1 p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-sm"
-                    title="Assign Categories"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a1 1 0 01-1-1V3a1 1 0 011-1z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
+                    Tags
                   </button>
                   <button
                     onClick={() => handleDelete(dataset.id)}
-                    className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm"
-                    title="Delete Dataset"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
+                    Delete
                   </button>
                 </div>
               </div>
             </div>
           ))}
           
-          {datasets.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <div className="w-24 h-24 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                </svg>
+          {datasets.length === 0 && !isLoading && (
+            <div className="col-span-full text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="w-32 h-32 bg-gradient-to-br from-green-500 to-green-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-green-500/20">
+                  <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No Datasets Yet</h3>
+                <p className="text-slate-600 mb-6">Start organizing your research by creating your first dataset</p>
+                <button
+                  onClick={() => openModal('create')}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create First Dataset
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Datasets Found</h3>
-              <p className="text-gray-600 mb-4">Start by creating your first dataset</p>
-              <button
-                onClick={() => openModal('create')}
-                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
-              >
-                Create First Dataset
-              </button>
             </div>
           )}
         </div>
       </div>
       {/* Dataset Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {modalMode === 'create' && 'Create New Dataset'}
-                  {modalMode === 'edit' && 'Edit Dataset'}
-                  {modalMode === 'view' && 'Dataset Details'}
-                </h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      {modalMode === 'create' && 'Create Dataset'}
+                      {modalMode === 'edit' && 'Edit Dataset'}
+                      {modalMode === 'view' && 'Dataset Details'}
+                    </h2>
+                    <p className="text-slate-600 text-sm mt-1">
+                      {modalMode === 'create' && 'Add a new research dataset'}
+                      {modalMode === 'edit' && 'Update dataset information'}
+                      {modalMode === 'view' && 'View dataset information'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              {modalMode === 'view' ? (
-                <div className="space-y-6">
+              <div className="p-6">
+                {modalMode === 'view' ? (
+                  <div className="space-y-6">
                   {/* View Mode Content */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -989,11 +1019,11 @@ export default function ManageDatasetsPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-3 pt-6 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-6 py-3.5 border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
                       disabled={isSubmitting}
                     >
                       Cancel
@@ -1001,17 +1031,43 @@ export default function ManageDatasetsPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className={`flex-1 px-4 py-3 rounded-xl text-white transition-colors ${
+                      className={`flex-1 px-6 py-3.5 rounded-2xl font-semibold text-white transition-all duration-300 ${
                         isSubmitting
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg'
+                          ? 'bg-slate-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 hover:scale-105'
                       }`}
                     >
-                      {isSubmitting ? 'Saving...' : modalMode === 'edit' ? 'Update' : 'Create'}
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Processing...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          {modalMode === 'edit' ? (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Update Dataset
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                              Create Dataset
+                            </>
+                          )}
+                        </span>
+                      )}
                     </button>
                   </div>
                 </form>
               )}
+              </div>
             </div>
           </div>
         </div>
@@ -1019,63 +1075,84 @@ export default function ManageDatasetsPage() {
 
       {/* Category Assignment Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Assign Categories</h2>
-                <button
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Assign Categories</h2>
+                    <p className="text-slate-600 text-sm mt-1">Select categories for this dataset</p>
+                  </div>
+                  <button
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-3 mb-6">
-                {categories.map((category) => (
-                  <label key={category.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedCategories([...selectedCategories, category.id]);
-                        } else {
-                          setSelectedCategories(selectedCategories.filter(id => id !== category.id));
-                        }
-                      }}
-                      className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-900">{category.name}</p>
-                      <p className="text-sm text-gray-500">{category.slug}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
+              <div className="p-6">
+                <div className="space-y-3 mb-6">
+                  {categories.map((category) => (
+                    <label key={category.id} className="flex items-center gap-3 p-4 border-2 border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 cursor-pointer transition-all duration-200">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCategories([...selectedCategories, category.id]);
+                          } else {
+                            setSelectedCategories(selectedCategories.filter(id => id !== category.id));
+                          }
+                        }}
+                        className="w-5 h-5 text-amber-600 rounded-lg focus:ring-amber-500 focus:ring-4 focus:ring-amber-500/10"
+                      />
+                      <div>
+                        <p className="font-semibold text-slate-900">{category.name}</p>
+                        <p className="text-sm text-slate-500 font-mono">{category.slug}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAssignCategories}
-                  disabled={isSubmitting || selectedCategories.length === 0}
-                  className={`flex-1 px-4 py-3 rounded-xl text-white transition-colors ${
-                    isSubmitting || selectedCategories.length === 0
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg'
-                  }`}
-                >
-                  {isSubmitting ? 'Assigning...' : 'Assign Categories'}
-                </button>
+                <div className="flex gap-3 pt-6 border-t border-slate-200">
+                  <button
+                    onClick={() => setIsCategoryModalOpen(false)}
+                    className="flex-1 px-6 py-3.5 border-2 border-slate-200 text-slate-700 font-semibold rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-200"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignCategories}
+                    disabled={isSubmitting || selectedCategories.length === 0}
+                    className={`flex-1 px-6 py-3.5 rounded-2xl font-semibold text-white transition-all duration-300 ${
+                      isSubmitting || selectedCategories.length === 0
+                        ? 'bg-slate-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 hover:scale-105'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Assign Categories
+                      </span>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

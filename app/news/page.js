@@ -331,7 +331,7 @@ export default function NewsPage() {
                             </div>
                           </div>
 
-                          <button 
+                          <button
                             onClick={() => router.push(`/news/${article.id}`)}
                             className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300"
                           >
@@ -390,7 +390,7 @@ export default function NewsPage() {
                         <div className="text-xs text-gray-600">
                           By {article.author}
                         </div>
-                        <button 
+                        <button
                           onClick={() => router.push(`/news/${article.id}`)}
                           className="text-amber-600 hover:text-amber-700 font-semibold text-sm"
                         >

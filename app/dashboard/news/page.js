@@ -256,55 +256,70 @@ export default function NewsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
         <div className="text-center">
-          <svg className="w-16 h-16 text-amber-600 animate-spin mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <p className="text-amber-700 font-semibold">Loading News...</p>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl animate-pulse"></div>
+            <div className="absolute inset-2 bg-white rounded-xl"></div>
+            <svg className="absolute inset-0 w-full h-full p-5 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-slate-700 font-medium text-lg">Loading News...</p>
+          <p className="text-slate-500 text-sm mt-2">Please wait</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
       {/* Page Header */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-sm p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">News Management</h1>
-            <p className="text-sm sm:text-base text-gray-600">Manage news articles and posts</p>
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
+                News
+              </h1>
+              <p className="text-slate-600 mt-1 text-sm sm:text-base">Manage news articles and posts</p>
+            </div>
+            <button
+              onClick={() => openModal('create')}
+              className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Add News</span>
+              </div>
+            </button>
           </div>
-          <button
-            onClick={() => openModal('create')}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="hidden sm:inline">Add News</span>
-          </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
-            {error}
+          <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200/60 rounded-2xl text-red-700 flex items-start gap-3 shadow-sm">
+            <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
         {/* News Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {news.map((newsItem) => (
             <div
               key={newsItem.id}
-              className="bg-white/95 backdrop-blur-sm rounded-2xl border border-amber-200 shadow-sm hover:shadow-md transition-all overflow-hidden"
+              className="group bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
             >
               {/* Thumbnail */}
-              <div className="relative h-48 bg-gradient-to-br from-amber-100 to-orange-100">
+              <div className="relative h-48 bg-gradient-to-br from-red-50 to-orange-50">
                 {newsItem.thumbnail_url ? (
                   <img 
                     src={newsItem.thumbnail_url} 
@@ -323,38 +338,37 @@ export default function NewsPage() {
                 </div>
                 
                 <div className="absolute top-3 right-3">
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(newsItem.status)}`}>
+                  <span className={`px-2.5 py-1 text-xs font-semibold rounded-xl ${getStatusBadge(newsItem.status)}`}>
                     {newsItem.status}
                   </span>
                 </div>
               </div>
 
               <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{newsItem.title}</h3>
-                    <p className="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded-lg mb-2 font-mono">
-                      {newsItem.slug}
-                    </p>
+                <h3 className="font-bold text-slate-900 mb-3 line-clamp-2 text-lg group-hover:text-amber-700 transition-colors">{newsItem.title}</h3>
+                <p className="text-sm text-amber-700 bg-amber-50/80 backdrop-blur-sm px-3 py-1.5 rounded-xl font-mono font-medium mb-3 inline-block">
+                  {newsItem.slug}
+                </p>
+
+                {/* Tags */}
+                <div className="mb-4">
+                  <p className="text-xs font-bold text-slate-700 mb-2">Tags</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {newsItem.tags?.slice(0, 3).map((tag, index) => (
+                      <span key={index} className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                    {newsItem.tags?.length > 3 && (
+                      <span className="text-xs text-slate-500 font-medium">+{newsItem.tags.length - 3} more</span>
+                    )}
                   </div>
                 </div>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {newsItem.tags?.slice(0, 3).map((tag, index) => (
-                    <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
-                      {tag}
-                    </span>
-                  ))}
-                  {newsItem.tags?.length > 3 && (
-                    <span className="text-xs text-gray-500">+{newsItem.tags.length - 3} more</span>
-                  )}
-                </div>
-
                 {/* Meta Info */}
-                <div className="flex justify-between items-center text-xs text-gray-500 mb-4">
-                  <span>Created: {new Date(newsItem.created_at).toLocaleDateString()}</span>
-                  <span className="bg-gray-100 px-2 py-1 rounded">
+                <div className="flex justify-between items-center text-xs text-slate-500 pb-4 mb-4 border-b border-slate-100">
+                  <span>{new Date(newsItem.created_at).toLocaleDateString()}</span>
+                  <span className="bg-slate-100/80 backdrop-blur-sm px-2.5 py-1 rounded-lg font-medium">
                     {newsItem.access_level}
                   </span>
                 </div>
@@ -363,61 +377,66 @@ export default function NewsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => openModal('view', newsItem)}
-                    className="flex-1 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm"
-                    title="View Details"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
+                    View
                   </button>
                   <button
                     onClick={() => openModal('edit', newsItem)}
-                    className="flex-1 p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors text-sm"
-                    title="Edit News"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
+                    Edit
                   </button>
                   <button
                     onClick={() => openCategoryModal(newsItem)}
-                    className="flex-1 p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors text-sm"
-                    title="Assign Categories"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a1 1 0 01-1-1V3a1 1 0 011-1z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
+                    Tags
                   </button>
                   <button
                     onClick={() => handleDelete(newsItem.id)}
-                    className="flex-1 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm"
-                    title="Delete News"
+                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
+                    Delete
                   </button>
                 </div>
               </div>
             </div>
           ))}
           
-          {news.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <div className="w-24 h-24 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
+          {news.length === 0 && !isLoading && (
+            <div className="col-span-full text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="w-32 h-32 bg-gradient-to-br from-red-500 to-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-red-500/20">
+                  <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No News Yet</h3>
+                <p className="text-slate-600 mb-6">Start sharing updates by creating your first news article</p>
+                <button
+                  onClick={() => openModal('create')}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create First News
+                </button>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No News Found</h3>
-              <p className="text-gray-600 mb-4">Start by creating your first news article</p>
-              <button
-                onClick={() => openModal('create')}
-                className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
-              >
-                Create First News
-              </button>
             </div>
           )}
         </div>
@@ -425,23 +444,32 @@ export default function NewsPage() {
 
       {/* News Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">
-                  {modalMode === 'create' && 'Create New News'}
-                  {modalMode === 'edit' && 'Edit News'}
-                  {modalMode === 'view' && 'News Details'}
-                </h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      {modalMode === 'create' && 'Create News'}
+                      {modalMode === 'edit' && 'Edit News'}
+                      {modalMode === 'view' && 'News Details'}
+                    </h2>
+                    <p className="text-slate-600 text-sm mt-1">
+                      {modalMode === 'create' && 'Publish a new news article'}
+                      {modalMode === 'edit' && 'Update news article'}
+                      {modalMode === 'view' && 'View news article details'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {modalMode === 'view' ? (
@@ -449,56 +477,56 @@ export default function NewsPage() {
                   {/* View Mode Content */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
-                      <p className="p-3 bg-gray-50 rounded-xl text-gray-900">{selectedNews?.title}</p>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
+                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900">{selectedNews?.title}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
-                      <p className="p-3 bg-gray-50 rounded-xl text-gray-900 font-mono">{selectedNews?.slug}</p>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Slug</label>
+                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 font-mono text-sm">{selectedNews?.slug}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                      <p className={`p-3 rounded-xl text-center font-semibold ${getStatusBadge(selectedNews?.status)}`}>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
+                      <p className={`p-3 rounded-2xl text-center font-semibold ${getStatusBadge(selectedNews?.status)}`}>
                         {selectedNews?.status}
                       </p>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Access Level</label>
-                      <p className="p-3 bg-gray-50 rounded-xl text-gray-900 capitalize">{selectedNews?.access_level}</p>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Access Level</label>
+                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 capitalize">{selectedNews?.access_level}</p>
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Thumbnail URL</label>
-                    <p className="p-3 bg-gray-50 rounded-xl text-gray-900 break-all">{selectedNews?.thumbnail_url || 'No thumbnail'}</p>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Thumbnail URL</label>
+                    <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 break-all text-sm">{selectedNews?.thumbnail_url || 'No thumbnail'}</p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Tags</label>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Tags</label>
                     <div className="flex flex-wrap gap-2">
                       {selectedNews?.tags?.map((tag, index) => (
-                        <span key={index} className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm">
+                        <span key={index} className="bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-amber-200">
                           {tag}
                         </span>
-                      )) || <span className="text-gray-500">No tags</span>}
+                      )) || <span className="text-slate-500">No tags</span>}
                     </div>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
-                    <div className="p-4 bg-gray-50 rounded-xl max-h-64 overflow-y-auto">
-                      <pre className="text-sm text-gray-900 whitespace-pre-wrap">{selectedNews?.content || 'No content'}</pre>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Content</label>
+                    <div className="p-4 bg-slate-50 rounded-2xl max-h-64 overflow-y-auto border border-slate-200">
+                      <pre className="text-sm text-slate-900 whitespace-pre-wrap">{selectedNews?.content || 'No content'}</pre>
                     </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Created At</label>
-                      <p className="p-3 bg-gray-50 rounded-xl text-gray-900">{new Date(selectedNews?.created_at).toLocaleString()}</p>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Created At</label>
+                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 text-sm">{new Date(selectedNews?.created_at).toLocaleString()}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Updated At</label>
-                      <p className="p-3 bg-gray-50 rounded-xl text-gray-900">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">Updated At</label>
+                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 text-sm">
                         {selectedNews?.updated_at ? new Date(selectedNews.updated_at).toLocaleString() : 'Never updated'}
                       </p>
                     </div>
@@ -507,35 +535,35 @@ export default function NewsPage() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
                       {error}
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
                         Title *
                       </label>
                       <input
                         type="text"
                         value={formData.title}
                         onChange={handleTitleChange}
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                         placeholder="Enter news title"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
                         Slug *
                       </label>
                       <input
                         type="text"
                         value={formData.slug}
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors font-mono"
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 font-mono text-sm"
                         placeholder="news-slug"
                         required
                       />
@@ -543,35 +571,35 @@ export default function NewsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
                       Thumbnail URL
                     </label>
                     <input
                       type="url"
                       value={formData.thumbnail_url}
                       onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                      className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
                       Content *
                     </label>
                     <textarea
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors resize-none font-mono"
+                      className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 resize-none font-mono text-sm"
                       placeholder="Enter content in markdown format..."
                       rows={8}
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">Supports markdown formatting</p>
+                    <p className="text-xs text-slate-500 mt-1">Supports markdown formatting</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
                       Tags
                     </label>
                     <div className="flex gap-2 mb-2">
@@ -580,25 +608,25 @@ export default function NewsPage() {
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                        className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                        className="flex-1 p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                         placeholder="Enter tag and press Enter"
                       />
                       <button
                         type="button"
                         onClick={handleAddTag}
-                        className="px-4 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors"
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105"
                       >
                         Add
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.tags.map((tag, index) => (
-                        <span key={index} className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                        <span key={index} className="bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-amber-200 flex items-center gap-2">
                           {tag}
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
-                            className="text-amber-500 hover:text-amber-700"
+                            className="text-amber-600 hover:text-amber-800 hover:scale-125 transition-transform"
                           >
                             ×
                           </button>
@@ -609,13 +637,13 @@ export default function NewsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
                         Access Level
                       </label>
                       <select
                         value={formData.access_level}
                         onChange={(e) => setFormData({ ...formData, access_level: e.target.value })}
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                       >
                         <option value="public">Public</option>
                         <option value="private">Private</option>
@@ -624,13 +652,13 @@ export default function NewsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
                         Status
                       </label>
                       <select
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                       >
                         <option value="draft">Draft</option>
                         <option value="published">Published</option>
@@ -639,11 +667,11 @@ export default function NewsPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-3 pt-6 border-t border-slate-200">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-6 py-3 border-2 border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-50 transition-all duration-200 font-medium hover:border-slate-300"
                       disabled={isSubmitting}
                     >
                       Cancel
@@ -651,13 +679,28 @@ export default function NewsPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className={`flex-1 px-4 py-3 rounded-xl text-white transition-colors ${
+                      className={`flex-1 px-6 py-3 rounded-2xl text-white transition-all duration-200 font-medium flex items-center justify-center gap-2 ${
                         isSubmitting
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg'
+                          ? 'bg-slate-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg hover:scale-105'
                       }`}
                     >
-                      {isSubmitting ? 'Saving...' : modalMode === 'edit' ? 'Update' : 'Create'}
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          {modalMode === 'edit' ? 'Update' : 'Create'}
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
@@ -669,24 +712,28 @@ export default function NewsPage() {
 
       {/* Category Assignment Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Assign Categories</h2>
-                <button
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden transform animate-slideUp">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Assign Categories</h2>
+                <p className="text-white/90 text-sm mt-1">Select categories for this news article</p>
               </div>
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-2.5 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-110"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-              <div className="space-y-3 mb-6">
+            <div className="p-6">
+              <div className="space-y-3 mb-6 max-h-[50vh] overflow-y-auto">
                 {categories.map((category) => (
-                  <label key={category.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer">
+                  <label key={category.id} className="flex items-start gap-3 p-4 border-2 border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-amber-300 cursor-pointer transition-all duration-200 group">
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(category.id)}
@@ -697,20 +744,20 @@ export default function NewsPage() {
                           setSelectedCategories(selectedCategories.filter(id => id !== category.id));
                         }
                       }}
-                      className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                      className="w-5 h-5 text-amber-600 border-2 border-slate-300 rounded-lg focus:ring-4 focus:ring-amber-500/20 transition-all mt-0.5"
                     />
-                    <div>
-                      <p className="font-medium text-gray-900">{category.name}</p>
-                      <p className="text-sm text-gray-500">{category.slug}</p>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">{category.name}</p>
+                      <p className="text-sm text-slate-500 font-mono mt-0.5">{category.slug}</p>
                     </div>
                   </label>
                 ))}
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-6 border-t border-slate-200">
                 <button
                   onClick={() => setIsCategoryModalOpen(false)}
-                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border-2 border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-50 transition-all duration-200 font-medium hover:border-slate-300"
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -718,13 +765,28 @@ export default function NewsPage() {
                 <button
                   onClick={handleAssignCategories}
                   disabled={isSubmitting || selectedCategories.length === 0}
-                  className={`flex-1 px-4 py-3 rounded-xl text-white transition-colors ${
+                  className={`flex-1 px-6 py-3 rounded-2xl text-white transition-all duration-200 font-medium flex items-center justify-center gap-2 ${
                     isSubmitting || selectedCategories.length === 0
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg'
+                      ? 'bg-slate-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg hover:scale-105'
                   }`}
                 >
-                  {isSubmitting ? 'Assigning...' : 'Assign Categories'}
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Assigning...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      Assign Categories
+                    </>
+                  )}
                 </button>
               </div>
             </div>
