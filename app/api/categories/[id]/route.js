@@ -1,9 +1,11 @@
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'project';
     const authHeader = request.headers.get('authorization');
     
-    console.log('Getting category by ID:', id);
+    console.log('Getting category by ID:', id, 'type:', type);
     
     if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
       return Response.json(
@@ -12,8 +14,17 @@ export async function GET(request, { params }) {
       );
     }
 
+    // Validate type parameter
+    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    if (!validTypes.includes(type)) {
+      return Response.json(
+        { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     // Forward request to external API
-    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/project/${id}`, {
+    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/${type}/${id}`, {
       method: 'GET',
       headers: {
         'Authorization': authHeader,
@@ -47,6 +58,8 @@ export async function GET(request, { params }) {
 export async function PATCH(request, { params }) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'project';
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
@@ -56,11 +69,20 @@ export async function PATCH(request, { params }) {
       );
     }
 
+    // Validate type parameter
+    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    if (!validTypes.includes(type)) {
+      return Response.json(
+        { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
-    console.log('Updating category with ID:', id, 'Data:', body);
+    console.log('Updating category with ID:', id, 'type:', type, 'Data:', body);
 
     // Forward request to external API
-    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/project/${id}`, {
+    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/${type}/${id}`, {
       method: 'PATCH',
       headers: {
         'Authorization': authHeader,
@@ -95,6 +117,8 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'project';
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
@@ -104,10 +128,19 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    console.log('Deleting category with ID:', id);
+    // Validate type parameter
+    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    if (!validTypes.includes(type)) {
+      return Response.json(
+        { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    console.log('Deleting category with ID:', id, 'type:', type);
 
     // Forward request to external API
-    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/project/${id}`, {
+    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/${type}/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': authHeader,

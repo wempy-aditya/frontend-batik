@@ -1,8 +1,10 @@
 export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'project'; // default to project for backward compatibility
     const authHeader = request.headers.get('authorization');
     
-    console.log('Getting categories with auth header:', authHeader);
+    console.log('Getting categories with type:', type, 'auth header:', authHeader);
     
     if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
       return Response.json(
@@ -11,8 +13,17 @@ export async function GET(request) {
       );
     }
 
+    // Validate type parameter
+    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    if (!validTypes.includes(type)) {
+      return Response.json(
+        { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     // Forward request to external API
-    const response = await fetch('https://spmb1.wempyaw.com/api/v1/categories/project/', {
+    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/${type}/`, {
       method: 'GET',
       headers: {
         'Authorization': authHeader,
@@ -45,6 +56,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'project'; // default to project for backward compatibility
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
@@ -54,11 +67,20 @@ export async function POST(request) {
       );
     }
 
+    // Validate type parameter
+    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    if (!validTypes.includes(type)) {
+      return Response.json(
+        { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
-    console.log('Creating category with data:', body);
+    console.log('Creating category with type:', type, 'data:', body);
 
     // Forward request to external API
-    const response = await fetch('https://spmb1.wempyaw.com/api/v1/categories/project/', {
+    const response = await fetch(`https://spmb1.wempyaw.com/api/v1/categories/${type}/`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,

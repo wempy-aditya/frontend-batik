@@ -1,17 +1,9 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ProtectedRoute, useAuth } from '@/components/AuthProvider';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function CategoriesPage() {
-  return (
-    <ProtectedRoute>
-      <CategoriesContent />
-    </ProtectedRoute>
-  );
-}
-
-function CategoriesContent() {
   const router = useRouter();
   const { getUserInfo } = useAuth();
   const [categories, setCategories] = useState([]);
@@ -21,22 +13,30 @@ function CategoriesContent() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [selectedType, setSelectedType] = useState('project'); // default type
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     description: ''
   });
 
+  const categoryTypes = [
+    { value: 'project', label: 'Project Categories', icon: '📁', color: 'from-blue-500 to-blue-600' },
+    { value: 'dataset', label: 'Dataset Categories', icon: '📊', color: 'from-green-500 to-green-600' },
+    { value: 'publication', label: 'Publication Categories', icon: '📄', color: 'from-purple-500 to-purple-600' },
+    { value: 'news', label: 'News Categories', icon: '📰', color: 'from-red-500 to-red-600' }
+  ];
+
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [selectedType]); // refetch when type changes
 
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('access_token');
       
-      const response = await fetch('/api/categories', {
+      const response = await fetch(`/api/categories?type=${selectedType}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -65,7 +65,9 @@ function CategoriesContent() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const url = modalMode === 'edit' ? `/api/categories/${selectedCategory.id}` : '/api/categories';
+      const url = modalMode === 'edit' 
+        ? `/api/categories/${selectedCategory.id}?type=${selectedType}` 
+        : `/api/categories?type=${selectedType}`;
       const method = modalMode === 'edit' ? 'PATCH' : 'POST';
 
       const response = await fetch(url, {
@@ -101,7 +103,7 @@ function CategoriesContent() {
     try {
       const token = localStorage.getItem('access_token');
       
-      const response = await fetch(`/api/categories/${categoryId}`, {
+      const response = await fetch(`/api/categories/${categoryId}?type=${selectedType}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -165,7 +167,7 @@ function CategoriesContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+      <div className="flex items-center justify-center p-12">
         <div className="text-center">
           <svg className="w-16 h-16 text-amber-600 animate-spin mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -177,32 +179,15 @@ function CategoriesContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-      {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-sm">
-        <div className="px-4 sm:px-6 py-4">
+    <div>
+      {/* Page Header */}
+      <div className="bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </button>
-              
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a1 1 0 01-1-1V3a1 1 0 011-1z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-gray-900">Project Categories</h1>
-                <p className="text-xs sm:text-sm text-gray-600">Manage project category data</p>
-              </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Categories Management</h1>
+              <p className="text-sm sm:text-base text-gray-600">Manage categories for different content types</p>
             </div>
-
             <button
               onClick={() => openModal('create')}
               className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
@@ -213,11 +198,37 @@ function CategoriesContent() {
               <span className="hidden sm:inline">Add Category</span>
             </button>
           </div>
+
+          {/* Category Type Selector */}
+          <div className="flex flex-wrap gap-2">
+            {categoryTypes.map((type) => (
+              <button
+                key={type.value}
+                onClick={() => {
+                  setSelectedType(type.value);
+                  setError('');
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
+                  selectedType === type.value
+                    ? `bg-gradient-to-r ${type.color} text-white shadow-lg`
+                    : 'bg-white/70 text-gray-600 hover:bg-white border border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-lg">{type.icon}</span>
+                <span className="font-medium">{type.label}</span>
+                {selectedType === type.value && (
+                  <span className="bg-white/20 text-xs px-2 py-1 rounded-lg">
+                    {categories.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
-      <main className="p-4 sm:p-6">
+      <div className="p-4 sm:p-6">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
             {error}
@@ -232,10 +243,10 @@ function CategoriesContent() {
               className="bg-white/95 backdrop-blur-sm rounded-2xl border border-amber-200 shadow-sm hover:shadow-md transition-all p-6"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a1 1 0 01-1-1V3a1 1 0 011-1z" />
-                  </svg>
+                <div className={`w-12 h-12 bg-gradient-to-br ${categoryTypes.find(t => t.value === selectedType)?.color || 'from-amber-100 to-orange-100'} rounded-xl flex items-center justify-center`}>
+                  <span className="text-2xl">
+                    {categoryTypes.find(t => t.value === selectedType)?.icon || '🏷️'}
+                  </span>
                 </div>
                 
                 <div className="flex gap-1">
@@ -288,15 +299,15 @@ function CategoriesContent() {
             </div>
           ))}
           
-          {categories.length === 0 && (
+          {categories.length === 0 && !isLoading && (
             <div className="col-span-full text-center py-12">
-              <div className="w-24 h-24 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-1.414.586H7a1 1 0 01-1-1V3a1 1 0 011-1z" />
-                </svg>
+              <div className={`w-24 h-24 bg-gradient-to-br ${categoryTypes.find(t => t.value === selectedType)?.color || 'from-amber-100 to-orange-100'} rounded-3xl flex items-center justify-center mx-auto mb-4`}>
+                <span className="text-4xl">
+                  {categoryTypes.find(t => t.value === selectedType)?.icon || '🏷️'}
+                </span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Categories Found</h3>
-              <p className="text-gray-600 mb-4">Start by creating your first project category</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No {categoryTypes.find(t => t.value === selectedType)?.label} Found</h3>
+              <p className="text-gray-600 mb-4">Start by creating your first {selectedType} category</p>
               <button
                 onClick={() => openModal('create')}
                 className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
@@ -306,7 +317,7 @@ function CategoriesContent() {
             </div>
           )}
         </div>
-      </main>
+      </div>
 
       {/* Modal */}
       {isModalOpen && (
@@ -315,9 +326,9 @@ function CategoriesContent() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {modalMode === 'create' && 'Create New Category'}
-                  {modalMode === 'edit' && 'Edit Category'}
-                  {modalMode === 'view' && 'Category Details'}
+                  {modalMode === 'create' && `Create New ${categoryTypes.find(t => t.value === selectedType)?.label.replace(' Categories', '')} Category`}
+                  {modalMode === 'edit' && `Edit ${categoryTypes.find(t => t.value === selectedType)?.label.replace(' Categories', '')} Category`}
+                  {modalMode === 'view' && `${categoryTypes.find(t => t.value === selectedType)?.label.replace(' Categories', '')} Category Details`}
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}

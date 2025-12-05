@@ -532,10 +532,6 @@ export default function ProjectsPage() {
                     </div>
                   </div>
 
-                  {/* Project Number */}
-                  <div className="absolute bottom-4 right-4 w-8 h-8 bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 text-sm font-bold rounded-full flex items-center justify-center">
-                    {project.id}
-                  </div>
                 </div>
               </div>
             ))}

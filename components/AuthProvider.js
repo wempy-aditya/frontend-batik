@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     checkAuthStatus();
@@ -15,8 +16,9 @@ export function AuthProvider({ children }) {
 
   const checkAuthStatus = () => {
     try {
-      const token = localStorage.getItem('access_token');
-      if (token) {
+      const accessToken = localStorage.getItem('access_token');
+      setToken(accessToken);
+      if (accessToken) {
         setIsAuthenticated(true);
         // Only get user info after successful login, not on every page load
         console.log('Token found, user authenticated');
@@ -87,12 +89,13 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const login = (token, tokenType = 'bearer', refreshToken = null) => {
-    localStorage.setItem('access_token', token);
+  const login = (accessToken, tokenType = 'bearer', refreshToken = null) => {
+    localStorage.setItem('access_token', accessToken);
     localStorage.setItem('token_type', tokenType);
     if (refreshToken) {
       localStorage.setItem('refresh_token', refreshToken);
     }
+    setToken(accessToken);
     setIsAuthenticated(true);
     
     // Don't get user info immediately to avoid 401
@@ -104,6 +107,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('token_type');
     localStorage.removeItem('refresh_token');
+    setToken(null);
     setIsAuthenticated(false);
     setUser(null);
   };
@@ -132,6 +136,7 @@ export function AuthProvider({ children }) {
     isAuthenticated,
     isLoading,
     user,
+    token,
     login,
     logout,
     checkAuthStatus,
