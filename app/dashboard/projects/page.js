@@ -10,7 +10,10 @@ export default function Projects() {
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [projectToDelete, setProjectToDelete] = useState(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterComplexity, setFilterComplexity] = useState('all');
@@ -100,6 +103,31 @@ export default function Projects() {
     }
   };
 
+  const fetchProjectDetail = async (projectId) => {
+    try {
+      setIsLoadingDetail(true);
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || data;
+      } else {
+        throw new Error('Failed to fetch project details');
+      }
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+      return null;
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -161,17 +189,24 @@ export default function Projects() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+  const openDeleteModal = (project) => {
+    setProjectToDelete(project);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!projectToDelete) return;
 
     try {
-      const response = await fetch(`/api/projects/${id}`, {
+      const response = await fetch(`/api/projects/${projectToDelete.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
         await fetchProjects();
+        setShowDeleteModal(false);
+        setProjectToDelete(null);
       } else {
         const errorData = await response.text();
         alert(`Delete failed: ${response.status} - ${errorData}`);
@@ -180,6 +215,10 @@ export default function Projects() {
       console.error('Error deleting project:', error);
       alert('Error deleting project: ' + error.message);
     }
+  };
+
+  const handleDelete = (project) => {
+    openDeleteModal(project);
   };
 
   const handleAssignCategories = async (categoryIds) => {
@@ -481,9 +520,14 @@ export default function Projects() {
                     {/* Actions */}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          setSelectedProject(project);
+                        onClick={async () => {
                           setShowViewModal(true);
+                          const detailData = await fetchProjectDetail(project.id);
+                          if (detailData) {
+                            setSelectedProject(detailData);
+                          } else {
+                            setSelectedProject(project);
+                          }
                         }}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-sm"
                       >
@@ -515,7 +559,7 @@ export default function Projects() {
                         Tags
                       </button>
                       <button
-                        onClick={() => handleDelete(project.id)}
+                        onClick={() => handleDelete(project)}
                         className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -926,14 +970,18 @@ export default function Projects() {
         )}
 
         {/* View Modal */}
-        {showViewModal && selectedProject && (
+        {showViewModal && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-slideUp">
               <div className="sticky top-0 z-10 bg-gradient-to-br from-slate-50 to-amber-50/50 backdrop-blur-sm p-6 border-b-2 border-slate-100">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">{selectedProject.title}</h2>
-                    <p className="text-slate-600 mt-1 font-mono text-sm">{selectedProject.slug}</p>
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-900 bg-clip-text text-transparent">
+                      {isLoadingDetail ? 'Loading...' : selectedProject?.title}
+                    </h2>
+                    {!isLoadingDetail && selectedProject && (
+                      <p className="text-slate-600 mt-1 font-mono text-sm">{selectedProject.slug}</p>
+                    )}
                   </div>
                   <button
                     onClick={() => setShowViewModal(false)}
@@ -946,6 +994,18 @@ export default function Projects() {
                 </div>
               </div>
               
+              {isLoadingDetail ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4">
+                      <svg className="w-full h-full text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </div>
+                    <p className="text-slate-600 font-medium">Loading project details...</p>
+                  </div>
+                </div>
+              ) : selectedProject && (
               <div className="p-6 space-y-6 overflow-y-auto">
                 {/* Project Image */}
                 <div className="w-full">
@@ -1088,17 +1148,55 @@ export default function Projects() {
                 {/* Categories */}
                 {selectedProject.categories && selectedProject.categories.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-3">Categories</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      Categories ({selectedProject.categories.length})
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {selectedProject.categories.map((category, index) => (
-                        <span key={index} className="bg-gradient-to-r from-amber-50 to-orange-100 text-amber-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-amber-200">
-                          {category}
+                        <span key={index} className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+                          {typeof category === 'string' ? category : category.name}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
+
+                {/* Metadata */}
+                <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-2xl border border-slate-200">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Metadata
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">ID</label>
+                      <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-xs shadow-sm">{selectedProject.id}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Creator Name</label>
+                      <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedProject.creator_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Created At</label>
+                      <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedProject.created_at ? new Date(selectedProject.created_at).toLocaleString() : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Updated At</label>
+                      <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedProject.updated_at ? new Date(selectedProject.updated_at).toLocaleString() : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Created By (ID)</label>
+                      <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-xs shadow-sm">{selectedProject.created_by || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
+              )}
             </div>
           </div>
         )}
@@ -1154,6 +1252,56 @@ export default function Projects() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     Assign Categories
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+              <div className="p-8">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full">
+                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-900 text-center mb-3">
+                  Delete Project?
+                </h3>
+                
+                <p className="text-gray-600 text-center mb-2">
+                  Are you sure you want to delete
+                </p>
+                <p className="text-gray-900 font-semibold text-center mb-6">
+                  "{projectToDelete?.title}"?
+                </p>
+                <p className="text-red-600 text-sm text-center mb-8">
+                  This action cannot be undone.
+                </p>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      setProjectToDelete(null);
+                    }}
+                    className="flex-1 px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Project
                   </button>
                 </div>
               </div>

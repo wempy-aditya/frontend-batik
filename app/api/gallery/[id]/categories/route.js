@@ -1,0 +1,38 @@
+import { NextResponse } from 'next/server';
+
+const API_BASE_URL = 'https://spmb1.wempyaw.com/api/v1';
+
+export async function POST(request, { params }) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const body = await request.json();
+
+    const response = await fetch(`${API_BASE_URL}/gallery/${id}/categories`, {
+      method: 'POST',
+      headers: {
+        'Authorization': authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(data, { status: response.status });
+    }
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error in gallery categories API route:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
+  }
+}

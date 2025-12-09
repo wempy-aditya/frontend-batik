@@ -11,9 +11,12 @@ export default function NewsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
   const [selectedNews, setSelectedNews] = useState(null);
+  const [newsToDelete, setNewsToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
@@ -115,15 +118,18 @@ export default function NewsPage() {
     }
   };
 
-  const handleDelete = async (newsId) => {
-    if (!confirm('Are you sure you want to delete this news?')) {
-      return;
-    }
+  const openDeleteModal = (newsItem) => {
+    setNewsToDelete(newsItem);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!newsToDelete) return;
 
     try {
       const token = localStorage.getItem('access_token');
       
-      const response = await fetch(`/api/news/${newsId}`, {
+      const response = await fetch(`/api/news/${newsToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -133,13 +139,19 @@ export default function NewsPage() {
 
       if (response.ok) {
         await fetchNews();
+        setIsDeleteModalOpen(false);
+        setNewsToDelete(null);
       } else {
         throw new Error('Failed to delete news');
       }
     } catch (error) {
       console.error('Error deleting news:', error);
-      setError('Failed to delete news');
+      setError('Failed to delete news: ' + error.message);
     }
+  };
+
+  const handleDelete = (newsItem) => {
+    openDeleteModal(newsItem);
   };
 
   const handleAssignCategories = async () => {
@@ -170,14 +182,54 @@ export default function NewsPage() {
     }
   };
 
-  const openModal = (mode, newsItem = null) => {
+  const fetchNewsDetail = async (newsId) => {
+    try {
+      setIsLoadingDetail(true);
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch(`/api/news/${newsId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Extract the actual data from the response wrapper
+        return data.data || data;
+      } else {
+        throw new Error('Failed to fetch news details');
+      }
+    } catch (error) {
+      console.error('Error fetching news details:', error);
+      setError('Failed to load news details: ' + error.message);
+      return null;
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  };
+
+  const openModal = async (mode, newsItem = null) => {
     setModalMode(mode);
-    setSelectedNews(newsItem);
     setError('');
+    setIsModalOpen(true);
     
     if (mode === 'create') {
+      setSelectedNews(null);
       resetForm();
+    } else if (mode === 'view' && newsItem) {
+      // Fetch detail data from API for view mode
+      const detailData = await fetchNewsDetail(newsItem.id);
+      if (detailData) {
+        setSelectedNews(detailData);
+      } else {
+        setSelectedNews(newsItem);
+      }
     } else if (newsItem) {
+      // For edit mode, use the newsItem from list and populate form
+      setSelectedNews(newsItem);
       setFormData({
         title: newsItem.title,
         slug: newsItem.slug,
@@ -188,8 +240,6 @@ export default function NewsPage() {
         status: newsItem.status || 'draft'
       });
     }
-    
-    setIsModalOpen(true);
   };
 
   const openCategoryModal = (newsItem) => {
@@ -404,7 +454,7 @@ export default function NewsPage() {
                     Tags
                   </button>
                   <button
-                    onClick={() => handleDelete(newsItem.id)}
+                    onClick={() => handleDelete(newsItem)}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,65 +523,160 @@ export default function NewsPage() {
               </div>
 
               {modalMode === 'view' ? (
-                <div className="space-y-6">
+                isLoadingDetail ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4">
+                        <svg className="w-full h-full text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </div>
+                      <p className="text-slate-600 font-medium">Loading news details...</p>
+                    </div>
+                  </div>
+                ) : (
+                <div className="space-y-6 p-6">
                   {/* View Mode Content */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900">{selectedNews?.title}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Slug</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 font-mono text-sm">{selectedNews?.slug}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
-                      <p className={`p-3 rounded-2xl text-center font-semibold ${getStatusBadge(selectedNews?.status)}`}>
-                        {selectedNews?.status}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Access Level</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 capitalize">{selectedNews?.access_level}</p>
+                  
+                  {/* Basic Information */}
+                  <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Basic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedNews?.title}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono shadow-sm">{selectedNews?.slug}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <p className={`inline-block px-4 py-2 rounded-xl font-semibold ${getStatusBadge(selectedNews?.status)}`}>
+                          {selectedNews?.status}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Access Level</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 capitalize shadow-sm">{selectedNews?.access_level}</p>
+                      </div>
                     </div>
                   </div>
-                  
+
+                  {/* Thumbnail Preview */}
+                  {selectedNews?.thumbnail_url && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Thumbnail
+                      </label>
+                      <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                        <img 
+                          src={selectedNews.thumbnail_url} 
+                          alt={selectedNews.title}
+                          className="w-full h-64 object-cover rounded-xl mb-3"
+                          onError={(e) => e.target.style.display = 'none'}
+                        />
+                        <a href={selectedNews.thumbnail_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-700 underline break-all">
+                          {selectedNews.thumbnail_url}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Thumbnail URL</label>
-                    <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 break-all text-sm">{selectedNews?.thumbnail_url || 'No thumbnail'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Tags</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      Tags ({selectedNews?.tags?.length || 0})
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {selectedNews?.tags?.map((tag, index) => (
-                        <span key={index} className="bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-amber-200">
-                          {tag}
-                        </span>
-                      )) || <span className="text-slate-500">No tags</span>}
+                      {selectedNews?.tags && selectedNews.tags.length > 0 ? (
+                        selectedNews.tags.map((tag, index) => (
+                          <span key={index} className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+                            {tag}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">No tags</p>
+                      )}
                     </div>
                   </div>
-                  
+
+                  {/* Categories */}
+                  {selectedNews?.categories && selectedNews.categories.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Categories ({selectedNews.categories.length})
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedNews.categories.map((category, index) => (
+                          <span key={index} className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+                            {typeof category === 'string' ? category : category.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Content */}
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Content</label>
-                    <div className="p-4 bg-slate-50 rounded-2xl max-h-64 overflow-y-auto border border-slate-200">
-                      <pre className="text-sm text-slate-900 whitespace-pre-wrap">{selectedNews?.content || 'No content'}</pre>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Content (Markdown)
+                    </label>
+                    <div className="p-4 bg-gray-900 rounded-2xl max-h-96 overflow-y-auto border border-gray-700">
+                      <pre className="text-sm text-green-400 whitespace-pre-wrap font-mono">{selectedNews?.content || 'No content'}</pre>
                     </div>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Created At</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 text-sm">{new Date(selectedNews?.created_at).toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Updated At</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 text-sm">
-                        {selectedNews?.updated_at ? new Date(selectedNews.updated_at).toLocaleString() : 'Never updated'}
-                      </p>
+
+                  {/* Metadata */}
+                  <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-2xl border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Metadata
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">ID</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-xs shadow-sm">{selectedNews?.id}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Creator Name</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedNews?.creator_name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Created At</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedNews?.created_at ? new Date(selectedNews.created_at).toLocaleString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Updated At</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedNews?.updated_at ? new Date(selectedNews.updated_at).toLocaleString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Created By (ID)</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-xs shadow-sm">{selectedNews?.created_by || 'N/A'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
+                )
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {error && (
@@ -787,6 +932,56 @@ export default function NewsPage() {
                       Assign Categories
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-8">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-3">
+                Delete News?
+              </h3>
+              
+              <p className="text-gray-600 text-center mb-2">
+                Are you sure you want to delete
+              </p>
+              <p className="text-gray-900 font-semibold text-center mb-6">
+                "{newsToDelete?.title}"?
+              </p>
+              <p className="text-red-600 text-sm text-center mb-8">
+                This action cannot be undone.
+              </p>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setNewsToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete News
                 </button>
               </div>
             </div>

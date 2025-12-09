@@ -52,7 +52,44 @@ export async function PUT(request, { params }) {
     }
 
     const body = await request.json();
-    console.log('PUT: Request body:', body);
+    console.log('PUT: Raw request body:', body);
+
+    // Sanitize data
+    const sanitizedData = {
+      title: body.title?.trim() || '',
+      slug: body.slug?.trim() || '',
+      abstract: body.abstract?.trim() || '',
+      authors: body.authors?.filter(a => a && a.trim()) || [],
+      journal_name: body.journal_name?.trim() || '',
+      access_level: body.access_level || 'public',
+      status: body.status || 'draft',
+    };
+
+    // Add optional fields only if they have values
+    if (body.publication_date && body.publication_date.trim()) {
+      sanitizedData.publication_date = body.publication_date.trim();
+    }
+    if (body.volume && body.volume.trim()) {
+      sanitizedData.volume = body.volume.trim();
+    }
+    if (body.issue && body.issue.trim()) {
+      sanitizedData.issue = body.issue.trim();
+    }
+    if (body.pages && body.pages.trim()) {
+      sanitizedData.pages = body.pages.trim();
+    }
+    if (body.doi && body.doi.trim()) {
+      sanitizedData.doi = body.doi.trim();
+    }
+    if (body.file_url && body.file_url.trim()) {
+      sanitizedData.file_url = body.file_url.trim();
+    }
+    if (body.keywords && body.keywords.length > 0) {
+      // Remove duplicates and empty strings
+      sanitizedData.keywords = [...new Set(body.keywords.filter(k => k && k.trim()))];
+    }
+
+    console.log('PUT: Sanitized data:', sanitizedData);
 
     const response = await fetch(`${API_BASE_URL}/publications/${id}`, {
       method: 'PUT',
@@ -60,11 +97,12 @@ export async function PUT(request, { params }) {
         'Authorization': token,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(sanitizedData),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
+      console.error('PUT: Backend error:', errorData);
       return NextResponse.json({ error: errorData }, { status: response.status });
     }
 

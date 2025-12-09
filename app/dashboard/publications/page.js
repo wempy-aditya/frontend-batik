@@ -9,9 +9,12 @@ export default function PublicationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
   const [selectedPublication, setSelectedPublication] = useState(null);
+  const [publicationToDelete, setPublicationToDelete] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
@@ -135,13 +138,50 @@ export default function PublicationsPage() {
       const url = modalMode === 'edit' ? `/api/publications/${selectedPublication.id}` : '/api/publications';
       const method = modalMode === 'edit' ? 'PUT' : 'POST';
 
+      // Sanitize and prepare data
+      const submitData = {
+        title: formData.title.trim(),
+        slug: formData.slug.trim(),
+        abstract: formData.abstract.trim(),
+        authors: formData.authors.filter(a => a && a.trim()),
+        journal_name: formData.journal_name.trim(),
+        access_level: formData.access_level,
+        status: formData.status,
+      };
+
+      // Add optional fields only if they have values
+      if (formData.publication_date && formData.publication_date.trim()) {
+        submitData.publication_date = formData.publication_date.trim();
+      }
+      if (formData.volume && formData.volume.trim()) {
+        submitData.volume = formData.volume.trim();
+      }
+      if (formData.issue && formData.issue.trim()) {
+        submitData.issue = formData.issue.trim();
+      }
+      if (formData.pages && formData.pages.trim()) {
+        submitData.pages = formData.pages.trim();
+      }
+      if (formData.doi && formData.doi.trim()) {
+        submitData.doi = formData.doi.trim();
+      }
+      if (formData.file_url && formData.file_url.trim()) {
+        submitData.file_url = formData.file_url.trim();
+      }
+      if (formData.keywords && formData.keywords.length > 0) {
+        // Remove duplicates and empty strings
+        submitData.keywords = [...new Set(formData.keywords.filter(k => k && k.trim()))];
+      }
+
+      console.log('Submitting publication data:', submitData);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (response.ok) {
@@ -150,7 +190,8 @@ export default function PublicationsPage() {
         resetForm();
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save publication');
+        console.error('Submit error:', errorData);
+        throw new Error(errorData.error || errorData.message || 'Failed to save publication');
       }
     } catch (error) {
       console.error('Error saving publication:', error);
@@ -160,15 +201,18 @@ export default function PublicationsPage() {
     }
   };
 
-  const handleDelete = async (publicationId) => {
-    if (!confirm('Are you sure you want to delete this publication?')) {
-      return;
-    }
+  const openDeleteModal = (publication) => {
+    setPublicationToDelete(publication);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!publicationToDelete) return;
 
     try {
       const token = localStorage.getItem('access_token');
       
-      const response = await fetch(`/api/publications/${publicationId}`, {
+      const response = await fetch(`/api/publications/${publicationToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -178,12 +222,47 @@ export default function PublicationsPage() {
 
       if (response.ok) {
         await fetchPublications();
+        setIsDeleteModalOpen(false);
+        setPublicationToDelete(null);
       } else {
         throw new Error('Failed to delete publication');
       }
     } catch (error) {
       console.error('Error deleting publication:', error);
-      setError('Failed to delete publication');
+      setError('Failed to delete publication: ' + error.message);
+    }
+  };
+
+  const handleDelete = (publication) => {
+    openDeleteModal(publication);
+  };
+
+  const fetchPublicationDetail = async (publicationId) => {
+    try {
+      setIsLoadingDetail(true);
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch(`/api/publications/${publicationId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Extract the actual data from the response wrapper
+        return data.data || data;
+      } else {
+        throw new Error('Failed to fetch publication details');
+      }
+    } catch (error) {
+      console.error('Error fetching publication details:', error);
+      setError('Failed to load publication details: ' + error.message);
+      return null;
+    } finally {
+      setIsLoadingDetail(false);
     }
   };
 
@@ -215,14 +294,25 @@ export default function PublicationsPage() {
     }
   };
 
-  const openModal = (mode, publication = null) => {
+  const openModal = async (mode, publication = null) => {
     setModalMode(mode);
-    setSelectedPublication(publication);
     setError('');
+    setIsModalOpen(true);
     
     if (mode === 'create') {
+      setSelectedPublication(null);
       resetForm();
+    } else if (mode === 'view' && publication) {
+      // Fetch detail data from API for view mode
+      const detailData = await fetchPublicationDetail(publication.id);
+      if (detailData) {
+        setSelectedPublication(detailData);
+      } else {
+        setSelectedPublication(publication);
+      }
     } else if (publication) {
+      // For edit mode, use the publication from list and populate form
+      setSelectedPublication(publication);
       setFormData({
         title: publication.title,
         slug: publication.slug,
@@ -240,8 +330,6 @@ export default function PublicationsPage() {
         file_url: publication.file_url || ''
       });
     }
-    
-    setIsModalOpen(true);
   };
 
   const openCategoryModal = (publication) => {
@@ -274,8 +362,10 @@ export default function PublicationsPage() {
   const generateSlug = (title) => {
     return title
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\s-]/g, '') // Only allow lowercase letters, numbers, spaces, and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
       .trim();
   };
 
@@ -487,7 +577,7 @@ export default function PublicationsPage() {
                     Tags
                   </button>
                   <button
-                    onClick={() => handleDelete(publication.id)}
+                    onClick={() => handleDelete(publication)}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -556,71 +646,288 @@ export default function PublicationsPage() {
               </div>
 
               {modalMode === 'view' ? (
+                isLoadingDetail ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4">
+                        <svg className="w-full h-full text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </div>
+                      <p className="text-slate-600 font-medium">Loading publication details...</p>
+                    </div>
+                  </div>
+                ) : (
                 <div className="p-6 space-y-6">
                   {/* View Mode Content */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900">{selectedPublication?.title}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Slug</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 font-mono text-sm">{selectedPublication?.slug}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Journal</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900">{selectedPublication?.journal_name}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Publication Date</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 text-sm">{selectedPublication?.publication_date}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Volume & Issue</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900">
-                        Vol. {selectedPublication?.volume}, Issue {selectedPublication?.issue}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Pages</label>
-                      <p className="p-3 bg-slate-50 rounded-2xl text-slate-900">{selectedPublication?.pages}</p>
+                  
+                  {/* Basic Information */}
+                  <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Basic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.title}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono shadow-sm">{selectedPublication?.slug}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <p className={`inline-block px-4 py-2 rounded-xl font-semibold ${getStatusBadge(selectedPublication?.status)}`}>
+                          {selectedPublication?.status}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Access Level</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 capitalize shadow-sm">{selectedPublication?.access_level}</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">DOI</label>
-                    <p className="p-3 bg-slate-50 rounded-2xl text-slate-900 font-mono text-sm">{selectedPublication?.doi}</p>
+
+                  {/* Publication Details */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50/50 p-4 rounded-2xl border border-blue-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      Publication Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Journal Name</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.journal_name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Venue</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.venue || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Publisher</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.publisher || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Year</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.year || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Volume</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.volume || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Issue</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.issue || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Pages</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.pages || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">DOI</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-sm shadow-sm break-all">{selectedPublication?.doi || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
-                  
+
+                  {/* Impact & Citations */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50/50 p-4 rounded-2xl border border-green-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Impact & Citations
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Citations</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-bold text-lg shadow-sm">{selectedPublication?.citations || 0}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Impact Factor</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-bold text-lg shadow-sm">{selectedPublication?.impact || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Authors */}
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Authors</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      Authors ({selectedPublication?.authors?.length || 0})
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {selectedPublication?.authors?.map((author, index) => (
-                        <span key={index} className="bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-blue-200">
-                          {author}
-                        </span>
-                      ))}
+                      {selectedPublication?.authors && selectedPublication.authors.length > 0 ? (
+                        selectedPublication.authors.map((author, index) => (
+                          <span key={index} className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+                            {author}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">No authors</p>
+                      )}
                     </div>
                   </div>
-                  
+
+                  {/* Keywords */}
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Keywords</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      Keywords ({selectedPublication?.keywords?.length || 0})
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {selectedPublication?.keywords?.map((keyword, index) => (
-                        <span key={index} className="bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-amber-200">
-                          {keyword}
-                        </span>
-                      ))}
+                      {selectedPublication?.keywords && selectedPublication.keywords.length > 0 ? (
+                        selectedPublication.keywords.map((keyword, index) => (
+                          <span key={index} className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+                            {keyword}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-gray-500 italic">No keywords</p>
+                      )}
                     </div>
                   </div>
-                  
+
+                  {/* Categories */}
+                  {selectedPublication?.categories && selectedPublication.categories.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Categories ({selectedPublication.categories.length})
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPublication.categories.map((category, index) => (
+                          <span key={index} className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm">
+                            {typeof category === 'string' ? category : category.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Abstract */}
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Abstract</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Abstract
+                    </label>
                     <div className="p-4 bg-slate-50 rounded-2xl max-h-64 overflow-y-auto border border-slate-200">
-                      <p className="text-sm text-slate-900 whitespace-pre-wrap">{selectedPublication?.abstract}</p>
+                      <p className="text-sm text-slate-900 whitespace-pre-wrap">{selectedPublication?.abstract || 'No abstract available'}</p>
+                    </div>
+                  </div>
+
+                  {/* Research Details */}
+                  {(selectedPublication?.methodology || selectedPublication?.results || selectedPublication?.conclusions) && (
+                    <div className="bg-gradient-to-r from-indigo-50 to-purple-50/50 p-4 rounded-2xl border border-indigo-200">
+                      <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Research Details
+                      </h3>
+                      <div className="space-y-4">
+                        {selectedPublication?.methodology && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Methodology</label>
+                            <div className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">
+                              <p className="text-sm whitespace-pre-wrap">{selectedPublication.methodology}</p>
+                            </div>
+                          </div>
+                        )}
+                        {selectedPublication?.results && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Results</label>
+                            <div className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">
+                              <p className="text-sm whitespace-pre-wrap">{selectedPublication.results}</p>
+                            </div>
+                          </div>
+                        )}
+                        {selectedPublication?.conclusions && (
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Conclusions</label>
+                            <div className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">
+                              <p className="text-sm whitespace-pre-wrap">{selectedPublication.conclusions}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* URLs & Resources */}
+                  <div className="bg-gradient-to-r from-cyan-50 to-blue-50/50 p-4 rounded-2xl border border-cyan-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      URLs & Resources
+                    </h3>
+                    <div className="space-y-3">
+                      {selectedPublication?.pdf_url && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">PDF URL</label>
+                          <a href={selectedPublication.pdf_url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-white rounded-xl text-blue-600 hover:text-blue-700 shadow-sm break-all text-sm underline">
+                            {selectedPublication.pdf_url}
+                          </a>
+                        </div>
+                      )}
+                      {selectedPublication?.graphical_abstract_url && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">Graphical Abstract</label>
+                          <a href={selectedPublication.graphical_abstract_url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-white rounded-xl text-blue-600 hover:text-blue-700 shadow-sm break-all text-sm underline">
+                            {selectedPublication.graphical_abstract_url}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Metadata */}
+                  <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-2xl border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Metadata
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">ID</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-xs shadow-sm">{selectedPublication?.id}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Creator Name</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.creator_name || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Created At</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.created_at ? new Date(selectedPublication.created_at).toLocaleString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Updated At</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">{selectedPublication?.updated_at ? new Date(selectedPublication.updated_at).toLocaleString() : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Created By (ID)</label>
+                        <p className="p-3 bg-white rounded-xl text-gray-900 font-mono text-xs shadow-sm">{selectedPublication?.created_by || 'N/A'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
+                )
               ) : (
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                   {error && (
@@ -994,6 +1301,56 @@ export default function PublicationsPage() {
                       Assign Categories
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="p-8">
+              <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-2xl font-bold text-gray-900 text-center mb-3">
+                Delete Publication?
+              </h3>
+              
+              <p className="text-gray-600 text-center mb-2">
+                Are you sure you want to delete
+              </p>
+              <p className="text-gray-900 font-semibold text-center mb-6">
+                "{publicationToDelete?.title}"?
+              </p>
+              <p className="text-red-600 text-sm text-center mb-8">
+                This action cannot be undone.
+              </p>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setPublicationToDelete(null);
+                  }}
+                  className="flex-1 px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete Publication
                 </button>
               </div>
             </div>

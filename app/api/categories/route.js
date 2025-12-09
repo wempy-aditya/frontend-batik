@@ -14,7 +14,7 @@ export async function GET(request) {
     }
 
     // Validate type parameter
-    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    const validTypes = ['project', 'dataset', 'publication', 'news', 'model', 'gallery'];
     if (!validTypes.includes(type)) {
       return Response.json(
         { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
@@ -68,7 +68,7 @@ export async function POST(request) {
     }
 
     // Validate type parameter
-    const validTypes = ['project', 'dataset', 'publication', 'news'];
+    const validTypes = ['project', 'dataset', 'publication', 'news', 'model', 'gallery'];
     if (!validTypes.includes(type)) {
       return Response.json(
         { message: `Invalid category type. Valid types are: ${validTypes.join(', ')}` },
