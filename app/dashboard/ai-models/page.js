@@ -22,11 +22,7 @@ export default function ManageAIModelsPage() {
     description: '',
     architecture: '',
     dataset_used: '',
-    metrics: {
-      accuracy: '',
-      f1_score: '',
-      loss: ''
-    },
+    metrics: '',  // Now a JSON string for flexibility
     model_file_url: '',
     access_level: 'public',
     status: 'draft'
@@ -175,11 +171,7 @@ export default function ManageAIModelsPage() {
       description: '',
       architecture: '',
       dataset_used: '',
-      metrics: {
-        accuracy: '',
-        f1_score: '',
-        loss: ''
-      },
+      metrics: '',  // Empty string for new model
       model_file_url: '',
       access_level: 'public',
       status: 'draft'
@@ -198,11 +190,7 @@ export default function ManageAIModelsPage() {
       description: model.description || '',
       architecture: model.architecture || '',
       dataset_used: model.dataset_used || '',
-      metrics: {
-        accuracy: model.metrics?.accuracy || '',
-        f1_score: model.metrics?.f1_score || '',
-        loss: model.metrics?.loss || ''
-      },
+      metrics: model.metrics ? JSON.stringify(model.metrics, null, 2) : '',  // Convert object to formatted JSON string
       model_file_url: model.model_file_url || '',
       access_level: model.access_level || 'public',
       status: model.status || 'draft'
@@ -226,11 +214,7 @@ export default function ManageAIModelsPage() {
         description: detailData.description || '',
         architecture: detailData.architecture || '',
         dataset_used: detailData.dataset_used || '',
-        metrics: {
-          accuracy: detailData.metrics?.accuracy || '',
-          f1_score: detailData.metrics?.f1_score || '',
-          loss: detailData.metrics?.loss || ''
-        },
+        metrics: detailData.metrics ? JSON.stringify(detailData.metrics, null, 2) : '',  // Convert to JSON string
         model_file_url: detailData.model_file_url || '',
         access_level: detailData.access_level || 'public',
         status: detailData.status || 'draft'
@@ -243,11 +227,7 @@ export default function ManageAIModelsPage() {
         description: model.description || '',
         architecture: model.architecture || '',
         dataset_used: model.dataset_used || '',
-        metrics: {
-          accuracy: model.metrics?.accuracy || '',
-          f1_score: model.metrics?.f1_score || '',
-          loss: model.metrics?.loss || ''
-        },
+        metrics: model.metrics ? JSON.stringify(model.metrics, null, 2) : '',  // Convert to JSON string
         model_file_url: model.model_file_url || '',
         access_level: model.access_level || 'public',
         status: model.status || 'draft'
@@ -333,16 +313,19 @@ export default function ManageAIModelsPage() {
         description: formData.description.trim(),
         architecture: formData.architecture.trim(),
         dataset_used: formData.dataset_used.trim(),
-        model_file_url: formData.model_file_url.trim(),
-        metrics: {
-          accuracy: parseFloat(formData.metrics.accuracy) || null,
-          f1_score: parseFloat(formData.metrics.f1_score) || null,
-          loss: parseFloat(formData.metrics.loss) || null
-        }
+        model_file_url: formData.model_file_url.trim()
       };
 
-      // Remove empty metrics
-      if (!submitData.metrics.accuracy && !submitData.metrics.f1_score && !submitData.metrics.loss) {
+      // Parse metrics JSON if provided
+      if (formData.metrics && formData.metrics.trim()) {
+        try {
+          submitData.metrics = JSON.parse(formData.metrics);
+        } catch (e) {
+          setError('Invalid JSON in metrics field. Please check your formatting.');
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
         submitData.metrics = null;
       }
 
@@ -414,16 +397,7 @@ export default function ManageAIModelsPage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    if (name.startsWith('metrics.')) {
-      const metricName = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        metrics: {
-          ...prev.metrics,
-          [metricName]: value
-        }
-      }));
-    } else if (name === 'name') {
+    if (name === 'name') {
       // Auto-generate slug from name
       const generatedSlug = generateSlug(value);
       setFormData(prev => ({ 
@@ -771,7 +745,7 @@ export default function ManageAIModelsPage() {
                       </div>
 
                       {/* Performance Metrics */}
-                      {selectedModel.metrics && (
+                      {selectedModel.metrics && Object.keys(selectedModel.metrics).length > 0 && (
                         <div className="bg-gradient-to-r from-green-50 to-emerald-50/50 p-4 rounded-2xl border border-green-200">
                           <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                             <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -779,31 +753,21 @@ export default function ManageAIModelsPage() {
                             </svg>
                             Performance Metrics
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {selectedModel.metrics.accuracy && (
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Accuracy</label>
-                                <p className="p-3 bg-white rounded-xl text-gray-900 font-bold text-lg shadow-sm">
-                                  {(selectedModel.metrics.accuracy * 100).toFixed(1)}%
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {Object.entries(selectedModel.metrics).map(([key, value]) => (
+                              <div key={key} className="bg-white rounded-xl p-4 shadow-sm border border-green-100">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                                  {key.replace(/_/g, ' ')}
+                                </label>
+                                <p className="text-gray-900 font-bold text-lg break-words">
+                                  {typeof value === 'number' 
+                                    ? (key.includes('percent') || key === 'accuracy' || key === 'precision' || key === 'recall' 
+                                      ? `${(value * 100).toFixed(2)}%` 
+                                      : value.toLocaleString())
+                                    : value}
                                 </p>
                               </div>
-                            )}
-                            {selectedModel.metrics.f1_score && (
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">F1 Score</label>
-                                <p className="p-3 bg-white rounded-xl text-gray-900 font-bold text-lg shadow-sm">
-                                  {selectedModel.metrics.f1_score.toFixed(3)}
-                                </p>
-                              </div>
-                            )}
-                            {selectedModel.metrics.loss && (
-                              <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Loss</label>
-                                <p className="p-3 bg-white rounded-xl text-gray-900 font-bold text-lg shadow-sm">
-                                  {selectedModel.metrics.loss.toFixed(3)}
-                                </p>
-                              </div>
-                            )}
+                            ))}
                           </div>
                         </div>
                       )}
@@ -969,53 +933,23 @@ export default function ManageAIModelsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Accuracy</label>
-                      <input
-                        type="number"
-                        name="metrics.accuracy"
-                        value={formData.metrics.accuracy}
-                        onChange={handleInputChange}
-                        step="0.01"
-                        min="0"
-                        max="1"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                        disabled={modalMode === 'view'}
-                        placeholder="0.95"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">F1 Score</label>
-                      <input
-                        type="number"
-                        name="metrics.f1_score"
-                        value={formData.metrics.f1_score}
-                        onChange={handleInputChange}
-                        step="0.01"
-                        min="0"
-                        max="1"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                        disabled={modalMode === 'view'}
-                        placeholder="0.92"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Loss</label>
-                      <input
-                        type="number"
-                        name="metrics.loss"
-                        value={formData.metrics.loss}
-                        onChange={handleInputChange}
-                        step="0.01"
-                        min="0"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                        disabled={modalMode === 'view'}
-                        placeholder="0.05"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Performance Metrics (JSON)
+                      <span className="text-gray-500 text-xs font-normal ml-2">Optional - Flexible format</span>
+                    </label>
+                    <textarea
+                      name="metrics"
+                      value={formData.metrics}
+                      onChange={handleInputChange}
+                      rows={8}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
+                      disabled={modalMode === 'view'}
+                      placeholder={`{\n  "map": 0.528,\n  "map_50": 0.697,\n  "precision": 0.682,\n  "recall": 0.581,\n  "fps": 45,\n  "inference_time_ms": 22,\n  "model_size_mb": 165,\n  "custom_note": "Your custom metric"\n}`}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Enter valid JSON with any metrics you need (e.g., accuracy, map, precision, recall, fps, loss, etc.)
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
