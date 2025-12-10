@@ -54,6 +54,14 @@ export function AuthProvider({ children }) {
     if (!response.ok) {
       const errorText = await response.text();
       console.log('User info error response:', errorText);
+      
+      // If unauthorized (401) or forbidden (403), clear auth and throw error
+      if (response.status === 401 || response.status === 403) {
+        console.error('Token expired or invalid, clearing auth data');
+        handleUnauthorized();
+        throw new Error('UNAUTHORIZED');
+      }
+      
       throw new Error('Failed to get user info');
     }
 
@@ -112,6 +120,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  // Utility function to check if API response is unauthorized
+  const handleUnauthorized = useCallback(() => {
+    console.error('Unauthorized access detected - clearing auth and redirecting to login');
+    clearAuthData();
+    // Force redirect to login
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  }, []);
+
   const logout = async () => {
     try {
       const token = localStorage.getItem('access_token');
@@ -141,7 +159,8 @@ export function AuthProvider({ children }) {
     logout,
     checkAuthStatus,
     getUserInfo,
-    refreshAccessToken
+    refreshAccessToken,
+    handleUnauthorized
   };
 
   return (

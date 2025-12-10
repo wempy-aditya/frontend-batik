@@ -14,7 +14,7 @@ export default function DashboardLayout({ children }) {
 function DashboardLayoutContent({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, getUserInfo } = useAuth();
+  const { user, logout, getUserInfo, handleUnauthorized } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,13 +25,19 @@ function DashboardLayoutContent({ children }) {
           await getUserInfo();
         } catch (error) {
           console.error('Failed to get user info:', error);
+          
+          // If error is UNAUTHORIZED, user will be redirected by AuthProvider
+          if (error.message === 'UNAUTHORIZED') {
+            // handleUnauthorized already called in getUserInfo
+            return;
+          }
         }
       }
       setIsLoading(false);
     };
 
     fetchUserInfo();
-  }, []);
+  }, [user, getUserInfo]);
 
   const handleLogout = async () => {
     await logout();
@@ -95,6 +101,13 @@ function DashboardLayoutContent({ children }) {
       href: '/dashboard/gallery',
       active: pathname.startsWith('/dashboard/gallery')
     },
+    { 
+      id: 'users', 
+      label: 'Users', 
+      icon: 'users', 
+      href: '/dashboard/users',
+      active: pathname.startsWith('/dashboard/users')
+    },
   ];
 
   const getIcon = (iconName) => {
@@ -107,6 +120,7 @@ function DashboardLayoutContent({ children }) {
       rocket: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
       brain: "M12 2l3.09 6.26L22 9l-5.91 2.74L16 18l-4-1-4 1-.09-6.26L2 9l6.91-.74L12 2z",
       photo: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+      users: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
     };
     return icons[iconName] || icons.chart;
   };
