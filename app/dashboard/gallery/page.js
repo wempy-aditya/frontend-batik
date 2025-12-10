@@ -1,6 +1,6 @@
 'use client';
-
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function GalleryManagement() {
   const [galleries, setGalleries] = useState([]);
@@ -18,6 +18,7 @@ export default function GalleryManagement() {
   const [offset, setOffset] = useState(0);
   const [limit] = useState(12);
   const [hasMore, setHasMore] = useState(true);
+  const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
   
   const [formData, setFormData] = useState({
     prompt: '',
@@ -38,52 +39,45 @@ export default function GalleryManagement() {
   }, [offset]);
 
   const fetchGalleries = async () => {
-    setIsLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      
-      console.log('Fetching galleries with offset:', offset, 'limit:', limit);
-      
       const response = await fetch(`/api/gallery?offset=${offset}&limit=${limit}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      console.log('Gallery response status:', response.status);
-      
-      const data = await response.json();
-      console.log('Gallery response data:', data);
-      
-      if (response.ok) {
-        // Extract gallery data from nested structure
-        let galleryData = [];
-        
-        // Response structure: {data: {data: [...], total_count: N}, offset, limit}
-        if (data.data && data.data.data) {
-          galleryData = data.data.data;
-        } else if (data.data && Array.isArray(data.data)) {
-          galleryData = data.data;
-        } else if (data.results) {
-          galleryData = data.results;
-        } else if (Array.isArray(data)) {
-          galleryData = data;
-        }
-        
-        console.log('Gallery data extracted:', galleryData);
-        setGalleries(Array.isArray(galleryData) ? galleryData : []);
-        setTotalCount(data.total_count || 0);
-        setHasMore(galleryData.length === limit);
-      } else {
-        console.error('Failed to fetch galleries:', data);
-        alert('Failed to fetch galleries');
-        setGalleries([]);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch galleries');
       }
+
+      const data = await response.json();
+      console.log('Gallery Response:', data);
+
+      let galleriesArray = [];
+      let total = 0;
+
+      if (data.data?.data?.data && Array.isArray(data.data.data.data)) {
+        galleriesArray = data.data.data.data;
+        total = data.data.data.total_count || 0;
+      } else if (data.data?.data && Array.isArray(data.data.data)) {
+        galleriesArray = data.data.data;
+        total = data.data.total_count || data.data.data.length;
+      } else if (data.data && Array.isArray(data.data)) {
+        galleriesArray = data.data;
+        total = data.total_count || data.data.length;
+      } else if (Array.isArray(data)) {
+        galleriesArray = data;
+        total = data.length;
+      }
+
+      setGalleries(galleriesArray);
+      setTotalCount(total);
+      setHasMore(galleriesArray.length === limit);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching galleries:', error);
-      alert('Error fetching galleries');
       setGalleries([]);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -97,14 +91,21 @@ export default function GalleryManagement() {
         }
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        const categoryData = Array.isArray(data) ? data : (data.data || []);
-        setCategories(Array.isArray(categoryData) ? categoryData : []);
-      } else {
-        setCategories([]);
+      if (!response.ok) {
+        throw new Error('Failed to fetch gallery categories');
       }
+      
+      const data = await response.json();
+      console.log('Gallery Categories Response:', data);
+      
+      let categoriesArray = [];
+      if (data.data && Array.isArray(data.data)) {
+        categoriesArray = data.data;
+      } else if (Array.isArray(data)) {
+        categoriesArray = data;
+      }
+      
+      setCategories(categoriesArray);
     } catch (error) {
       console.error('Error fetching categories:', error);
       setCategories([]);
@@ -114,20 +115,29 @@ export default function GalleryManagement() {
   const fetchModels = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/ai-models?offset=0&limit=100', {
+      const response = await fetch('/api/ai-models', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        const modelData = Array.isArray(data) ? data : (data.data || []);
-        setModels(Array.isArray(modelData) ? modelData : []);
-      } else {
-        setModels([]);
+      if (!response.ok) {
+        throw new Error('Failed to fetch models');
       }
+      
+      const data = await response.json();
+      console.log('Models Response:', data);
+      
+      let modelsArray = [];
+      if (data.data?.data && Array.isArray(data.data.data)) {
+        modelsArray = data.data.data;
+      } else if (data.data && Array.isArray(data.data)) {
+        modelsArray = data.data;
+      } else if (Array.isArray(data)) {
+        modelsArray = data;
+      }
+      
+      setModels(modelsArray);
     } catch (error) {
       console.error('Error fetching models:', error);
       setModels([]);
@@ -135,45 +145,35 @@ export default function GalleryManagement() {
   };
 
   const fetchGalleryDetail = async (id) => {
-    setIsLoadingDetail(true);
     try {
+      setIsLoadingDetail(true);
       const token = localStorage.getItem('access_token');
       const response = await fetch(`/api/gallery/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      const data = await response.json();
-      console.log('Gallery detail response:', data);
-      
-      if (response.ok) {
-        // Handle nested data structure
-        const detailData = data.data?.data || data.data || data;
-        console.log('Gallery detail extracted:', detailData);
-        setViewGallery(detailData);
-        setShowViewModal(true);
-      } else {
-        alert('Failed to fetch gallery details: ' + (data.error || data.message || 'Unknown error'));
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch gallery detail');
       }
+
+      const data = await response.json();
+      const galleryData = data.data || data;
+      setViewGallery(galleryData);
+      setModalMode('view');
+      setShowViewModal(true);
+      setIsLoadingDetail(false);
     } catch (error) {
-      console.error('Error fetching gallery details:', error);
-      alert('Error fetching gallery details');
-    } finally {
+      console.error('Error fetching gallery detail:', error);
+      alert('Failed to load gallery details');
       setIsLoadingDetail(false);
     }
   };
 
-  const handleOpenModal = (gallery = null) => {
-    if (gallery) {
-      setCurrentGallery(gallery);
-      setFormData({
-        prompt: gallery.prompt || '',
-        image_url: gallery.image_url || '',
-        extra_metadata: gallery.extra_metadata ? JSON.stringify(gallery.extra_metadata, null, 2) : '',
-        model_id: gallery.model_id || ''
-      });
-    } else {
+  const openModal = async (mode, gallery = null) => {
+    setModalMode(mode);
+    if (mode === 'create') {
       setCurrentGallery(null);
       setFormData({
         prompt: '',
@@ -181,8 +181,19 @@ export default function GalleryManagement() {
         extra_metadata: '',
         model_id: ''
       });
+      setShowModal(true);
+    } else if (mode === 'edit') {
+      setCurrentGallery(gallery);
+      setFormData({
+        prompt: gallery.prompt || '',
+        image_url: gallery.image_url || '',
+        extra_metadata: gallery.extra_metadata ? JSON.stringify(gallery.extra_metadata, null, 2) : '',
+        model_id: gallery.model_id || ''
+      });
+      setShowModal(true);
+    } else if (mode === 'view') {
+      await fetchGalleryDetail(gallery.id);
     }
-    setShowModal(true);
   };
 
   const handleCloseModal = () => {
@@ -202,50 +213,47 @@ export default function GalleryManagement() {
     try {
       const token = localStorage.getItem('access_token');
       
-      // Parse extra_metadata if it's a string
-      let metadata = formData.extra_metadata;
-      if (typeof metadata === 'string' && metadata.trim()) {
+      let metadata = null;
+      if (formData.extra_metadata.trim()) {
         try {
-          metadata = JSON.parse(metadata);
-        } catch (err) {
-          alert('Invalid JSON format for extra metadata');
+          metadata = JSON.parse(formData.extra_metadata);
+        } catch (e) {
+          alert('Invalid JSON in Extra Metadata');
           return;
         }
-      } else if (!metadata || metadata.trim() === '') {
-        metadata = {};
       }
 
       const payload = {
         prompt: formData.prompt,
         image_url: formData.image_url,
         extra_metadata: metadata,
-        model_id: formData.model_id ? parseInt(formData.model_id) : null
+        model_id: formData.model_id || undefined
       };
 
-      const url = currentGallery ? `/api/gallery/${currentGallery.id}` : '/api/gallery';
+      const url = currentGallery 
+        ? `/api/gallery/${currentGallery.id}` 
+        : '/api/gallery';
+      
       const method = currentGallery ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(currentGallery ? 'Gallery updated successfully' : 'Gallery created successfully');
-        handleCloseModal();
-        fetchGalleries();
-      } else {
-        alert(data.error || 'Failed to save gallery');
+      if (!response.ok) {
+        throw new Error(`Failed to ${currentGallery ? 'update' : 'create'} gallery`);
       }
+
+      await fetchGalleries();
+      handleCloseModal();
     } catch (error) {
-      console.error('Error saving gallery:', error);
-      alert('Error saving gallery');
+      console.error('Error:', error);
+      alert(error.message);
     }
   };
 
@@ -261,22 +269,19 @@ export default function GalleryManagement() {
         }
       });
 
-      if (response.ok || response.status === 204) {
-        alert('Gallery deleted successfully');
-        setShowDeleteModal(false);
-        setGalleryToDelete(null);
-        fetchGalleries();
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to delete gallery');
+      if (!response.ok) {
+        throw new Error('Failed to delete gallery');
       }
+
+      await fetchGalleries();
+      handleCloseDeleteModal();
     } catch (error) {
       console.error('Error deleting gallery:', error);
-      alert('Error deleting gallery');
+      alert('Failed to delete gallery');
     }
   };
 
-  const handleOpenDeleteModal = (gallery) => {
+  const openDeleteModal = (gallery) => {
     setGalleryToDelete(gallery);
     setShowDeleteModal(true);
   };
@@ -286,17 +291,14 @@ export default function GalleryManagement() {
     setGalleryToDelete(null);
   };
 
-  const handleOpenCategoryModal = (gallery) => {
+  const openCategoryModal = (gallery) => {
     setCategoryGalleryId(gallery.id);
-    // Handle both string array and object array
-    const categoryIds = gallery.categories?.map(cat => {
-      if (typeof cat === 'string') {
-        // Find category id by name
-        const found = categories.find(c => c.name === cat);
-        return found?.id;
-      }
-      return cat.id;
-    }).filter(Boolean) || [];
+    
+    const currentCategoryNames = gallery.categories || [];
+    const categoryIds = categories
+      .filter(cat => currentCategoryNames.includes(cat.name))
+      .map(cat => cat.id);
+    
     setSelectedCategories(categoryIds);
     setShowCategoryModal(true);
   };
@@ -308,13 +310,11 @@ export default function GalleryManagement() {
   };
 
   const handleCategoryToggle = (categoryId) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId);
-      } else {
-        return [...prev, categoryId];
-      }
-    });
+    setSelectedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   const handleSaveCategories = async () => {
@@ -323,30 +323,26 @@ export default function GalleryManagement() {
       const response = await fetch(`/api/gallery/${categoryGalleryId}/categories`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           category_ids: selectedCategories
         })
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        alert('Categories updated successfully');
-        handleCloseCategoryModal();
-        fetchGalleries();
-      } else {
-        alert(data.error || 'Failed to update categories');
+      if (!response.ok) {
+        throw new Error('Failed to assign categories');
       }
+
+      await fetchGalleries();
+      handleCloseCategoryModal();
     } catch (error) {
-      console.error('Error updating categories:', error);
-      alert('Error updating categories');
+      console.error('Error assigning categories:', error);
+      alert('Failed to assign categories');
     }
   };
 
-  // Filter galleries based on search
   const filteredGalleries = galleries.filter(gallery => {
     const matchesSearch = !searchTerm || 
       (gallery.prompt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -354,272 +350,303 @@ export default function GalleryManagement() {
     return matchesSearch;
   });
 
-  const totalPages = Math.ceil(totalCount / limit);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl animate-pulse"></div>
+            <div className="absolute inset-2 bg-white rounded-xl"></div>
+            <svg className="absolute inset-0 w-full h-full p-5 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-slate-700 font-medium text-lg">Loading Gallery...</p>
+          <p className="text-slate-500 text-sm mt-2">Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-            Gallery Management
-          </h1>
-          <p className="text-gray-600">Manage AI-generated batik gallery images</p>
-        </div>
-
-        {/* Search and Actions Bar */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex-1 w-full md:w-auto">
-              <input
-                type="text"
-                placeholder="Search by prompt or model..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-              />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
+      {/* Page Header */}
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
+                Gallery
+              </h1>
+              <p className="text-slate-600 mt-1 text-sm sm:text-base">Manage AI-generated batik gallery images</p>
             </div>
             <button
-              onClick={() => handleOpenModal()}
-              className="w-full md:w-auto px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-md"
+              onClick={() => openModal('create')}
+              className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
             >
-              + Add New Gallery Item
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Add Gallery Item</span>
+              </div>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Gallery Table */}
-        {isLoading ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
-            <p className="mt-4 text-gray-600">Loading galleries...</p>
-          </div>
-        ) : (
-          <>
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prompt</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categories</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredGalleries.map((gallery) => (
-                      <tr key={gallery.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="h-16 w-16 bg-gray-100 rounded overflow-hidden">
-                            {gallery.image_url ? (
-                              <img
-                                src={gallery.image_url}
-                                alt={gallery.prompt || 'Gallery'}
-                                className="h-full w-full object-cover"
-                                onError={(e) => {
-                                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23ddd" width="64" height="64"/%3E%3C/svg%3E';
-                                }}
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs">No Img</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 max-w-xs truncate">{gallery.prompt || 'No prompt'}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{gallery.model_name || 'N/A'}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-1">
-                            {gallery.categories?.slice(0, 2).map((cat, index) => (
-                              <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                                {typeof cat === 'string' ? cat : cat.name}
-                              </span>
-                            ))}
-                            {gallery.categories?.length > 2 && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                                +{gallery.categories.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {gallery.created_at ? new Date(gallery.created_at).toLocaleDateString() : 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => fetchGalleryDetail(gallery.id)}
-                              className="text-blue-600 hover:text-blue-900 transition-colors"
-                              title="View Details"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleOpenModal(gallery)}
-                              className="text-amber-600 hover:text-amber-900 transition-colors"
-                              title="Edit"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleOpenCategoryModal(gallery)}
-                              className="text-purple-600 hover:text-purple-900 transition-colors"
-                              title="Manage Categories"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => handleOpenDeleteModal(gallery)}
-                              className="text-red-600 hover:text-red-900 transition-colors"
-                              title="Delete"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {filteredGalleries.length === 0 && (
-                <div className="text-center py-12">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Gallery Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredGalleries.map((gallery) => (
+            <div
+              key={gallery.id}
+              className="group bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+            >
+              {/* Image */}
+              <div className="relative h-64 bg-gradient-to-br from-amber-50 to-orange-50">
+                {gallery.image_url ? (
+                  <img 
+                    src={gallery.image_url} 
+                    alt={gallery.prompt || 'Gallery'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg className="w-16 h-16 text-amber-600/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="mt-4 text-gray-600">No gallery items found</p>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{offset + 1}</span> to <span className="font-medium">{Math.min(offset + limit, totalCount)}</span> of{' '}
-                  <span className="font-medium">{totalCount}</span> results
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setOffset(Math.max(0, offset - limit))}
-                    disabled={offset === 0}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Previous
-                  </button>
-                  <div className="flex items-center px-4 py-2 text-sm text-gray-700">
-                    Page {Math.floor(offset / limit) + 1} of {totalPages}
+              <div className="p-6">
+                <p className="font-bold text-slate-900 mb-3 line-clamp-2 text-base group-hover:text-amber-700 transition-colors">
+                  {gallery.prompt || 'No prompt'}
+                </p>
+                
+                {gallery.model_name && (
+                  <p className="text-sm text-amber-700 bg-amber-50/80 backdrop-blur-sm px-3 py-1.5 rounded-xl font-mono font-medium mb-3 inline-block">
+                    {gallery.model_name}
+                  </p>
+                )}
+
+                {/* Categories */}
+                {gallery.categories && gallery.categories.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-slate-700 mb-2">Categories</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {gallery.categories.slice(0, 3).map((cat, index) => (
+                        <span key={index} className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
+                          {typeof cat === 'string' ? cat : cat.name}
+                        </span>
+                      ))}
+                      {gallery.categories.length > 3 && (
+                        <span className="text-xs text-slate-500 font-medium">+{gallery.categories.length - 3} more</span>
+                      )}
+                    </div>
                   </div>
+                )}
+
+                {/* Meta Info */}
+                <div className="text-xs text-slate-500 pb-4 mb-4 border-b border-slate-100">
+                  <span>{gallery.created_at ? new Date(gallery.created_at).toLocaleDateString() : 'N/A'}</span>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => setOffset(offset + limit)}
-                    disabled={!hasMore || offset + limit >= totalCount}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={() => openModal('view', gallery)}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-sm"
                   >
-                    Next
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View
+                  </button>
+                  <button
+                    onClick={() => openModal('edit', gallery)}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => openCategoryModal(gallery)}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Tags
+                  </button>
+                  <button
+                    onClick={() => openDeleteModal(gallery)}
+                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
                   </button>
                 </div>
               </div>
-            )}
-          </>
-        )}
+            </div>
+          ))}
+          
+          {filteredGalleries.length === 0 && !isLoading && (
+            <div className="col-span-full text-center py-16">
+              <div className="max-w-md mx-auto">
+                <div className="w-32 h-32 bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-amber-500/20">
+                  <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No Gallery Items Yet</h3>
+                <p className="text-slate-600 mb-6">Start creating by adding your first gallery item</p>
+                <button
+                  onClick={() => openModal('create')}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create First Gallery Item
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                {currentGallery ? 'Edit Gallery Item' : 'Add New Gallery Item'}
-              </h2>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prompt *
-                  </label>
-                  <textarea
-                    value={formData.prompt}
-                    onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                    rows="4"
-                    required
-                    placeholder="Enter the generation prompt..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image URL *
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-transparent"
-                    required
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Extra Metadata (JSON)
-                  </label>
-                  <textarea
-                    value={formData.extra_metadata}
-                    onChange={(e) => setFormData({ ...formData, extra_metadata: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-transparent font-mono text-sm"
-                    rows="6"
-                    placeholder='{"steps": 50, "guidance_scale": 7.5, "seed": 12345}'
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Optional. Enter valid JSON for generation parameters</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    AI Model
-                  </label>
-                  <select
-                    value={formData.model_id}
-                    onChange={(e) => setFormData({ ...formData, model_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-600 focus:border-transparent"
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                      {modalMode === 'create' && 'Create Gallery Item'}
+                      {modalMode === 'edit' && 'Edit Gallery Item'}
+                    </h2>
+                    <p className="text-slate-600 text-sm mt-1">
+                      {modalMode === 'create' && 'Add a new item to your gallery'}
+                      {modalMode === 'edit' && 'Update gallery item'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCloseModal}
+                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
                   >
-                    <option value="">-- Select Model (Optional) --</option>
-                    {models.map((model) => (
-                      <option key={model.id} value={model.id}>
-                        {model.name} ({model.model_type})
-                      </option>
-                    ))}
-                  </select>
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6 p-6">
+                <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Basic Information
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Prompt <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={formData.prompt}
+                        onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                        rows="4"
+                        required
+                        placeholder="Enter the generation prompt..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Image URL <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                        required
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        AI Model
+                      </label>
+                      <select
+                        value={formData.model_id}
+                        onChange={(e) => setFormData({ ...formData, model_id: e.target.value })}
+                        className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
+                      >
+                        <option value="">-- Select Model (Optional) --</option>
+                        {Array.isArray(models) && models.map((model) => (
+                          <option key={model.id} value={model.id}>
+                            {model.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    Metadata (Optional)
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Extra Metadata (JSON)
+                    </label>
+                    <textarea
+                      value={formData.extra_metadata}
+                      onChange={(e) => setFormData({ ...formData, extra_metadata: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono text-sm"
+                      rows="6"
+                      placeholder='{"steps": 50, "guidance_scale": 7.5, "seed": 12345}'
+                    />
+                    <p className="text-xs text-slate-500 mt-2">Optional. Enter valid JSON for generation parameters</p>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all"
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
                   >
-                    {currentGallery ? 'Update' : 'Create'}
+                    {modalMode === 'create' ? 'Create Gallery Item' : 'Save Changes'}
                   </button>
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-slate-100 text-slate-700 px-6 py-3.5 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
                   >
                     Cancel
                   </button>
@@ -631,116 +658,126 @@ export default function GalleryManagement() {
       )}
 
       {/* View Modal */}
-      {showViewModal && viewGallery && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                Gallery Detail
-              </h2>
+      {showViewModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Gallery Details</h2>
+                    <p className="text-slate-600 text-sm mt-1">View gallery item details</p>
+                  </div>
+                  <button
+                    onClick={() => setShowViewModal(false)}
+                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
               {isLoadingDetail ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
-                  <p className="mt-4 text-gray-600">Loading details...</p>
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4">
+                      <svg className="w-full h-full text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </div>
+                    <p className="text-slate-600 font-medium">Loading details...</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              ) : viewGallery && (
+                <div className="space-y-6 p-6">
+                  <div className="aspect-video bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl overflow-hidden border border-slate-200">
                     {viewGallery.image_url ? (
                       <img
                         src={viewGallery.image_url}
                         alt={viewGallery.prompt || 'Gallery image'}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3EImage Error%3C/text%3E%3C/svg%3E';
+                          e.target.style.display = 'none';
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        No Image Available
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
                       </div>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">ID</label>
-                      <p className="text-gray-900">{viewGallery.id}</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Created By</label>
-                      <p className="text-gray-900">{viewGallery.creator_name || viewGallery.created_by || 'N/A'}</p>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Prompt</label>
-                      <p className="text-gray-900 whitespace-pre-wrap">{viewGallery.prompt || 'N/A'}</p>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Image URL</label>
-                      <a 
-                        href={viewGallery.image_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline break-all"
-                      >
-                        {viewGallery.image_url}
-                      </a>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">AI Model</label>
-                      <p className="text-gray-900">
-                        {viewGallery.model_name || (viewGallery.model_id ? `Model ID: ${viewGallery.model_id}` : 'N/A')}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Categories</label>
-                      <div className="flex flex-wrap gap-2">
-                        {viewGallery.categories?.length > 0 ? (
-                          viewGallery.categories.map((cat, index) => (
-                            <span key={index} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm">
-                              {typeof cat === 'string' ? cat : cat.name}
-                            </span>
-                          ))
-                        ) : (
-                          <p className="text-gray-900">No categories</p>
-                        )}
+                  <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Basic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">ID</label>
+                        <p className="text-slate-900 font-mono text-sm">{viewGallery.id}</p>
                       </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Extra Metadata</label>
-                      <pre className="text-gray-900 bg-gray-50 p-3 rounded border border-gray-200 overflow-x-auto text-sm">
-                        {viewGallery.extra_metadata 
-                          ? JSON.stringify(viewGallery.extra_metadata, null, 2)
-                          : 'No metadata'}
-                      </pre>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Created At</label>
-                      <p className="text-gray-900">
-                        {viewGallery.created_at ? new Date(viewGallery.created_at).toLocaleString() : 'N/A'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">Updated At</label>
-                      <p className="text-gray-900">
-                        {viewGallery.updated_at ? new Date(viewGallery.updated_at).toLocaleString() : 'N/A'}
-                      </p>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">Created By</label>
+                        <p className="text-slate-900">{viewGallery.creator_name || viewGallery.created_by || 'N/A'}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">Prompt</label>
+                        <p className="text-slate-900 whitespace-pre-wrap">{viewGallery.prompt || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">AI Model</label>
+                        <p className="text-slate-900">
+                          {viewGallery.model_name || (viewGallery.model_id ? `Model ID: ${viewGallery.model_id}` : 'N/A')}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">Categories</label>
+                        <div className="flex flex-wrap gap-2">
+                          {viewGallery.categories?.length > 0 ? (
+                            viewGallery.categories.map((cat, index) => (
+                              <span key={index} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                                {typeof cat === 'string' ? cat : cat.name}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-slate-900">No categories</p>
+                          )}
+                        </div>
+                      </div>
+                      {viewGallery.extra_metadata && (
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">Extra Metadata</label>
+                          <pre className="text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-200 overflow-x-auto text-sm font-mono">
+                            {JSON.stringify(viewGallery.extra_metadata, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">Created At</label>
+                        <p className="text-slate-900">
+                          {viewGallery.created_at ? new Date(viewGallery.created_at).toLocaleString() : 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-500 mb-1">Updated At</label>
+                        <p className="text-slate-900">
+                          {viewGallery.updated_at ? new Date(viewGallery.updated_at).toLocaleString() : 'N/A'}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex justify-end pt-4">
                     <button
                       onClick={() => setShowViewModal(false)}
-                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
                     >
                       Close
                     </button>
@@ -754,22 +791,27 @@ export default function GalleryManagement() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">Confirm Delete</h2>
-            <p className="text-gray-600 mb-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-2xl">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-center text-slate-900">Delete Gallery Item?</h2>
+            <p className="text-slate-600 mb-6 text-center">
               Are you sure you want to delete this gallery item? This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex-1 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition-all duration-200"
               >
                 Delete
               </button>
               <button
                 onClick={handleCloseDeleteModal}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
               >
                 Cancel
               </button>
@@ -780,40 +822,40 @@ export default function GalleryManagement() {
 
       {/* Category Assignment Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               Assign Categories
             </h2>
             
             <div className="space-y-2 mb-6 max-h-96 overflow-y-auto">
               {categories.length > 0 ? (
                 categories.map((category) => (
-                  <label key={category.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                  <label key={category.id} className="flex items-center space-x-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors">
                     <input
                       type="checkbox"
                       checked={selectedCategories.includes(category.id)}
                       onChange={() => handleCategoryToggle(category.id)}
-                      className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-600"
+                      className="w-5 h-5 text-amber-600 border-slate-300 rounded-lg focus:ring-amber-600"
                     />
-                    <span className="text-gray-700">{category.name}</span>
+                    <span className="text-slate-700 font-medium">{category.name}</span>
                   </label>
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-4">No categories available</p>
+                <p className="text-center text-slate-500 py-8">No categories available</p>
               )}
             </div>
 
             <div className="flex gap-3">
               <button
                 onClick={handleSaveCategories}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all"
+                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300"
               >
-                Save
+                Save Changes
               </button>
               <button
                 onClick={handleCloseCategoryModal}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
               >
                 Cancel
               </button>

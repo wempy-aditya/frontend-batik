@@ -88,6 +88,13 @@ function DashboardLayoutContent({ children }) {
       href: '/dashboard/ai-models',
       active: pathname.startsWith('/dashboard/ai-models')
     },
+    { 
+      id: 'gallery', 
+      label: 'Gallery', 
+      icon: 'photo', 
+      href: '/dashboard/gallery',
+      active: pathname.startsWith('/dashboard/gallery')
+    },
   ];
 
   const getIcon = (iconName) => {
@@ -99,6 +106,7 @@ function DashboardLayoutContent({ children }) {
       document: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
       rocket: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
       brain: "M12 2l3.09 6.26L22 9l-5.91 2.74L16 18l-4-1-4 1-.09-6.26L2 9l6.91-.74L12 2z",
+      photo: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
     };
     return icons[iconName] || icons.chart;
   };

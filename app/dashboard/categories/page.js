@@ -43,6 +43,16 @@ export default function CategoriesPage() {
       label: "News Categories",
       color: "from-red-500 to-red-600",
     },
+    {
+      value: "model",
+      label: "AI Model Categories",
+      color: "from-indigo-500 to-indigo-600",
+    },
+    {
+      value: "gallery",
+      label: "Gallery Categories",
+      color: "from-amber-500 to-orange-600",
+    },
   ];
 
   useEffect(() => {
