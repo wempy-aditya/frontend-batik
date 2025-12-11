@@ -1,6 +1,6 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/components/AuthProvider';
+"use client";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function GalleryManagement() {
   const [galleries, setGalleries] = useState([]);
@@ -18,18 +18,18 @@ export default function GalleryManagement() {
   const [offset, setOffset] = useState(0);
   const [limit] = useState(12);
   const [hasMore, setHasMore] = useState(true);
-  const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
-  
+  const [modalMode, setModalMode] = useState("create"); // 'create', 'edit', 'view'
+
   const [formData, setFormData] = useState({
-    prompt: '',
-    image_url: '',
-    extra_metadata: '',
-    model_id: ''
+    prompt: "",
+    image_url: "",
+    extra_metadata: "",
+    model_id: "",
   });
 
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [categoryGalleryId, setCategoryGalleryId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
@@ -40,19 +40,22 @@ export default function GalleryManagement() {
 
   const fetchGalleries = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/gallery?offset=${offset}&limit=${limit}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(
+        `/api/gallery?offset=${offset}&limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch galleries');
+        throw new Error("Failed to fetch galleries");
       }
 
       const data = await response.json();
-      console.log('Gallery Response:', data);
+      console.log("Gallery Response:", data);
 
       let galleriesArray = [];
       let total = 0;
@@ -76,7 +79,7 @@ export default function GalleryManagement() {
       setHasMore(galleriesArray.length === limit);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching galleries:', error);
+      console.error("Error fetching galleries:", error);
       setGalleries([]);
       setIsLoading(false);
     }
@@ -84,50 +87,50 @@ export default function GalleryManagement() {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/categories?type=gallery', {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch("/api/categories?type=gallery", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch gallery categories');
+        throw new Error("Failed to fetch gallery categories");
       }
-      
+
       const data = await response.json();
-      console.log('Gallery Categories Response:', data);
-      
+      console.log("Gallery Categories Response:", data);
+
       let categoriesArray = [];
       if (data.data && Array.isArray(data.data)) {
         categoriesArray = data.data;
       } else if (Array.isArray(data)) {
         categoriesArray = data;
       }
-      
+
       setCategories(categoriesArray);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
       setCategories([]);
     }
   };
 
   const fetchModels = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/ai-models', {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch("/api/ai-models", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch models');
+        throw new Error("Failed to fetch models");
       }
-      
+
       const data = await response.json();
-      console.log('Models Response:', data);
-      
+      console.log("Models Response:", data);
+
       let modelsArray = [];
       if (data.data?.data && Array.isArray(data.data.data)) {
         modelsArray = data.data.data;
@@ -136,10 +139,10 @@ export default function GalleryManagement() {
       } else if (Array.isArray(data)) {
         modelsArray = data;
       }
-      
+
       setModels(modelsArray);
     } catch (error) {
-      console.error('Error fetching models:', error);
+      console.error("Error fetching models:", error);
       setModels([]);
     }
   };
@@ -147,51 +150,53 @@ export default function GalleryManagement() {
   const fetchGalleryDetail = async (id) => {
     try {
       setIsLoadingDetail(true);
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       const response = await fetch(`/api/gallery/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch gallery detail');
+        throw new Error("Failed to fetch gallery detail");
       }
 
       const data = await response.json();
       const galleryData = data.data || data;
       setViewGallery(galleryData);
-      setModalMode('view');
+      setModalMode("view");
       setShowViewModal(true);
       setIsLoadingDetail(false);
     } catch (error) {
-      console.error('Error fetching gallery detail:', error);
-      alert('Failed to load gallery details');
+      console.error("Error fetching gallery detail:", error);
+      alert("Failed to load gallery details");
       setIsLoadingDetail(false);
     }
   };
 
   const openModal = async (mode, gallery = null) => {
     setModalMode(mode);
-    if (mode === 'create') {
+    if (mode === "create") {
       setCurrentGallery(null);
       setFormData({
-        prompt: '',
-        image_url: '',
-        extra_metadata: '',
-        model_id: ''
+        prompt: "",
+        image_url: "",
+        extra_metadata: "",
+        model_id: "",
       });
       setShowModal(true);
-    } else if (mode === 'edit') {
+    } else if (mode === "edit") {
       setCurrentGallery(gallery);
       setFormData({
-        prompt: gallery.prompt || '',
-        image_url: gallery.image_url || '',
-        extra_metadata: gallery.extra_metadata ? JSON.stringify(gallery.extra_metadata, null, 2) : '',
-        model_id: gallery.model_id || ''
+        prompt: gallery.prompt || "",
+        image_url: gallery.image_url || "",
+        extra_metadata: gallery.extra_metadata
+          ? JSON.stringify(gallery.extra_metadata, null, 2)
+          : "",
+        model_id: gallery.model_id || "",
       });
       setShowModal(true);
-    } else if (mode === 'view') {
+    } else if (mode === "view") {
       await fetchGalleryDetail(gallery.id);
     }
   };
@@ -200,25 +205,25 @@ export default function GalleryManagement() {
     setShowModal(false);
     setCurrentGallery(null);
     setFormData({
-      prompt: '',
-      image_url: '',
-      extra_metadata: '',
-      model_id: ''
+      prompt: "",
+      image_url: "",
+      extra_metadata: "",
+      model_id: "",
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const token = localStorage.getItem('access_token');
-      
+      const token = localStorage.getItem("access_token");
+
       let metadata = null;
       if (formData.extra_metadata.trim()) {
         try {
           metadata = JSON.parse(formData.extra_metadata);
         } catch (e) {
-          alert('Invalid JSON in Extra Metadata');
+          alert("Invalid JSON in Extra Metadata");
           return;
         }
       }
@@ -227,32 +232,34 @@ export default function GalleryManagement() {
         prompt: formData.prompt,
         image_url: formData.image_url,
         extra_metadata: metadata,
-        model_id: formData.model_id || undefined
+        model_id: formData.model_id || undefined,
       };
 
-      const url = currentGallery 
-        ? `/api/gallery/${currentGallery.id}` 
-        : '/api/gallery';
-      
-      const method = currentGallery ? 'PUT' : 'POST';
+      const url = currentGallery
+        ? `/api/gallery/${currentGallery.id}`
+        : "/api/gallery";
+
+      const method = currentGallery ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${currentGallery ? 'update' : 'create'} gallery`);
+        throw new Error(
+          `Failed to ${currentGallery ? "update" : "create"} gallery`
+        );
       }
 
       await fetchGalleries();
       handleCloseModal();
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       alert(error.message);
     }
   };
@@ -261,23 +268,23 @@ export default function GalleryManagement() {
     if (!galleryToDelete) return;
 
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem("access_token");
       const response = await fetch(`/api/gallery/${galleryToDelete.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete gallery');
+        throw new Error("Failed to delete gallery");
       }
 
       await fetchGalleries();
       handleCloseDeleteModal();
     } catch (error) {
-      console.error('Error deleting gallery:', error);
-      alert('Failed to delete gallery');
+      console.error("Error deleting gallery:", error);
+      alert("Failed to delete gallery");
     }
   };
 
@@ -293,12 +300,12 @@ export default function GalleryManagement() {
 
   const openCategoryModal = (gallery) => {
     setCategoryGalleryId(gallery.id);
-    
+
     const currentCategoryNames = gallery.categories || [];
     const categoryIds = categories
-      .filter(cat => currentCategoryNames.includes(cat.name))
-      .map(cat => cat.id);
-    
+      .filter((cat) => currentCategoryNames.includes(cat.name))
+      .map((cat) => cat.id);
+
     setSelectedCategories(categoryIds);
     setShowCategoryModal(true);
   };
@@ -310,43 +317,47 @@ export default function GalleryManagement() {
   };
 
   const handleCategoryToggle = (categoryId) => {
-    setSelectedCategories(prev =>
+    setSelectedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
+        ? prev.filter((id) => id !== categoryId)
         : [...prev, categoryId]
     );
   };
 
   const handleSaveCategories = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/gallery/${categoryGalleryId}/categories`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          category_ids: selectedCategories
-        })
-      });
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(
+        `/api/gallery/${categoryGalleryId}/categories`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            category_ids: selectedCategories,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to assign categories');
+        throw new Error("Failed to assign categories");
       }
 
       await fetchGalleries();
       handleCloseCategoryModal();
     } catch (error) {
-      console.error('Error assigning categories:', error);
-      alert('Failed to assign categories');
+      console.error("Error assigning categories:", error);
+      alert("Failed to assign categories");
     }
   };
 
-  const filteredGalleries = galleries.filter(gallery => {
-    const matchesSearch = !searchTerm || 
-      (gallery.prompt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       gallery.model_name?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredGalleries = galleries.filter((gallery) => {
+    const matchesSearch =
+      !searchTerm ||
+      gallery.prompt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      gallery.model_name?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -357,11 +368,23 @@ export default function GalleryManagement() {
           <div className="relative w-20 h-20 mx-auto mb-6">
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl animate-pulse"></div>
             <div className="absolute inset-2 bg-white rounded-xl"></div>
-            <svg className="absolute inset-0 w-full h-full p-5 text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <svg
+              className="absolute inset-0 w-full h-full p-5 text-amber-600 animate-spin"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
             </svg>
           </div>
-          <p className="text-slate-700 font-medium text-lg">Loading Gallery...</p>
+          <p className="text-slate-700 font-medium text-lg">
+            Loading Gallery...
+          </p>
           <p className="text-slate-500 text-sm mt-2">Please wait</p>
         </div>
       </div>
@@ -378,16 +401,28 @@ export default function GalleryManagement() {
               <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
                 Gallery
               </h1>
-              <p className="text-slate-600 mt-1 text-sm sm:text-base">Manage AI-generated batik gallery images</p>
+              <p className="text-slate-600 mt-1 text-sm sm:text-base">
+                Manage AI-generated batik gallery images
+              </p>
             </div>
             <button
-              onClick={() => openModal('create')}
+              onClick={() => openModal("create")}
               className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <div className="relative flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
                 </svg>
                 <span>Add Gallery Item</span>
               </div>
@@ -408,28 +443,38 @@ export default function GalleryManagement() {
               {/* Image */}
               <div className="relative h-64 bg-gradient-to-br from-amber-50 to-orange-50">
                 {gallery.image_url ? (
-                  <img 
-                    src={gallery.image_url} 
-                    alt={gallery.prompt || 'Gallery'}
+                  <img
+                    src={gallery.image_url}
+                    alt={gallery.prompt || "Gallery"}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
                     }}
                   />
                 ) : null}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-16 h-16 text-amber-600/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-16 h-16 text-amber-600/50"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
               </div>
 
               <div className="p-6">
                 <p className="font-bold text-slate-900 mb-3 line-clamp-2 text-base group-hover:text-amber-700 transition-colors">
-                  {gallery.prompt || 'No prompt'}
+                  {gallery.prompt || "No prompt"}
                 </p>
-                
+
                 {gallery.model_name && (
                   <p className="text-sm text-amber-700 bg-amber-50/80 backdrop-blur-sm px-3 py-1.5 rounded-xl font-mono font-medium mb-3 inline-block">
                     {gallery.model_name}
@@ -439,15 +484,22 @@ export default function GalleryManagement() {
                 {/* Categories */}
                 {gallery.categories && gallery.categories.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs font-bold text-slate-700 mb-2">Categories</p>
+                    <p className="text-xs font-bold text-slate-700 mb-2">
+                      Categories
+                    </p>
                     <div className="flex flex-wrap gap-1.5">
                       {gallery.categories.slice(0, 3).map((cat, index) => (
-                        <span key={index} className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
-                          {typeof cat === 'string' ? cat : cat.name}
+                        <span
+                          key={index}
+                          className="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium"
+                        >
+                          {typeof cat === "string" ? cat : cat.name}
                         </span>
                       ))}
                       {gallery.categories.length > 3 && (
-                        <span className="text-xs text-slate-500 font-medium">+{gallery.categories.length - 3} more</span>
+                        <span className="text-xs text-slate-500 font-medium">
+                          +{gallery.categories.length - 3} more
+                        </span>
                       )}
                     </div>
                   </div>
@@ -455,69 +507,142 @@ export default function GalleryManagement() {
 
                 {/* Meta Info */}
                 <div className="text-xs text-slate-500 pb-4 mb-4 border-b border-slate-100">
-                  <span>{gallery.created_at ? new Date(gallery.created_at).toLocaleDateString() : 'N/A'}</span>
+                  <span>
+                    {gallery.created_at
+                      ? new Date(gallery.created_at).toLocaleDateString()
+                      : "N/A"}
+                  </span>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:flex gap-2">
                   <button
-                    onClick={() => openModal('view', gallery)}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                    onClick={() => openModal("view", gallery)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <svg
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </svg>
-                    View
+                    <span className="hidden xs:inline">View</span>
                   </button>
                   <button
-                    onClick={() => openModal('edit', gallery)}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                    onClick={() => openModal("edit", gallery)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <svg
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
                     </svg>
-                    Edit
+                    <span className="hidden xs:inline">Edit</span>
                   </button>
                   <button
                     onClick={() => openCategoryModal(gallery)}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    <svg
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
                     </svg>
-                    Tags
+                    <span className="hidden xs:inline">Tags</span>
                   </button>
                   <button
                     onClick={() => openDeleteModal(gallery)}
-                    className="flex items-center justify-center gap-2 px-3 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-sm"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <svg
+                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
                     </svg>
-                    Delete
+                    <span className="hidden xs:inline">Delete</span>
                   </button>
                 </div>
               </div>
             </div>
           ))}
-          
+
           {filteredGalleries.length === 0 && !isLoading && (
             <div className="col-span-full text-center py-16">
               <div className="max-w-md mx-auto">
                 <div className="w-32 h-32 bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-amber-500/20">
-                  <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-16 h-16 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No Gallery Items Yet</h3>
-                <p className="text-slate-600 mb-6">Start creating by adding your first gallery item</p>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                  No Gallery Items Yet
+                </h3>
+                <p className="text-slate-600 mb-6">
+                  Start creating by adding your first gallery item
+                </p>
                 <button
-                  onClick={() => openModal('create')}
+                  onClick={() => openModal("create")}
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-8 py-4 rounded-2xl font-medium shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
                   </svg>
                   Create First Gallery Item
                 </button>
@@ -529,41 +654,62 @@ export default function GalleryManagement() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
-            <div className="max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-4 sm:p-6 z-10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900">
-                      {modalMode === 'create' && 'Create Gallery Item'}
-                      {modalMode === 'edit' && 'Edit Gallery Item'}
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                      {modalMode === "create" && "Create Gallery Item"}
+                      {modalMode === "edit" && "Edit Gallery Item"}
                     </h2>
-                    <p className="text-slate-600 text-sm mt-1">
-                      {modalMode === 'create' && 'Add a new item to your gallery'}
-                      {modalMode === 'edit' && 'Update gallery item'}
+                    <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                      {modalMode === "create" &&
+                        "Add a new item to your gallery"}
+                      {modalMode === "edit" && "Update gallery item"}
                     </p>
                   </div>
                   <button
                     onClick={handleCloseModal}
-                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
+                    className="flex-shrink-0 p-1.5 sm:p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6 p-6">
+              <form onSubmit={handleSubmit} className="space-y-6 p-4 sm:p-6">
                 <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
                   <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     Basic Information
                   </h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -571,7 +717,9 @@ export default function GalleryManagement() {
                       </label>
                       <textarea
                         value={formData.prompt}
-                        onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, prompt: e.target.value })
+                        }
                         className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                         rows="4"
                         required
@@ -586,7 +734,12 @@ export default function GalleryManagement() {
                       <input
                         type="url"
                         value={formData.image_url}
-                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            image_url: e.target.value,
+                          })
+                        }
                         className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                         required
                         placeholder="https://example.com/image.jpg"
@@ -599,15 +752,18 @@ export default function GalleryManagement() {
                       </label>
                       <select
                         value={formData.model_id}
-                        onChange={(e) => setFormData({ ...formData, model_id: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, model_id: e.target.value })
+                        }
                         className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200"
                       >
                         <option value="">-- Select Model (Optional) --</option>
-                        {Array.isArray(models) && models.map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.name}
-                          </option>
-                        ))}
+                        {Array.isArray(models) &&
+                          models.map((model) => (
+                            <option key={model.id} value={model.id}>
+                              {model.name}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>
@@ -615,24 +771,41 @@ export default function GalleryManagement() {
 
                 <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
                   <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    <svg
+                      className="w-5 h-5 text-amber-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                      />
                     </svg>
                     Metadata (Optional)
                   </h3>
-                  
+
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">
                       Extra Metadata (JSON)
                     </label>
                     <textarea
                       value={formData.extra_metadata}
-                      onChange={(e) => setFormData({ ...formData, extra_metadata: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          extra_metadata: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 font-mono text-sm"
                       rows="6"
                       placeholder='{"steps": 50, "guidance_scale": 7.5, "seed": 12345}'
                     />
-                    <p className="text-xs text-slate-500 mt-2">Optional. Enter valid JSON for generation parameters</p>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Optional. Enter valid JSON for generation parameters
+                    </p>
                   </div>
                 </div>
 
@@ -641,7 +814,9 @@ export default function GalleryManagement() {
                     type="submit"
                     className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 hover:scale-105"
                   >
-                    {modalMode === 'create' ? 'Create Gallery Item' : 'Save Changes'}
+                    {modalMode === "create"
+                      ? "Create Gallery Item"
+                      : "Save Changes"}
                   </button>
                   <button
                     type="button"
@@ -659,21 +834,35 @@ export default function GalleryManagement() {
 
       {/* View Modal */}
       {showViewModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
-            <div className="max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-6 z-10">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden transform transition-all animate-slideUp">
+            <div className="max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-gradient-to-r from-slate-50 to-amber-50/50 backdrop-blur-xl border-b border-slate-200/60 p-4 sm:p-6 z-10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Gallery Details</h2>
-                    <p className="text-slate-600 text-sm mt-1">View gallery item details</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                      Gallery Details
+                    </h2>
+                    <p className="text-slate-600 text-xs sm:text-sm mt-1">
+                      View gallery item details
+                    </p>
                   </div>
                   <button
                     onClick={() => setShowViewModal(false)}
-                    className="p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
+                    className="flex-shrink-0 p-1.5 sm:p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 hover:scale-110"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -683,106 +872,182 @@ export default function GalleryManagement() {
                 <div className="flex items-center justify-center py-12">
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-4">
-                      <svg className="w-full h-full text-amber-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      <svg
+                        className="w-full h-full text-amber-600 animate-spin"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
                       </svg>
                     </div>
-                    <p className="text-slate-600 font-medium">Loading details...</p>
+                    <p className="text-slate-600 font-medium">
+                      Loading details...
+                    </p>
                   </div>
                 </div>
-              ) : viewGallery && (
-                <div className="space-y-6 p-6">
-                  <div className="aspect-video bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl overflow-hidden border border-slate-200">
-                    {viewGallery.image_url ? (
-                      <img
-                        src={viewGallery.image_url}
-                        alt={viewGallery.prompt || 'Gallery image'}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Basic Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">ID</label>
-                        <p className="text-slate-900 font-mono text-sm">{viewGallery.id}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">Created By</label>
-                        <p className="text-slate-900">{viewGallery.creator_name || viewGallery.created_by || 'N/A'}</p>
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">Prompt</label>
-                        <p className="text-slate-900 whitespace-pre-wrap">{viewGallery.prompt || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">AI Model</label>
-                        <p className="text-slate-900">
-                          {viewGallery.model_name || (viewGallery.model_id ? `Model ID: ${viewGallery.model_id}` : 'N/A')}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">Categories</label>
-                        <div className="flex flex-wrap gap-2">
-                          {viewGallery.categories?.length > 0 ? (
-                            viewGallery.categories.map((cat, index) => (
-                              <span key={index} className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-                                {typeof cat === 'string' ? cat : cat.name}
-                              </span>
-                            ))
-                          ) : (
-                            <p className="text-slate-900">No categories</p>
-                          )}
-                        </div>
-                      </div>
-                      {viewGallery.extra_metadata && (
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-semibold text-slate-500 mb-1">Extra Metadata</label>
-                          <pre className="text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-200 overflow-x-auto text-sm font-mono">
-                            {JSON.stringify(viewGallery.extra_metadata, null, 2)}
-                          </pre>
+              ) : (
+                viewGallery && (
+                  <div className="space-y-6 p-4 sm:p-6">
+                    <div className="aspect-video bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl overflow-hidden border border-slate-200">
+                      {viewGallery.image_url ? (
+                        <img
+                          src={viewGallery.image_url}
+                          alt={viewGallery.prompt || "Gallery image"}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                          <svg
+                            className="w-24 h-24"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
                         </div>
                       )}
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">Created At</label>
-                        <p className="text-slate-900">
-                          {viewGallery.created_at ? new Date(viewGallery.created_at).toLocaleString() : 'N/A'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-500 mb-1">Updated At</label>
-                        <p className="text-slate-900">
-                          {viewGallery.updated_at ? new Date(viewGallery.updated_at).toLocaleString() : 'N/A'}
-                        </p>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-slate-50 to-amber-50/50 p-4 rounded-2xl border border-slate-200">
+                      <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-amber-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Basic Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            ID
+                          </label>
+                          <p className="text-slate-900 font-mono text-sm">
+                            {viewGallery.id}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            Created By
+                          </label>
+                          <p className="text-slate-900">
+                            {viewGallery.creator_name ||
+                              viewGallery.created_by ||
+                              "N/A"}
+                          </p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            Prompt
+                          </label>
+                          <p className="text-slate-900 whitespace-pre-wrap">
+                            {viewGallery.prompt || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            AI Model
+                          </label>
+                          <p className="text-slate-900">
+                            {viewGallery.model_name ||
+                              (viewGallery.model_id
+                                ? `Model ID: ${viewGallery.model_id}`
+                                : "N/A")}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            Categories
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {viewGallery.categories?.length > 0 ? (
+                              viewGallery.categories.map((cat, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium"
+                                >
+                                  {typeof cat === "string" ? cat : cat.name}
+                                </span>
+                              ))
+                            ) : (
+                              <p className="text-slate-900">No categories</p>
+                            )}
+                          </div>
+                        </div>
+                        {viewGallery.extra_metadata && (
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-semibold text-slate-500 mb-1">
+                              Extra Metadata
+                            </label>
+                            <pre className="text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-200 overflow-x-auto text-sm font-mono">
+                              {JSON.stringify(
+                                viewGallery.extra_metadata,
+                                null,
+                                2
+                              )}
+                            </pre>
+                          </div>
+                        )}
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            Created At
+                          </label>
+                          <p className="text-slate-900">
+                            {viewGallery.created_at
+                              ? new Date(
+                                  viewGallery.created_at
+                                ).toLocaleString()
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-500 mb-1">
+                            Updated At
+                          </label>
+                          <p className="text-slate-900">
+                            {viewGallery.updated_at
+                              ? new Date(
+                                  viewGallery.updated_at
+                                ).toLocaleString()
+                              : "N/A"}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex justify-end pt-4">
-                    <button
-                      onClick={() => setShowViewModal(false)}
-                      className="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
-                    >
-                      Close
-                    </button>
+                    <div className="flex justify-end pt-4">
+                      <button
+                        onClick={() => setShowViewModal(false)}
+                        className="bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
+                      >
+                        Close
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
           </div>
@@ -794,13 +1059,26 @@ export default function GalleryManagement() {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-red-100 rounded-2xl">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mb-2 text-center text-slate-900">Delete Gallery Item?</h2>
+            <h2 className="text-2xl font-bold mb-2 text-center text-slate-900">
+              Delete Gallery Item?
+            </h2>
             <p className="text-slate-600 mb-6 text-center">
-              Are you sure you want to delete this gallery item? This action cannot be undone.
+              Are you sure you want to delete this gallery item? This action
+              cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
@@ -822,43 +1100,57 @@ export default function GalleryManagement() {
 
       {/* Category Assignment Modal */}
       {showCategoryModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              Assign Categories
-            </h2>
-            
-            <div className="space-y-2 mb-6 max-h-96 overflow-y-auto">
-              {categories.length > 0 ? (
-                categories.map((category) => (
-                  <label key={category.id} className="flex items-center space-x-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={() => handleCategoryToggle(category.id)}
-                      className="w-5 h-5 text-amber-600 border-slate-300 rounded-lg focus:ring-amber-600"
-                    />
-                    <span className="text-slate-700 font-medium">{category.name}</span>
-                  </label>
-                ))
-              ) : (
-                <p className="text-center text-slate-500 py-8">No categories available</p>
-              )}
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+            <div className="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-600 p-4 sm:p-6 z-10">
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                Assign Categories
+              </h2>
+              <p className="text-amber-50 text-xs sm:text-sm mt-1">
+                Select categories for this gallery item
+              </p>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={handleSaveCategories}
-                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300"
-              >
-                Save Changes
-              </button>
-              <button
-                onClick={handleCloseCategoryModal}
-                className="flex-1 bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
-              >
-                Cancel
-              </button>
+            <div className="p-4 sm:p-6">
+              <div className="space-y-2 mb-6 max-h-96 overflow-y-auto">
+                {categories.length > 0 ? (
+                  categories.map((category) => (
+                    <label
+                      key={category.id}
+                      className="flex items-center space-x-3 p-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategoryToggle(category.id)}
+                        className="w-5 h-5 text-amber-600 border-slate-300 rounded-lg focus:ring-amber-600"
+                      />
+                      <span className="text-slate-700 font-medium">
+                        {category.name}
+                      </span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-center text-slate-500 py-8">
+                    No categories available
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveCategories}
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={handleCloseCategoryModal}
+                  className="flex-1 bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:bg-slate-200 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
