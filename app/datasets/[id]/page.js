@@ -1,6 +1,30 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+
+// Helper functions
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+};
+
+const formatNumber = (num) => {
+  if (!num) return "0";
+  if (num >= 1000000000) return (num / 1000000000).toFixed(1) + "B";
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+  if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+  return num.toString();
+};
+
+const getGradientClass = (gradientString) => {
+  // Placeholder - map hex colors to Tailwind gradient classes
+  // You can enhance this to dynamically generate gradients
+  if (!gradientString) return "from-gray-400 to-gray-600";
+  return "from-amber-500 to-orange-500"; // Default fallback
+};
 
 export default function DatasetDetailPage() {
   const router = useRouter();
@@ -9,277 +33,225 @@ export default function DatasetDetailPage() {
 
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSample, setSelectedSample] = useState(null);
+  const [dataset, setDataset] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Dataset data (in real app, this would come from an API)
+  // Fetch dataset detail from API
+  useEffect(() => {
+    const fetchDataset = async () => {
+      try {
+        const response = await fetch(`/api/datasets/public/${datasetId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setDataset(data);
+        } else {
+          // API failed, will use fallback data
+          setDataset(null);
+        }
+      } catch (error) {
+        console.error('Error fetching dataset:', error);
+        // Error occurred, will use fallback data
+        setDataset(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (datasetId) {
+      fetchDataset();
+    }
+  }, [datasetId]);
+
+  // Fallback dataset data (API-compliant structure)
   const datasets = {
-    1: {
-      id: 1,
-      name: "ImageNet-2024",
-      tagline: "Large-scale visual recognition challenge dataset",
-      description:
-        "ImageNet-2024 is the latest iteration of the renowned ImageNet dataset, featuring over 14 million high-quality images across 20,000+ categories. This comprehensive dataset has been meticulously curated for object recognition research, deep learning training, and computer vision advancement.",
-      size: "150GB",
-      samples: "14.2M",
-      categories: "20K+",
-      accessType: "Public",
-      downloadCount: "250K+",
-      lastUpdated: "2024-01-15",
-      gradient: "from-amber-500 to-orange-500",
+    "019ae4b2-d4c7-7a18-890d-80db7143746a": {
+      id: "019ae4b2-d4c7-7a18-890d-80db7143746a",
+      name: "Indonesian Batik Patterns",
+      slug: "indonesian-batik-patterns",
+      description: "Comprehensive collection of traditional Indonesian batik patterns from various regions including Java, Sumatra, and Bali. Features high-resolution images with detailed annotations.",
+      tagline: "Traditional Indonesian batik patterns dataset",
+      samples: 50000,
+      download_count: 1250,
+      gradient: "#FF6B6B,#4ECDC4",
       version: "2024.1",
-      format: "JPEG, XML",
-      license: "Academic Use",
-      citation:
-        "Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., & Fei-Fei, L. (2024). ImageNet: A large-scale hierarchical image database.",
-      keyFeatures: [
-        "14.2 million annotated images",
-        "20,000+ hierarchical categories",
-        "Multiple annotation types (bounding boxes, segmentation)",
-        "High-quality manual verification",
-        "Regular updates and improvements",
-        "Comprehensive metadata",
+      format: "JPEG, PNG",
+      license: "CC BY-NC 4.0",
+      citation: "Indonesian Batik Research Institute (2024). Indonesian Batik Patterns Dataset.",
+      key_features: [
+        "50,000 high-resolution batik images",
+        "Multiple regional styles",
+        "Detailed pattern annotations",
+        "Cultural context metadata",
+        "Expert verification"
       ],
-      useCases: [
-        "Object Recognition",
-        "Image Classification",
-        "Transfer Learning",
-        "Model Benchmarking",
-        "Feature Extraction",
-        "Deep Learning Research",
+      use_cases: [
+        "Pattern Recognition",
+        "Cultural Heritage Preservation",
+        "Machine Learning Training",
+        "Design Inspiration",
+        "Academic Research"
       ],
-      technicalSpecs: {
-        format: "Image Dataset",
-        type: "Classification & Recognition",
-        license: "Academic Use",
+      technical_specs: {
+        type: "Image Classification",
         access: "Public",
-        lastUpdate: "January 2024",
+        format: "JPEG, PNG",
+        license: "CC BY-NC 4.0",
         version: "2024.1",
+        lastUpdate: "March 2024"
       },
       statistics: {
-        avgImagesPerCategory: "710",
-        minImagesPerCategory: "500",
-        maxImagesPerCategory: "1300",
-        avgImageSize: "482KB",
-        totalAnnotations: "14.2M",
-        qualityScore: "98.5%",
+        avgImageSize: "2.5MB",
+        qualityScore: "96.8%",
+        totalAnnotations: 50000,
+        avgImagesPerCategory: 850,
+        maxImagesPerCategory: 1200,
+        minImagesPerCategory: 500
       },
-      sampleImages: [
-        {
-          id: 1,
-          category: "Golden Retriever",
-          confidence: "98.5%",
-          gradient: "from-yellow-400 to-amber-500",
-        },
-        {
-          id: 2,
-          category: "Sports Car",
-          confidence: "97.2%",
-          gradient: "from-red-500 to-orange-500",
-        },
-        {
-          id: 3,
-          category: "Coffee Cup",
-          confidence: "96.8%",
-          gradient: "from-amber-600 to-yellow-500",
-        },
-        {
-          id: 4,
-          category: "Mountain Landscape",
-          confidence: "99.1%",
-          gradient: "from-blue-500 to-cyan-500",
-        },
-        {
-          id: 5,
-          category: "Laptop Computer",
-          confidence: "97.9%",
-          gradient: "from-gray-600 to-slate-500",
-        },
-        {
-          id: 6,
-          category: "Pizza",
-          confidence: "98.3%",
-          gradient: "from-red-400 to-yellow-500",
-        },
-      ],
+      sample_images: [],
+      sample_image_url: null,
+      file_url: null,
+      source: "Indonesian Batik Research Institute",
+      size: 125000000000,
+      access_level: "public",
+      status: "published",
+      created_by: "019ae4b1-0000-0000-0000-000000000001",
+      created_at: "2024-01-15T00:00:00Z",
+      updated_at: "2024-03-20T00:00:00Z",
+      categories: ["Traditional Patterns", "Cultural Heritage", "Southeast Asian Art"],
+      creator_name: "IBRI Research Team",
       downloadOptions: [
         {
           type: "Full Dataset",
-          size: "150GB",
+          size: formatFileSize(125000000000),
           format: "ZIP",
           speed: "Fast servers",
         },
         {
           type: "Training Set",
-          size: "120GB",
+          size: formatFileSize(100000000000),
           format: "ZIP",
           speed: "Fast servers",
         },
         {
           type: "Validation Set",
-          size: "20GB",
+          size: formatFileSize(15000000000),
           format: "ZIP",
           speed: "Fast servers",
         },
         {
           type: "Test Set",
-          size: "10GB",
+          size: formatFileSize(10000000000),
           format: "ZIP",
           speed: "Fast servers",
         },
       ],
       relatedPapers: [
         {
-          title: "Deep Residual Learning using ImageNet",
+          title: "Pattern Recognition in Traditional Textiles",
           year: "2024",
-          citations: "15K+",
+          citations: "850",
         },
         {
-          title: "Vision Transformers on Large Scale Datasets",
+          title: "Deep Learning for Cultural Heritage",
           year: "2023",
-          citations: "12K+",
+          citations: "620",
         },
         {
-          title: "Self-Supervised Learning with ImageNet",
+          title: "Batik Classification using CNN",
           year: "2024",
-          citations: "8K+",
+          citations: "430",
         },
       ],
-    },
-    2: {
-      id: 2,
-      name: "COCO-Enhanced",
-      tagline: "Extended Microsoft COCO dataset with enhanced annotations",
-      description:
-        "COCO-Enhanced is an extended version of the Microsoft COCO dataset, featuring additional annotations for instance segmentation, keypoint detection, and panoptic understanding. This comprehensive dataset is ideal for multi-task learning and advanced computer vision research.",
-      size: "45GB",
-      samples: "330K",
-      categories: "150",
-      accessType: "Registered",
-      downloadCount: "125K+",
-      lastUpdated: "2023-11-20",
-      gradient: "from-orange-500 to-red-500",
-      version: "2023.2",
-      format: "JPEG, JSON",
-      license: "CC BY 4.0",
-      citation:
-        "Lin, T.-Y., et al. (2023). Microsoft COCO: Common Objects in Context - Enhanced Edition.",
-      keyFeatures: [
-        "330,000 diverse images",
-        "150 object categories with detailed annotations",
-        "Instance segmentation masks",
-        "Keypoint annotations for people",
-        "Panoptic segmentation data",
-        "Caption annotations",
-      ],
-      useCases: [
-        "Object Detection",
-        "Instance Segmentation",
-        "Keypoint Detection",
-        "Panoptic Segmentation",
-        "Image Captioning",
-        "Multi-Task Learning",
-      ],
-      technicalSpecs: {
-        format: "Image Dataset",
-        type: "Object Detection & Segmentation",
-        license: "CC BY 4.0",
-        access: "Registered Users",
-        lastUpdate: "November 2023",
-        version: "2023.2",
-      },
-      statistics: {
-        avgImagesPerCategory: "2200",
-        minImagesPerCategory: "1000",
-        maxImagesPerCategory: "5000",
-        avgImageSize: "350KB",
-        totalAnnotations: "2.5M",
-        qualityScore: "99.2%",
-      },
-      sampleImages: [
-        {
-          id: 1,
-          category: "Person with Bicycle",
-          confidence: "99.2%",
-          gradient: "from-blue-500 to-cyan-500",
-        },
-        {
-          id: 2,
-          category: "Street Scene",
-          confidence: "98.7%",
-          gradient: "from-purple-500 to-pink-500",
-        },
-        {
-          id: 3,
-          category: "Kitchen Interior",
-          confidence: "97.5%",
-          gradient: "from-green-500 to-teal-500",
-        },
-        {
-          id: 4,
-          category: "Sports Activity",
-          confidence: "98.9%",
-          gradient: "from-red-500 to-orange-500",
-        },
-        {
-          id: 5,
-          category: "Wildlife",
-          confidence: "97.8%",
-          gradient: "from-amber-500 to-yellow-500",
-        },
-        {
-          id: 6,
-          category: "Urban Architecture",
-          confidence: "98.4%",
-          gradient: "from-slate-600 to-gray-500",
-        },
-      ],
-      downloadOptions: [
-        {
-          type: "Full Dataset",
-          size: "45GB",
-          format: "ZIP",
-          speed: "Fast servers",
-        },
-        {
-          type: "Training Set",
-          size: "35GB",
-          format: "ZIP",
-          speed: "Fast servers",
-        },
-        {
-          type: "Validation Set",
-          size: "6GB",
-          format: "ZIP",
-          speed: "Fast servers",
-        },
-        {
-          type: "Annotations Only",
-          size: "2GB",
-          format: "JSON",
-          speed: "Instant",
-        },
-      ],
-      relatedPapers: [
-        {
-          title: "Mask R-CNN for Instance Segmentation",
-          year: "2023",
-          citations: "25K+",
-        },
-        {
-          title: "Panoptic Segmentation Methods",
-          year: "2024",
-          citations: "10K+",
-        },
-        {
-          title: "Multi-Task Learning with COCO",
-          year: "2023",
-          citations: "8K+",
-        },
-      ],
-    },
-    // Add more datasets as needed
+    }
   };
 
-  const dataset = datasets[datasetId] || datasets[1];
+  // Use API data if available, otherwise use fallback
+  const currentDataset = dataset || datasets[datasetId] || datasets["019ae4b2-d4c7-7a18-890d-80db7143746a"];
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
+          <p className="text-gray-600">Loading dataset...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Default fallback dataset (API-compliant structure)
+  const defaultDataset = {
+    id: "unknown",
+    name: "Dataset Not Found",
+    slug: "not-found",
+    tagline: "This dataset is not available",
+    description: "The requested dataset could not be found.",
+    samples: 0,
+    download_count: 0,
+    gradient: "#9CA3AF,#6B7280",
+    version: "1.0",
+    format: "N/A",
+    license: "N/A",
+    citation: "N/A",
+    key_features: ["Dataset not available"],
+    use_cases: ["N/A"],
+    technical_specs: {
+      type: "N/A",
+      access: "Public",
+      format: "N/A",
+      license: "N/A",
+      version: "1.0",
+      lastUpdate: "N/A"
+    },
+    statistics: {
+      avgImageSize: "0KB",
+      qualityScore: "0%",
+      totalAnnotations: 0,
+      avgImagesPerCategory: 0,
+      maxImagesPerCategory: 0,
+      minImagesPerCategory: 0
+    },
+    sample_images: [],
+    sample_image_url: null,
+    file_url: null,
+    source: "N/A",
+    size: 0,
+    access_level: "public",
+    status: "published",
+    created_by: "unknown",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    categories: [],
+    creator_name: "Unknown",
+    downloadOptions: [],
+    relatedPapers: [],
+  };
+
+  // Determine display dataset with proper fallback chain
+  const displayDataset = currentDataset || defaultDataset;
+
+  // Not found state - only show if no dataset available at all
+  if (!loading && !displayDataset) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Dataset Not Found
+          </h1>
+          <p className="text-gray-600 mb-8">
+            The dataset you're looking for doesn't exist.
+          </p>
+          <button
+            onClick={() => router.push("/datasets")}
+            className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl cursor-pointer hover:shadow-xl transition-all duration-300"
+          >
+            Back to Datasets
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: "overview", name: "Overview", icon: "M4 6h16M4 12h16m-7 6h7" },
@@ -299,7 +271,7 @@ export default function DatasetDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Hero Section */}
       <section
-        className={`relative py-20 pt-32 bg-gradient-to-r ${dataset.gradient} overflow-hidden`}
+        className={`relative py-20 pt-32 bg-gradient-to-r ${getGradientClass(displayDataset?.gradient)} overflow-hidden`}
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -353,7 +325,7 @@ export default function DatasetDetailPage() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span className="text-white">{dataset.name}</span>
+            <span className="text-white">{displayDataset?.name}</span>
           </div>
 
           {/* Title and Info */}
@@ -374,34 +346,34 @@ export default function DatasetDetailPage() {
                   />
                 </svg>
                 <span className="text-sm font-semibold text-white">
-                  {dataset.accessType} Dataset
+                  {(displayDataset?.access_level || 'public').charAt(0).toUpperCase() + (displayDataset?.access_level || 'public').slice(1)} Dataset
                 </span>
               </div>
 
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-                {dataset.name}
+                {displayDataset?.name}
               </h1>
               <p className="text-xl text-white/90 mb-8 leading-relaxed">
-                {dataset.tagline}
+                {displayDataset?.tagline}
               </p>
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <div className="text-3xl font-bold text-white">
-                    {dataset.samples}
+                    {formatNumber(displayDataset?.samples)}
                   </div>
                   <div className="text-white/80 text-sm">Samples</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <div className="text-3xl font-bold text-white">
-                    {dataset.size}
+                    {formatFileSize(displayDataset?.size)}
                   </div>
                   <div className="text-white/80 text-sm">Total Size</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                   <div className="text-3xl font-bold text-white">
-                    {dataset.categories}
+                    {displayDataset?.categories?.length || 0}
                   </div>
                   <div className="text-white/80 text-sm">Categories</div>
                 </div>
@@ -447,25 +419,25 @@ export default function DatasetDetailPage() {
                     <div className="flex justify-between text-white/80">
                       <span>Version:</span>
                       <span className="font-semibold text-white">
-                        {dataset.version}
+                        {displayDataset?.version}
                       </span>
                     </div>
                     <div className="flex justify-between text-white/80">
                       <span>Format:</span>
                       <span className="font-semibold text-white">
-                        {dataset.format}
+                        {displayDataset?.format}
                       </span>
                     </div>
                     <div className="flex justify-between text-white/80">
                       <span>License:</span>
                       <span className="font-semibold text-white">
-                        {dataset.license}
+                        {displayDataset?.license}
                       </span>
                     </div>
                     <div className="flex justify-between text-white/80">
                       <span>Updated:</span>
                       <span className="font-semibold text-white">
-                        {new Date(dataset.lastUpdated).toLocaleDateString(
+                        {new Date(displayDataset?.updated_at || displayDataset?.created_at).toLocaleDateString(
                           "en-US",
                           { year: "numeric", month: "short", day: "numeric" }
                         )}
@@ -529,7 +501,7 @@ export default function DatasetDetailPage() {
                       About This Dataset
                     </h2>
                     <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                      {dataset.description}
+                      {displayDataset?.description}
                     </p>
 
                     {/* Key Features */}
@@ -537,7 +509,7 @@ export default function DatasetDetailPage() {
                       Key Features
                     </h3>
                     <div className="grid md:grid-cols-2 gap-3">
-                      {dataset.keyFeatures.map((feature, index) => (
+                      {(displayDataset?.key_features || []).map((feature, index) => (
                         <div key={index} className="flex items-start gap-3">
                           <svg
                             className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0"
@@ -564,7 +536,7 @@ export default function DatasetDetailPage() {
                       Common Use Cases
                     </h2>
                     <div className="grid md:grid-cols-3 gap-4">
-                      {dataset.useCases.map((useCase, index) => (
+                      {(displayDataset?.use_cases || []).map((useCase, index) => (
                         <div
                           key={index}
                           className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100"
@@ -587,7 +559,7 @@ export default function DatasetDetailPage() {
                     </h3>
                     <div className="bg-gray-50 rounded-xl p-4">
                       <code className="text-sm text-gray-700">
-                        {dataset.citation}
+                        {displayDataset?.citation}
                       </code>
                     </div>
                     <button className="mt-4 w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
@@ -601,7 +573,7 @@ export default function DatasetDetailPage() {
                       Related Publications
                     </h3>
                     <div className="space-y-4">
-                      {dataset.relatedPapers.map((paper, index) => (
+                      {(displayDataset?.relatedPapers || []).map((paper, index) => (
                         <div
                           key={index}
                           className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
@@ -635,72 +607,129 @@ export default function DatasetDetailPage() {
               </div>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {dataset.sampleImages.map((sample) => (
-                  <div
-                    key={sample.id}
-                    onClick={() => setSelectedSample(sample)}
-                    className="group cursor-pointer bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
-                  >
+                {(displayDataset?.sample_images || []).length > 0 ? (
+                  displayDataset.sample_images.map((imageUrl, index) => (
                     <div
-                      className={`aspect-square bg-gradient-to-br ${sample.gradient} relative`}
+                      key={index}
+                      onClick={() => setSelectedSample(imageUrl)}
+                      className="group cursor-pointer bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
                     >
-                      <div className="absolute inset-0 opacity-20">
-                        <div
-                          className="w-full h-full"
-                          style={{
-                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                            backgroundSize: "60px 60px",
+                      <div className="aspect-square relative overflow-hidden">
+                        <img 
+                          src={imageUrl} 
+                          alt={`Sample ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%239ca3af' font-size='20' dy='.3em'%3EImage Not Available%3C/text%3E%3C/svg%3E";
                           }}
-                        ></div>
+                        />
                       </div>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                        <svg
-                          className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-                          />
-                        </svg>
+                      <div className="p-4">
+                        <div className="text-sm text-gray-600">Sample {index + 1}</div>
                       </div>
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-gray-900 mb-2">
-                        {sample.category}
-                      </h3>
-                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12 text-gray-500">
+                    No sample images available
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
 
-          {/* Metadata Tab */}
+          {/* Technical Tab - Update field names */}
           {activeTab === "technical" && (
             <div className="space-y-8">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Dataset Metadata
-                </h2>
-                <div className="space-y-4">
-                  {Object.entries(dataset.technicalSpecs).map(
-                    ([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl"
-                      >
-                        <div className="w-48 font-semibold text-gray-700 capitalize">
-                          {key.replace(/([A-Z])/g, " $1").trim()}:
-                        </div>
-                        <div className="flex-1 text-gray-900">{value}</div>
-                      </div>
-                    )
-                  )}
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Technical Specifications */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    Technical Specifications
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Type</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.technical_specs?.type}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Format</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.format}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">License</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.license}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Access Level</span>
+                      <span className="font-semibold text-gray-900 capitalize">
+                        {displayDataset?.access_level}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Version</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.version}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Last Update</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.technical_specs?.lastUpdate}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Statistics */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    Dataset Statistics
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Avg. Image Size</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.statistics?.avgImageSize}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Quality Score</span>
+                      <span className="font-semibold text-gray-900">
+                        {displayDataset?.statistics?.qualityScore}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Total Annotations</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatNumber(displayDataset?.statistics?.totalAnnotations)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Avg. per Category</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatNumber(displayDataset?.statistics?.avgImagesPerCategory)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pb-3 border-b border-gray-200">
+                      <span className="text-gray-600">Max per Category</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatNumber(displayDataset?.statistics?.maxImagesPerCategory)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Min per Category</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatNumber(displayDataset?.statistics?.minImagesPerCategory)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -738,23 +767,15 @@ export default function DatasetDetailPage() {
             </button>
 
             <div className="bg-white rounded-2xl overflow-hidden">
-              <div
-                className={`aspect-video bg-gradient-to-br ${selectedSample.gradient}`}
-              >
-                <div className="absolute inset-0 opacity-20">
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                      backgroundSize: "60px 60px",
-                    }}
-                  ></div>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {selectedSample.category}
-                </h3>
+              <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                <img 
+                  src={selectedSample} 
+                  alt="Sample preview"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Crect fill='%23f3f4f6' width='800' height='600'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%239ca3af' font-size='24' dy='.3em'%3EImage Not Available%3C/text%3E%3C/svg%3E";
+                  }}
+                />
               </div>
             </div>
           </div>

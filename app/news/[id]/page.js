@@ -1,11 +1,143 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function NewsDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const newsId = parseInt(params.id);
+  const newsId = params.id;
+  const [news, setNews] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Helper functions - declared before use
+  const getCategory = (article) => {
+    if (article.category) return article.category;
+    if (article.tags && article.tags.length > 0) return article.tags[0];
+    return 'news';
+  };
+
+  const getReadTime = (content) => {
+    if (!content) return '5 min read';
+    const words = content.split(' ').length;
+    const minutes = Math.ceil(words / 200);
+    return `${minutes} min read`;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Simple markdown to HTML converter
+  const renderMarkdown = (markdown) => {
+    if (!markdown) return '';
+
+    let html = markdown;
+
+    // Headers (h1-h6)
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    // Bold **text** or __text__
+    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+    html = html.replace(/__(.*?)__/gim, '<strong>$1</strong>');
+
+    // Italic *text* or _text_
+    html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+    html = html.replace(/_(.*?)_/gim, '<em>$1</em>');
+
+    // Links [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, '<a href="$2" class="text-amber-600 hover:underline">$1</a>');
+
+    // Images ![alt](url)
+    html = html.replace(/!\[([^\]]*)\]\(([^\)]+)\)/gim, '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-4" />');
+
+    // Unordered lists
+    html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+    html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul class="list-disc list-inside my-4 space-y-2">$1</ul>');
+
+    // Ordered lists
+    html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+    
+    // Blockquotes
+    html = html.replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-amber-500 pl-4 italic my-4">$1</blockquote>');
+
+    // Code blocks ```code```
+    html = html.replace(/```(.*?)```/gis, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto my-4"><code>$1</code></pre>');
+
+    // Inline code `code`
+    html = html.replace(/`([^`]+)`/gim, '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>');
+
+    // Line breaks (double space or \n\n)
+    html = html.replace(/\n\n/g, '</p><p class="mb-4">');
+    html = html.replace(/\n/g, '<br>');
+
+    // Wrap in paragraph if not already wrapped
+    if (!html.startsWith('<')) {
+      html = '<p class="mb-4">' + html + '</p>';
+    }
+
+    return html;
+  };
+
+  // Fetch news detail from API
+  useEffect(() => {
+    const fetchNews = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/news/public/${newsId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setNews(data);
+        } else {
+          setNews(null);
+        }
+      } catch (error) {
+        console.error('Error fetching news:', error);
+        setNews(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (newsId) {
+      fetchNews();
+    }
+  }, [newsId]);
+
+  // Default fallback news
+  const defaultNews = {
+    id: 1,
+    title: "News Not Found",
+    content: "The requested news article could not be found.",
+    tags: [],
+    creator_name: "Admin",
+    created_at: new Date().toISOString(),
+    status: "published",
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mb-4"></div>
+          <p className="text-gray-600">Loading news...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Display logic
+  const displayNews = news || defaultNews;
+
+  // Fallback data for reference (not used unless API fails)
   const newsArticles = [
     {
       id: 1,
@@ -692,21 +824,34 @@ export default function NewsDetailPage() {
     },
   ];
 
-  const article = newsArticles.find((a) => a.id === newsId);
+  // Related articles (from fallback for now)
+  const relatedArticles = newsArticles
+    .filter((a) => a.id !== newsId && a.category === getCategory(displayNews))
+    .slice(0, 3);
 
-  if (!article) {
+  // Not found state
+  if (!loading && !news) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Article Not Found
-          </h1>
-          <p className="text-gray-600 mb-8">
-            The article you're looking for doesn't exist.
-          </p>
+          <svg
+            className="w-24 h-24 mx-auto text-gray-300 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+            />
+          </svg>
+          <h2 className="text-3xl font-bold text-gray-700 mb-4">Article Not Found</h2>
+          <p className="text-gray-500 mb-8">The article you're looking for doesn't exist.</p>
           <button
-            onClick={() => router.push("/news")}
-            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-xl transition-all duration-300"
+            onClick={() => router.push('/news')}
+            className="px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors duration-300"
           >
             Back to News
           </button>
@@ -715,24 +860,11 @@ export default function NewsDetailPage() {
     );
   }
 
-  const relatedArticles = newsArticles
-    .filter((a) => a.id !== newsId && a.category === article.category)
-    .slice(0, 3);
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Hero Section */}
       <section
-        className={`relative py-20 pt-32 bg-gradient-to-br ${article.image} overflow-hidden`}
+        className="relative py-20 pt-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 overflow-hidden"
       >
         <div className="absolute inset-0 bg-black/40"></div>
 
@@ -783,14 +915,14 @@ export default function NewsDetailPage() {
           {/* Article Header */}
           <div className="max-w-4xl mx-auto text-center">
             <span className="inline-block px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-full capitalize mb-6">
-              {article.category}
+              {getCategory(displayNews)}
             </span>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-              {article.title}
+              {displayNews?.title}
             </h1>
 
-            <p className="text-xl text-white/90 mb-8">{article.excerpt}</p>
+            <p className="text-xl text-white/90 mb-8">{displayNews?.excerpt || displayNews?.content?.substring(0, 200) + '...'}</p>
 
             <div className="flex items-center justify-center gap-6 text-white/80">
               <div className="flex items-center gap-2">
@@ -807,7 +939,7 @@ export default function NewsDetailPage() {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                {formatDate(article.date)}
+                {formatDate(displayNews?.created_at || displayNews?.date || new Date().toISOString())}
               </div>
               <span>•</span>
               <div className="flex items-center gap-2">
@@ -824,7 +956,7 @@ export default function NewsDetailPage() {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                {article.readTime}
+                {getReadTime(displayNews?.content) || displayNews?.readTime || '5 min read'}
               </div>
             </div>
           </div>
@@ -839,13 +971,13 @@ export default function NewsDetailPage() {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6 mb-12">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {article.author.charAt(0)}
+                  {(displayNews?.creator_name || displayNews?.author || 'A').charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <div className="text-xl font-bold text-gray-900">
-                    {article.author}
+                    {displayNews?.creator_name || displayNews?.author || 'Admin'}
                   </div>
-                  <div className="text-gray-600">{article.authorRole}</div>
+                  <div className="text-gray-600">{displayNews?.authorRole || 'Writer'}</div>
                 </div>
               </div>
             </div>
@@ -853,8 +985,10 @@ export default function NewsDetailPage() {
             {/* Article Body */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-8 md:p-12 mb-12">
               <div
-                className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-a:text-amber-600 prose-strong:text-gray-900 prose-ul:text-gray-700"
-                dangerouslySetInnerHTML={{ __html: article.fullContent }}
+                className="prose prose-lg max-w-none text-gray-700"
+                dangerouslySetInnerHTML={{ 
+                  __html: renderMarkdown(displayNews?.fullContent || displayNews?.content || 'No content available.')
+                }}
               />
 
               {/* Tags */}
@@ -863,7 +997,7 @@ export default function NewsDetailPage() {
                   Tags:
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag, index) => (
+                  {(displayNews?.tags || []).map((tag, index) => (
                     <span
                       key={index}
                       className="px-4 py-2 bg-amber-50 text-amber-700 text-sm font-medium rounded-lg border border-amber-200"

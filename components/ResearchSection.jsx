@@ -1,14 +1,43 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 const ResearchSection = () => {
   const [hoveredPaper, setHoveredPaper] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [publications, setPublications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const carouselRef = useRef(null);
 
-  const publications = [
+  // Fetch featured publications from API
+  useEffect(() => {
+    const fetchPublications = async () => {
+      try {
+        const response = await fetch('/api/publications/featured?limit=5');
+        if (response.ok) {
+          const data = await response.json();
+          // Ensure data is array
+          if (Array.isArray(data)) {
+            setPublications(data);
+          } else if (data && Array.isArray(data.data)) {
+            setPublications(data.data);
+          } else {
+            console.log('Publications data is not array:', data);
+            setPublications([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching publications:', error);
+        setPublications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPublications();
+  }, []);
+
+  const fallbackPublications = [
     {
       id: 1,
       title:
@@ -110,8 +139,28 @@ const ResearchSection = () => {
     },
   ];
 
-  const itemsPerPage = 3;
-  const maxIndex = Math.max(0, publications.length - itemsPerPage);
+  const displayPublications = loading ? [] : (publications.length > 0 ? publications : fallbackPublications);
+  
+  // Responsive items per page
+  const [itemsPerPage, setItemsPerPage] = useState(3);
+  
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      if (window.innerWidth < 768) {
+        setItemsPerPage(1); // Mobile
+      } else if (window.innerWidth < 1024) {
+        setItemsPerPage(2); // Tablet
+      } else {
+        setItemsPerPage(3); // Desktop
+      }
+    };
+
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
+  
+  const maxIndex = Math.max(0, displayPublications.length - itemsPerPage);
 
   const scrollToIndex = (index) => {
     setCurrentIndex(index);
@@ -172,17 +221,22 @@ const ResearchSection = () => {
         {/* Publications Carousel */}
         <div className="relative mb-16">
           {/* Carousel Container */}
-          <div className="overflow-hidden">
-            <div
+          <div className="overflow-hidden px-4 md:px-0">
+            {loading ? (
+              <div className="text-center py-12 text-gray-400">Loading publications...</div>
+            ) : displayPublications.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">No publications available</div>
+            ) : (
+              <div
               ref={carouselRef}
               className="flex transition-transform duration-500 ease-out gap-6"
               style={{
                 transform: `translateX(-${
-                  currentIndex * (100 / itemsPerPage + 2)
+                  currentIndex * (100 / itemsPerPage)
                 }%)`,
               }}
             >
-              {publications.map((paper) => (
+              {displayPublications.map((paper, index) => (
                 <div
                   key={paper.id}
                   className="flex-shrink-0 group relative"
@@ -196,16 +250,16 @@ const ResearchSection = () => {
                 >
                   {/* Paper Card */}
                   <div
-                    className={`relative bg-white rounded-2xl p-8 shadow-lg border border-gray-200 transition-all duration-500 transform hover:-translate-y-1 h-full ${
-                      hoveredPaper === paper.id ? "shadow-2xl scale-102" : ""
+                    className={`relative bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200 transition-all duration-500 transform hover:-translate-y-1 h-full flex flex-col ${
+                      hoveredPaper === paper.id ? "shadow-2xl md:scale-102" : ""
                     }`}
                   >
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                    <div className="flex items-start justify-between mb-4 md:mb-6">
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
                           <svg
-                            className="w-5 h-5 text-white"
+                            className="w-4 h-4 md:w-5 md:h-5 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -218,112 +272,101 @@ const ResearchSection = () => {
                             />
                           </svg>
                         </div>
-                        <div>
-                          <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full mb-2">
+                        <div className="min-w-0">
+                          <span className="inline-block px-2 md:px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full mb-1 md:mb-2">
                             {paper.category}
                           </span>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-xs md:text-sm text-gray-600">
                             {paper.year}
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-gray-900">
-                          {paper.citations}
+                      {paper.citations && (
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {paper.citations}
+                          </div>
+                          <div className="text-xs text-gray-500">Citations</div>
                         </div>
-                        <div className="text-xs text-gray-500">Citations</div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-4 leading-tight group-hover:text-blue-600 transition-colors duration-300">
+                    <h3 className="text-base md:text-lg lg:text-xl font-bold text-gray-900 mb-3 md:mb-4 leading-tight group-hover:text-blue-600 transition-colors duration-300 line-clamp-3">
                       {paper.title}
                     </h3>
 
                     {/* Abstract */}
-                    <p className="text-gray-600 text-sm leading-relaxed mb-6 line-clamp-3">
-                      {paper.abstract}
-                    </p>
+                    {paper.abstract && (
+                      <p className="text-gray-600 text-xs md:text-sm leading-relaxed mb-4 md:mb-6 line-clamp-3 flex-grow">
+                        {paper.abstract}
+                      </p>
+                    )}
 
                     {/* Authors */}
-                    <div className="mb-4">
-                      <div className="text-xs font-semibold text-gray-700 mb-2">
-                        Authors:
+                    {(paper.authors || paper.author) && (
+                      <div className="mb-3 md:mb-4">
+                        <div className="text-xs font-semibold text-gray-700 mb-1 md:mb-2">
+                          Authors:
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 md:gap-2">
+                          {(Array.isArray(paper.authors) ? paper.authors : [paper.authors || paper.author]).map((author, index) => (
+                            <span
+                              key={index}
+                              className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
+                            >
+                              {author}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {paper.authors.map((author, index) => (
-                          <span
-                            key={index}
-                            className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
-                          >
-                            {author}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                    )}
 
                     {/* Venue */}
-                    <div className="mb-6">
-                      <div className="text-xs font-semibold text-gray-700 mb-1">
-                        Published in:
+                    {(paper.venue || paper.journal) && (
+                      <div className="mb-4 md:mb-6">
+                        <div className="text-xs font-semibold text-gray-700 mb-1">
+                          Published in:
+                        </div>
+                        <div className="text-xs md:text-sm text-gray-600 font-medium line-clamp-2">
+                          {paper.venue || paper.journal}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 font-medium line-clamp-2">
-                        {paper.venue}
-                      </div>
-                    </div>
+                    )}
 
                     {/* Keywords */}
-                    <div className="mb-6">
-                      <div className="text-xs font-semibold text-gray-700 mb-2">
-                        Keywords:
+                    {paper.keywords && paper.keywords.length > 0 && (
+                      <div className="mb-4 md:mb-6">
+                        <div className="text-xs font-semibold text-gray-700 mb-1 md:mb-2">
+                          Keywords:
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 md:gap-2">
+                          {paper.keywords.map((keyword, index) => (
+                            <span
+                              key={index}
+                              className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded-full"
+                            >
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {paper.keywords.map((keyword, index) => (
-                          <span
-                            key={index}
-                            className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded-full"
-                          >
-                            {keyword}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                    )}
 
                     {/* DOI */}
-                    <div className="text-xs text-gray-500 mb-6 font-mono truncate">
-                      DOI: {paper.doi}
-                    </div>
+                    {paper.doi && (
+                      <div className="text-xs text-gray-500 mb-4 md:mb-6 font-mono truncate">
+                        DOI: {paper.doi}
+                      </div>
+                    )}
 
                     {/* Actions */}
-                    <div className="flex gap-3">
+                    <div className="mt-auto pt-4 flex flex-col sm:flex-row gap-2 md:gap-3">
                       <button
-                        onClick={() => router.push(`/publications/${paper.id}`)}
-                        className={`flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl transition-all duration-300 transform ${
-                          hoveredPaper === paper.id
-                            ? "scale-105 shadow-lg"
-                            : "hover:scale-105"
-                        }`}
+                        onClick={() => router.push(`/publications/${paper.slug || paper.id}`)}
+                        className="flex-1 py-2.5 md:py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                       >
-                        <div className="flex items-center justify-center gap-2">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                            />
-                          </svg>
-                          <span>Read Publication</span>
-                        </div>
-                      </button>
-
-                      <button className="py-3 px-4 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors duration-200">
                         <svg
                           className="w-4 h-4"
                           fill="none"
@@ -334,29 +377,68 @@ const ResearchSection = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                           />
                         </svg>
+                        <span className="text-sm md:text-base">Read</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          if (navigator.share) {
+                            navigator.share({
+                              title: paper.title,
+                              text: paper.abstract,
+                              url: window.location.origin + `/publications/${paper.slug || paper.id}`
+                            });
+                          } else {
+                            navigator.clipboard.writeText(window.location.origin + `/publications/${paper.slug || paper.id}`);
+                            alert('Link copied to clipboard!');
+                          }
+                        }}
+                        className="sm:w-auto px-4 py-2.5 md:py-3 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-300 hover:border-blue-500 hover:text-blue-600 hover:shadow-md flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                          />
+                        </svg>
+                        <span className="text-sm md:text-base">Share</span>
                       </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+            )}
           </div>
 
-          {/* Navigation Buttons */}
+          {/* Navigation Buttons - Hidden on mobile */}
           <button
             onClick={handlePrevious}
             disabled={currentIndex === 0}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+            className={`hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 lg:-translate-x-6 z-10 w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-full shadow-lg items-center justify-center transition-all duration-300 ${
               currentIndex === 0
                 ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-gray-50 hover:scale-110"
+                : "hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white hover:scale-110"
             }`}
           >
             <svg
-              className="w-6 h-6 text-gray-800"
+              className="w-5 h-5 lg:w-6 lg:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -373,14 +455,14 @@ const ResearchSection = () => {
           <button
             onClick={handleNext}
             disabled={currentIndex === maxIndex}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 ${
+            className={`hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 lg:translate-x-6 z-10 w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-full shadow-lg items-center justify-center transition-all duration-300 ${
               currentIndex === maxIndex
                 ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-gray-50 hover:scale-110"
+                : "hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white hover:scale-110"
             }`}
           >
             <svg
-              className="w-6 h-6 text-gray-800"
+              className="w-5 h-5 lg:w-6 lg:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -405,9 +487,61 @@ const ResearchSection = () => {
                     ? "w-8 bg-gradient-to-r from-blue-500 to-purple-500"
                     : "w-2 bg-gray-300 hover:bg-gray-400"
                 }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
+
+          {/* Mobile Navigation Buttons */}
+          <div className="flex md:hidden justify-center gap-4 mt-8">
+          <button
+            onClick={handlePrevious}
+            disabled={currentIndex === 0}
+            className={`flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
+              currentIndex === 0
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white active:scale-95"
+            }`}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          
+          <button
+            onClick={handleNext}
+            disabled={currentIndex >= maxIndex}
+            className={`flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
+              currentIndex >= maxIndex
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white active:scale-95"
+            }`}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
         </div>
 
         {/* Research Stats */}

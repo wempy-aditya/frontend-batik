@@ -1100,7 +1100,7 @@ export default function NewsPage() {
                       >
                         <option value="draft">Draft</option>
                         <option value="published">Published</option>
-                        <option value="archived">Archived</option>
+                        {/* <option value="archived">Archived</option> */}
                       </select>
                     </div>
                   </div>

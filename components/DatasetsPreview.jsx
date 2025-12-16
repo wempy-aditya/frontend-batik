@@ -1,12 +1,41 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const DatasetsPreview = () => {
   const [hoveredDataset, setHoveredDataset] = useState(null);
+  const [datasets, setDatasets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const datasets = [
+  // Fetch featured datasets from API
+  useEffect(() => {
+    const fetchDatasets = async () => {
+      try {
+        const response = await fetch('/api/datasets/featured?limit=3');
+        if (response.ok) {
+          const data = await response.json();
+          // Ensure data is array
+          if (Array.isArray(data)) {
+            setDatasets(data);
+          } else if (data && Array.isArray(data.data)) {
+            setDatasets(data.data);
+          } else {
+            console.log('Datasets data is not array:', data);
+            setDatasets([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching datasets:', error);
+        setDatasets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDatasets();
+  }, []);
+
+  const fallbackDatasets = [
     {
       id: 1,
       name: "ImageNet-2024",
@@ -48,6 +77,8 @@ const DatasetsPreview = () => {
     }
   ];
 
+  const displayDatasets = loading ? [] : (datasets.length > 0 ? datasets : fallbackDatasets);
+
   return (
     <section className="py-20 bg-white relative overflow-hidden">
       {/* Background Elements */}
@@ -77,7 +108,11 @@ const DatasetsPreview = () => {
 
         {/* Datasets Grid */}
         <div className="grid lg:grid-cols-3 gap-8">
-          {datasets.map((dataset) => (
+          {loading ? (
+            <div className="col-span-3 text-center py-12 text-gray-400">Loading datasets...</div>
+          ) : displayDatasets.length === 0 ? (
+            <div className="col-span-3 text-center py-12 text-gray-400">No datasets available</div>
+          ) : displayDatasets.map((dataset) => (
             <div
               key={dataset.id}
               className="group relative"
@@ -91,35 +126,62 @@ const DatasetsPreview = () => {
                 
                 {/* Header with Preview */}
                 <div className="relative h-40 overflow-hidden">
-                  <div className={`absolute inset-0 bg-gradient-to-br ${dataset.previewGradient} transition-transform duration-700 ${
-                    hoveredDataset === dataset.id ? 'scale-110' : ''
-                  }`}></div>
-                  
-                  {/* Sample Grid Overlay */}
-                  <div className="absolute inset-0 p-4">
-                    <div className="grid grid-cols-4 gap-2 h-full opacity-30">
-                      {Array.from({length: 8}).map((_, index) => (
-                        <div
-                          key={index}
-                          className="bg-white/40 rounded-lg backdrop-blur-sm animate-pulse"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        ></div>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Background - Gradient or Image */}
+                  {dataset.sample_image_url ? (
+                    <>
+                      <img 
+                        src={dataset.sample_image_url}
+                        alt={`${dataset.title || dataset.name} preview`}
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
+                          hoveredDataset === dataset.id ? 'scale-110' : ''
+                        }`}
+                        onError={(e) => {
+                          // Fallback to gradient if image fails to load
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                      <div 
+                        className={`hidden absolute inset-0 bg-gradient-to-br ${dataset.previewGradient || 'from-gray-400 to-gray-600'} transition-transform duration-700 ${
+                          hoveredDataset === dataset.id ? 'scale-110' : ''
+                        }`}
+                      ></div>
+                      {/* Overlay for better text visibility */}
+                      <div className="absolute inset-0 bg-black/20"></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`absolute inset-0 bg-gradient-to-br ${dataset.previewGradient || 'from-gray-400 to-gray-600'} transition-transform duration-700 ${
+                        hoveredDataset === dataset.id ? 'scale-110' : ''
+                      }`}></div>
+                      
+                      {/* Sample Grid Overlay - only shown when no image */}
+                      <div className="absolute inset-0 p-4">
+                        <div className="grid grid-cols-4 gap-2 h-full opacity-30">
+                          {Array.from({length: 8}).map((_, index) => (
+                            <div
+                              key={index}
+                              className="bg-white/40 rounded-lg backdrop-blur-sm animate-pulse"
+                              style={{ animationDelay: `${index * 100}ms` }}
+                            ></div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   {/* Access Badge */}
-                  <div className="absolute top-4 right-4">
-                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${dataset.accessColor}`}>
-                      {dataset.accessType}
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${dataset.accessColor || 'bg-green-100 text-green-800'} shadow-md`}>
+                      {dataset.accessType || dataset.access_level || 'Public'}
                     </span>
                   </div>
 
                   {/* Stats Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
-                    <div className="flex justify-between text-white text-sm">
-                      <span className="font-medium">{dataset.samples} samples</span>
-                      <span className="font-medium">{dataset.size}</span>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 z-10">
+                    <div className="flex justify-between text-white text-sm font-medium">
+                      <span>{dataset.samples ? dataset.samples.toLocaleString() : 'N/A'} samples</span>
+                      <span>{dataset.size ? `${(dataset.size / (1024 * 1024 * 1024)).toFixed(1)}GB` : 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -128,14 +190,16 @@ const DatasetsPreview = () => {
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">
-                      {dataset.name}
+                      {dataset.title || dataset.name}
                     </h3>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                      </svg>
-                      {dataset.downloadCount}
-                    </div>
+                    {dataset.downloadCount && (
+                      <div className="flex items-center text-sm text-gray-500">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                        </svg>
+                        {dataset.downloadCount}
+                      </div>
+                    )}
                   </div>
                   
                   <p className="text-gray-600 text-sm leading-relaxed mb-6">
@@ -155,35 +219,31 @@ const DatasetsPreview = () => {
                   </div>
 
                   {/* Last Updated */}
-                  <div className="text-xs text-gray-500 mb-4">
-                    Last updated: {new Date(dataset.lastUpdated).toLocaleDateString('en-US', { 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </div>
+                  {(dataset.updated_at || dataset.lastUpdated) && (
+                    <div className="text-xs text-gray-500 mb-4">
+                      Last updated: {new Date(dataset.updated_at || dataset.lastUpdated).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div className="space-y-2">
                     <button 
-                      onClick={() => window.location.href = `/datasets/${dataset.id}/download`}
-                      className={`w-full py-3 px-4 bg-gradient-to-r ${dataset.previewGradient} text-white font-semibold rounded-xl transition-all duration-300 transform ${
+                      onClick={() => router.push(`/datasets/${dataset.slug || dataset.id}`)}
+                      className={`w-full py-3 px-4 bg-gradient-to-r ${dataset.previewGradient || 'from-indigo-500 to-purple-500'} text-white font-semibold rounded-xl transition-all duration-300 transform ${
                         hoveredDataset === dataset.id ? 'scale-105 shadow-lg' : 'hover:scale-105'
                       }`}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span>Download Dataset</span>
+                        <span>View Dataset</span>
                       </div>
-                    </button>
-                    
-                    <button 
-                      onClick={() => window.location.href = `/datasets/${dataset.id}`}
-                      className="w-full py-2 px-4 text-gray-700 font-medium text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                    >
-                      View Documentation
                     </button>
                   </div>
                 </div>

@@ -1,38 +1,110 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [hoveredProject, setHoveredProject] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const router = useRouter();
 
-  const categories = [
-    { id: "all", name: "All Projects", count: 12 },
-    { id: "generative-ai", name: "Generative AI", count: 4 },
-    { id: "computer-vision", name: "Computer Vision", count: 3 },
-    { id: "enhancement", name: "Enhancement", count: 3 },
-    { id: "research", name: "Research", count: 2 },
-  ];
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/projects/categories');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            // Add "All" category at the beginning
+            const allCategories = [
+              { id: "all", name: "All Projects", slug: "all" },
+              ...data
+            ];
+            setCategories(allCategories);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        // Set default categories if API fails
+        setCategories([
+          { id: "all", name: "All Projects", slug: "all" },
+        ]);
+      }
+    };
+    fetchCategories();
+  }, []);
 
-  const projects = [
+  // Fetch projects
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        let url = `/api/projects/public?page=${currentPage}&items_per_page=12`;
+        
+        if (searchQuery) {
+          url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
+
+        // If category is selected (not "all"), fetch by category
+        if (selectedCategory !== "all") {
+          url = `/api/projects/category/${selectedCategory}?page=${currentPage}&items_per_page=12`;
+        }
+        
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data && Array.isArray(data.data)) {
+            setProjects(data.data);
+            setTotalPages(data.pages || 1);
+          } else if (Array.isArray(data)) {
+            setProjects(data);
+          } else {
+            console.log('Projects data structure:', data);
+            setProjects([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, [selectedCategory, searchQuery, currentPage]);
+
+  const fallbackProjects = [
     {
-      id: 1,
+      id: "019afd30-2d9c-78de-a48b-10c172214c9d",
       title: "Neural Style Transfer",
+      slug: "neural-style-transfer",
       description:
         "Transform artistic styles using advanced neural networks. Create stunning artwork by combining content and style images through deep learning algorithms powered by VGG-19 architecture.",
+      full_description: "Detailed description...",
       technologies: [
         "TensorFlow",
         "VGG-19",
         "Neural Networks",
         "Style Transfer",
       ],
-      thumbnail: "from-amber-500 to-orange-500",
-      category: "generative-ai",
-      status: "Active",
-      complexity: "Advanced",
-      duration: "6 months",
-      team: 4,
+      thumbnail_url: "https://picsum.photos/720/480?random=1",
+      tags: ["AI", "Art", "Computer Vision"],
+      complexity: "hard",
+      start_at: "2024-01-01T00:00:00Z",
+      access_level: "public",
+      status: "published",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-15T00:00:00Z",
+      challenges: [],
+      achievements: [],
+      future_work: [],
     },
     {
       id: 2,
@@ -209,33 +281,40 @@ export default function ProjectsPage() {
     },
   ];
 
-  const filteredProjects =
-    selectedCategory === "all"
-      ? projects
-      : projects.filter((project) => project.category === selectedCategory);
+  const displayProjects = loading ? [] : (projects.length > 0 ? projects : fallbackProjects);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
+
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(1); // Reset to first page on category change
+  };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Active":
+    switch (status?.toLowerCase()) {
+      case "published":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Completed":
+      case "draft":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "archived":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Beta":
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      case "In Progress":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Research":
-        return "bg-purple-100 text-purple-800 border-purple-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getComplexityColor = (complexity) => {
-    switch (complexity) {
-      case "Advanced":
+    switch (complexity?.toLowerCase()) {
+      case "easy":
+        return "bg-green-100 text-green-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "hard":
         return "bg-orange-100 text-orange-800";
-      case "Expert":
+      case "expert":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -353,31 +432,68 @@ export default function ProjectsPage() {
       {/* Projects Section */}
       <section className="py-20">
         <div className="container mx-auto px-6 lg:px-8">
+          {/* Search Bar */}
+          <div className="mb-8 max-w-2xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearch}
+                placeholder="Search projects by title or description..."
+                className="w-full px-6 py-4 pl-12 bg-white rounded-2xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors"
+              />
+              <svg
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+
           {/* Category Filter */}
           <div className="mb-12">
             <div className="flex flex-wrap justify-center gap-4">
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
+                  onClick={() => handleCategoryChange(category.id || category.slug)}
                   className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
-                    selectedCategory === category.id
+                    selectedCategory === (category.id || category.slug)
                       ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
                       : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
                   }`}
                 >
                   {category.name}
-                  <span className="ml-2 text-sm opacity-75">
-                    ({category.count})
-                  </span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Projects Grid */}
-          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
-            {filteredProjects.map((project) => (
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Loading projects...</p>
+            </div>
+          ) : displayProjects.length === 0 ? (
+            <div className="text-center py-20">
+              <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xl text-gray-600">No projects found</p>
+              <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+              {displayProjects.map((project) => (
               <div
                 key={project.id}
                 className="group relative"
@@ -398,8 +514,20 @@ export default function ProjectsPage() {
 
                   {/* Thumbnail/Hero Image */}
                   <div className="relative h-48 overflow-hidden">
+                    {project.thumbnail_url ? (
+                      <img
+                        src={project.thumbnail_url}
+                        alt={project.title}
+                        className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-br ${project.thumbnail} transition-all duration-700 group-hover:scale-110`}
+                      className={`absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 transition-all duration-700 group-hover:scale-110`}
+                      style={{ display: project.thumbnail_url ? 'none' : 'block' }}
                     >
                       {/* Animated Overlay */}
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
@@ -419,7 +547,7 @@ export default function ProjectsPage() {
                           project.status
                         )}`}
                       >
-                        {project.status}
+                        {project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : 'Published'}
                       </span>
                     </div>
                     <div className="absolute top-4 right-4">
@@ -428,7 +556,7 @@ export default function ProjectsPage() {
                           project.complexity
                         )}`}
                       >
-                        {project.complexity}
+                        {project.complexity ? project.complexity.charAt(0).toUpperCase() + project.complexity.slice(1) : 'Medium'}
                       </span>
                     </div>
                   </div>
@@ -467,41 +595,24 @@ export default function ProjectsPage() {
                       </div>
                     </div>
 
-                    {/* Project Meta */}
-                    <div className="flex justify-between items-center text-xs text-gray-500 pt-2">
-                      <div className="flex items-center gap-1">
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        {project.duration}
+                    {/* Tags */}
+                    {project.tags && project.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {project.tags.slice(0, 3).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {project.tags.length > 3 && (
+                          <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-50 rounded-md">
+                            +{project.tags.length - 3}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                        {project.team} team members
-                      </div>
-                    </div>
+                    )}
 
                     {/* Action Button */}
                     <div
@@ -511,7 +622,7 @@ export default function ProjectsPage() {
                         );
                         window.location.href = `/projects/${project.id}`;
                       }}
-                      className={`w-full py-3 px-4 bg-gradient-to-r ${project.thumbnail} text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 mt-4 cursor-pointer`}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 mt-4 cursor-pointer"
                     >
                       <div className="flex items-center justify-center gap-2">
                         <span>View Details</span>
@@ -534,8 +645,54 @@ export default function ProjectsPage() {
 
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && displayProjects.length > 0 && totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-12">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <div className="flex gap-2">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      currentPage === index + 1
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                        : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
 
           {/* CTA Section */}
           <div className="text-center mt-20">

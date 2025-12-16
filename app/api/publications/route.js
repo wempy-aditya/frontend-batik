@@ -57,9 +57,20 @@ export async function POST(request) {
       status: body.status || 'draft',
     };
 
+    // Add year (required field)
+    if (body.year !== undefined && body.year !== null) {
+      sanitizedData.year = body.year;
+    }
+
     // Add optional fields only if they have values
-    if (body.publication_date && body.publication_date.trim()) {
-      sanitizedData.publication_date = body.publication_date.trim();
+    if (body.venue && body.venue.trim()) {
+      sanitizedData.venue = body.venue.trim();
+    }
+    if (body.citations !== undefined && body.citations >= 0) {
+      sanitizedData.citations = body.citations;
+    }
+    if (body.impact && body.impact.trim()) {
+      sanitizedData.impact = body.impact.trim();
     }
     if (body.volume && body.volume.trim()) {
       sanitizedData.volume = body.volume.trim();
@@ -70,11 +81,26 @@ export async function POST(request) {
     if (body.pages && body.pages.trim()) {
       sanitizedData.pages = body.pages.trim();
     }
+    if (body.publisher && body.publisher.trim()) {
+      sanitizedData.publisher = body.publisher.trim();
+    }
     if (body.doi && body.doi.trim()) {
       sanitizedData.doi = body.doi.trim();
     }
-    if (body.file_url && body.file_url.trim()) {
-      sanitizedData.file_url = body.file_url.trim();
+    if (body.pdf_url && body.pdf_url.trim()) {
+      sanitizedData.pdf_url = body.pdf_url.trim();
+    }
+    if (body.graphical_abstract_url && body.graphical_abstract_url.trim()) {
+      sanitizedData.graphical_abstract_url = body.graphical_abstract_url.trim();
+    }
+    if (body.methodology && body.methodology.trim()) {
+      sanitizedData.methodology = body.methodology.trim();
+    }
+    if (body.results && body.results.trim()) {
+      sanitizedData.results = body.results.trim();
+    }
+    if (body.conclusions && body.conclusions.trim()) {
+      sanitizedData.conclusions = body.conclusions.trim();
     }
     if (body.keywords && body.keywords.length > 0) {
       // Remove duplicates and empty strings

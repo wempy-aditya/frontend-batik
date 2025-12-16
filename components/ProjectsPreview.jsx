@@ -5,10 +5,39 @@ import { useRouter } from "next/navigation";
 const ProjectsPreview = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const carouselRef = useRef(null);
 
-  const projects = [
+  // Fetch featured projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects/featured?limit=6');
+        if (response.ok) {
+          const data = await response.json();
+          // Ensure data is array
+          if (Array.isArray(data)) {
+            setProjects(data);
+          } else if (data && Array.isArray(data.data)) {
+            setProjects(data.data);
+          } else {
+            console.log('Projects data is not array:', data);
+            setProjects([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  const fallbackProjects = [
     {
       id: 1,
       title: "Neural Style Transfer",
@@ -277,7 +306,27 @@ const ProjectsPreview = () => {
     },
   ];
 
-  const itemsPerPage = 4;
+  // Responsive items per page
+  const [itemsPerPage, setItemsPerPage] = useState(4);
+  
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      if (window.innerWidth < 640) {
+        setItemsPerPage(1); // Mobile
+      } else if (window.innerWidth < 1024) {
+        setItemsPerPage(2); // Tablet
+      } else if (window.innerWidth < 1280) {
+        setItemsPerPage(3); // Small Desktop
+      } else {
+        setItemsPerPage(4); // Large Desktop
+      }
+    };
+
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
+
   const maxIndex = Math.max(0, projects.length - itemsPerPage);
 
   const scrollToIndex = (index) => {
@@ -350,14 +399,14 @@ const ProjectsPreview = () => {
           <button
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 rounded-full bg-white shadow-xl border border-gray-200 flex items-center justify-center transition-all duration-300 ${
+            className={`hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 lg:-translate-x-6 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white shadow-xl border border-gray-200 items-center justify-center transition-all duration-300 ${
               currentIndex === 0
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:scale-110"
             }`}
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5 lg:w-6 lg:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -374,14 +423,14 @@ const ProjectsPreview = () => {
           <button
             onClick={handleNext}
             disabled={currentIndex >= maxIndex}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 w-12 h-12 rounded-full bg-white shadow-xl border border-gray-200 flex items-center justify-center transition-all duration-300 ${
+            className={`hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 lg:translate-x-6 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white shadow-xl border border-gray-200 items-center justify-center transition-all duration-300 ${
               currentIndex >= maxIndex
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:scale-110"
             }`}
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5 lg:w-6 lg:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -396,85 +445,104 @@ const ProjectsPreview = () => {
           </button>
 
           {/* Projects Carousel */}
-          <div className="overflow-hidden" ref={carouselRef}>
+          <div className="overflow-hidden px-4 sm:px-0" ref={carouselRef}>
             <div
-              className="flex transition-transform duration-500 ease-out gap-8"
+              className="flex transition-transform duration-500 ease-out gap-4 sm:gap-6 lg:gap-8"
               style={{
                 transform: `translateX(-${
-                  currentIndex * (100 / itemsPerPage + 2)
+                  currentIndex * (100 / itemsPerPage + (itemsPerPage === 1 ? 0 : 2))
                 }%)`,
               }}
             >
-              {projects.map((project) => (
+              {projects.map((project, index) => (
                 <div
                   key={project.id}
-                  className="group relative flex-shrink-0"
-                  style={{ width: `calc(${100 / itemsPerPage}% - 1.5rem)` }}
+                  className="group relative flex-shrink-0 w-full sm:w-auto"
+                  style={{ 
+                    width: itemsPerPage === 1 
+                      ? '100%' 
+                      : `calc(${100 / itemsPerPage}% - ${itemsPerPage === 2 ? '1rem' : itemsPerPage === 3 ? '1.5rem' : '1.5rem'})` 
+                  }}
                   onMouseEnter={() => setHoveredCard(project.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
                   {/* Main Card */}
-                  <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-gray-200/50 hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-6 hover:scale-105 h-full">
+                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200/50 hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-2 lg:hover:-translate-y-6 hover:scale-[1.02] lg:hover:scale-105 h-full flex flex-col">
                     {/* Gradient Background on Hover */}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-br from-gray-50 to-white rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
+                      className={`absolute inset-0 bg-gradient-to-br from-gray-50 to-white rounded-2xl lg:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
                     ></div>
 
                     {/* Animated Border Glow */}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-r ${project.gradient} rounded-3xl opacity-0 group-hover:opacity-30 blur-sm transition-all duration-700 scale-105`}
+                      className={`absolute inset-0 bg-gradient-to-r ${project.gradient} rounded-2xl lg:rounded-3xl opacity-0 group-hover:opacity-30 blur-sm transition-all duration-700 scale-105`}
                     ></div>
 
                     {/* Content */}
-                    <div className="relative z-10 space-y-6">
-                      {/* Icon Container */}
-                      <div className="relative">
-                        <div
-                          className={`w-20 h-20 bg-gradient-to-br ${project.gradient} rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-700`}
-                        >
-                          {project.icon}
+                    <div className="relative z-10 space-y-4 lg:space-y-6 flex-grow flex flex-col">
+                      {/* Header with Icon and Number */}
+                      <div className="flex items-start justify-between gap-4">
+                        {/* Icon Container */}
+                        <div className="relative flex-shrink-0">
+                          <div
+                            className={`w-14 h-14 lg:w-20 lg:h-20 bg-gradient-to-br ${project.gradient} rounded-xl lg:rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-700`}
+                          >
+                            {project.icon}
+                          </div>
+                          {/* Icon Glow Effect */}
+                          <div
+                            className={`absolute inset-0 w-14 h-14 lg:w-20 lg:h-20 bg-gradient-to-br ${project.gradient} rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-40 blur-xl transition-opacity duration-700`}
+                          ></div>
                         </div>
-                        {/* Icon Glow Effect */}
-                        <div
-                          className={`absolute inset-0 w-20 h-20 bg-gradient-to-br ${project.gradient} rounded-2xl opacity-0 group-hover:opacity-40 blur-xl transition-opacity duration-700`}
-                        ></div>
+
+                        {/* Project Number */}
+                        <div className="flex-shrink-0">
+                          <div
+                            className={`w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br ${project.gradient} text-orange-900 text-base lg:text-lg font-bold rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-500`}
+                          >
+                            {String(index + 1).padStart(2, '0')}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-2xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors duration-500">
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors duration-500 line-clamp-2">
                         {project.title}
                       </h3>
 
                       {/* Description */}
-                      <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors duration-500">
+                      <p className="text-sm lg:text-base text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors duration-500 line-clamp-3 flex-grow">
                         {project.description}
                       </p>
 
                       {/* Technologies */}
-                      <div className="flex flex-wrap gap-2">
-                        {project.technologies.map((tech, techIndex) => (
-                          <span
-                            key={techIndex}
-                            className="px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full border border-gray-200 hover:bg-gray-200 transition-all duration-300"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
+                      {project.technologies && project.technologies.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {project.technologies.slice(0, 4).map((tech, techIndex) => (
+                            <span
+                              key={techIndex}
+                              className="px-2.5 py-1 lg:px-3 lg:py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full border border-gray-200 hover:bg-gray-200 transition-all duration-300"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                          {project.technologies.length > 4 && (
+                            <span className="px-2.5 py-1 lg:px-3 lg:py-1.5 text-xs font-semibold text-gray-500 bg-gray-50 rounded-full border border-gray-200">
+                              +{project.technologies.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
-                      {/* Learn More Link */}
-                      <div className="flex items-center justify-between pt-4">
+                      {/* View Project Button */}
+                      <div className="pt-4 mt-auto">
                         <button
                           onClick={() => router.push(`/projects/${project.id}`)}
-                          className="flex items-center cursor-pointer"
+                          className={`w-full flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-3.5 bg-gradient-to-r ${project.gradient} text-orange-900 font-semibold rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] group/btn`}
                         >
-                          <span
-                            className={`text-sm font-semibold bg-gradient-to-r ${project.gradient} bg-clip-text text-transparent transition-all duration-500 group-hover:translate-x-1`}
-                          >
-                            View Project
-                          </span>
+                          <span className="text-sm lg:text-base">View Project</span>
                           <svg
-                            className="w-4 h-4 ml-2 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-500"
+                            className="w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -487,19 +555,12 @@ const ProjectsPreview = () => {
                             />
                           </svg>
                         </button>
-
-                        {/* Project Number */}
-                        <div
-                          className={`w-8 h-8 bg-gradient-to-r ${project.gradient} text-white text-sm font-bold rounded-full flex items-center justify-center opacity-20 group-hover:opacity-100 transition-all duration-500`}
-                        >
-                          {project.id}
-                        </div>
                       </div>
                     </div>
 
                     {/* Bottom Highlight Line */}
                     <div
-                      className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-32 h-1 bg-gradient-to-r ${project.gradient} rounded-full transition-all duration-700`}
+                      className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-24 lg:group-hover:w-32 h-1 bg-gradient-to-r ${project.gradient} rounded-full transition-all duration-700`}
                     ></div>
                   </div>
                 </div>
@@ -518,9 +579,61 @@ const ProjectsPreview = () => {
                     ? "w-8 bg-gradient-to-r from-amber-500 to-orange-500"
                     : "w-2 bg-gray-300 hover:bg-gray-400"
                 }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
+        </div>
+
+        {/* Mobile Navigation Buttons */}
+        <div className="flex sm:hidden justify-center gap-4 mt-8 mb-12">
+          <button
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className={`flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
+              currentIndex === 0
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white active:scale-95"
+            }`}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          
+          <button
+            onClick={handleNext}
+            disabled={currentIndex >= maxIndex}
+            className={`flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
+              currentIndex >= maxIndex
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white active:scale-95"
+            }`}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
         </div>
 
         {/* CTA Section */}

@@ -1,20 +1,60 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function NewsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [newsArticles, setNewsArticles] = useState([]);
+  const [featuredNews, setFeaturedNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
+  // Fetch all news
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch('/api/news/public');
+        if (response.ok) {
+          const data = await response.json();
+          setNewsArticles(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching news:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
+  // Fetch featured news
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const response = await fetch('/api/news/public/featured?limit=2');
+        if (response.ok) {
+          const data = await response.json();
+          setFeaturedNews(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching featured news:', error);
+      }
+    };
+
+    fetchFeatured();
+  }, []);
+
   const categories = [
-    { id: "all", name: "All News", count: 12 },
-    { id: "research", name: "Research", count: 4 },
-    { id: "product", name: "Product Updates", count: 3 },
-    { id: "company", name: "Company News", count: 3 },
-    { id: "events", name: "Events", count: 2 },
+    { id: "all", name: "All News", count: newsArticles.length },
+    { id: "research", name: "Research", count: newsArticles.filter(a => a.tags?.includes('research')).length },
+    { id: "product", name: "Product Updates", count: newsArticles.filter(a => a.tags?.includes('product')).length },
+    { id: "company", name: "Company News", count: newsArticles.filter(a => a.tags?.includes('company')).length },
+    { id: "events", name: "Events", count: newsArticles.filter(a => a.tags?.includes('events')).length },
   ];
 
-  const newsArticles = [
+  const fallbackNews = [
     {
       id: 1,
       title: "AI Vision Lab Launches Advanced Neural Style Transfer Model",
@@ -161,10 +201,16 @@ export default function NewsPage() {
     },
   ];
 
+  // Display news with fallback
+  const displayNews = loading ? [] : (newsArticles.length > 0 ? newsArticles : fallbackNews);
+  const displayFeatured = featuredNews.length > 0 ? featuredNews : fallbackNews.filter(n => n.featured);
+
   const filteredNews =
     selectedCategory === "all"
-      ? newsArticles
-      : newsArticles.filter((article) => article.category === selectedCategory);
+      ? displayNews
+      : displayNews.filter((article) => 
+          article.tags?.includes(selectedCategory) || article.category === selectedCategory
+        );
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -173,6 +219,21 @@ export default function NewsPage() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  // Extract category from tags (use first tag as category)
+  const getCategory = (article) => {
+    if (article.category) return article.category;
+    if (article.tags && article.tags.length > 0) return article.tags[0];
+    return 'news';
+  };
+
+  // Calculate read time from content
+  const getReadTime = (content) => {
+    if (!content) return '3 min read';
+    const words = content.split(' ').length;
+    const minutes = Math.ceil(words / 200);
+    return `${minutes} min read`;
   };
 
   return (
@@ -280,53 +341,66 @@ export default function NewsPage() {
           </div>
 
           {/* Featured News */}
-          {selectedCategory === "all" && (
+          {selectedCategory === "all" && displayFeatured.length > 0 && (
             <div className="mb-16">
               <h2 className="text-3xl font-bold text-gray-900 mb-8">
                 Featured Stories
               </h2>
               <div className="grid lg:grid-cols-2 gap-8">
-                {newsArticles
-                  .filter((article) => article.featured)
-                  .map((article) => (
+                {displayFeatured.map((article) => (
                     <div
                       key={article.id}
                       className="group relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
                     >
-                      <div
-                        className={`h-64 bg-gradient-to-br ${article.image} relative`}
-                      >
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
-                        <div className="absolute top-4 left-4">
-                          <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-full capitalize">
-                            {article.category}
-                          </span>
+                      {/* Thumbnail Image */}
+                      {article.thumbnail_url ? (
+                        <div className="h-64 relative overflow-hidden">
+                          <img 
+                            src={article.thumbnail_url} 
+                            alt={article.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                          <div className="absolute top-4 left-4">
+                            <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-full capitalize">
+                              {getCategory(article)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className={`h-64 bg-gradient-to-br ${article.image || 'from-amber-500 to-orange-500'} relative`}>
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                          <div className="absolute top-4 left-4">
+                            <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-gray-900 text-sm font-semibold rounded-full capitalize">
+                              {getCategory(article)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="p-8">
                         <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                          <span>{formatDate(article.date)}</span>
+                          <span>{formatDate(article.created_at || article.date)}</span>
                           <span>•</span>
-                          <span>{article.readTime}</span>
+                          <span>{getReadTime(article.content) || article.readTime}</span>
                         </div>
 
                         <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-amber-600 transition-colors">
                           {article.title}
                         </h3>
 
-                        <p className="text-gray-600 leading-relaxed mb-6">
-                          {article.excerpt}
+                        <p className="text-gray-600 leading-relaxed mb-6 line-clamp-3">
+                          {article.excerpt || article.content?.substring(0, 150) + '...' || ''}
                         </p>
 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full flex items-center justify-center text-white font-bold">
-                              {article.author.charAt(0)}
+                              {(article.creator_name || article.author || 'A').charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <div className="text-sm font-semibold text-gray-900">
-                                {article.author}
+                                {article.creator_name || article.author || 'Admin'}
                               </div>
                             </div>
                           </div>
@@ -350,32 +424,54 @@ export default function NewsPage() {
             <h2 className="text-3xl font-bold text-gray-900 mb-8">
               {selectedCategory === "all" ? "All News" : "Filtered News"}
             </h2>
-            <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
-              {filteredNews
-                .filter(
-                  (article) => !article.featured || selectedCategory !== "all"
-                )
-                .map((article) => (
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mb-4"></div>
+                <p className="text-gray-600">Loading news...</p>
+              </div>
+            ) : filteredNews.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">No news found.</p>
+              </div>
+            ) : (
+              <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+                {filteredNews.map((article) => (
                   <div
                     key={article.id}
                     className="group bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
                   >
-                    <div
-                      className={`h-48 bg-gradient-to-br ${article.image} relative`}
-                    >
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
-                      <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-semibold rounded-full capitalize">
-                          {article.category}
-                        </span>
+                    {/* Thumbnail */}
+                    {article.thumbnail_url ? (
+                      <div className="h-48 relative overflow-hidden">
+                        <img 
+                          src={article.thumbnail_url} 
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-semibold rounded-full capitalize">
+                            {getCategory(article)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className={`h-48 bg-gradient-to-br ${article.image || 'from-gray-500 to-slate-500'} relative`}>
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-gray-900 text-xs font-semibold rounded-full capitalize">
+                            {getCategory(article)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="p-6">
                       <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-                        <span>{formatDate(article.date)}</span>
+                        <span>{formatDate(article.created_at || article.date)}</span>
                         <span>•</span>
-                        <span>{article.readTime}</span>
+                        <span>{getReadTime(article.content) || article.readTime}</span>
                       </div>
 
                       <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2">
@@ -383,12 +479,12 @@ export default function NewsPage() {
                       </h3>
 
                       <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                        {article.excerpt}
+                        {article.excerpt || article.content?.substring(0, 100) + '...' || ''}
                       </p>
 
                       <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                         <div className="text-xs text-gray-600">
-                          By {article.author}
+                          By {article.creator_name || article.author || 'Admin'}
                         </div>
                         <button
                           onClick={() => router.push(`/news/${article.id}`)}
@@ -400,7 +496,8 @@ export default function NewsPage() {
                     </div>
                   </div>
                 ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Newsletter CTA */}

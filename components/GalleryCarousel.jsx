@@ -5,10 +5,39 @@ import { useRouter } from "next/navigation";
 const GalleryCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const carouselRef = useRef(null);
   const router = useRouter();
 
-  const galleryImages = [
+  // Fetch featured gallery from API
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const response = await fetch('/api/gallery/featured?limit=8');
+        if (response.ok) {
+          const data = await response.json();
+          // Ensure data is array
+          if (Array.isArray(data)) {
+            setGalleryImages(data);
+          } else if (data && Array.isArray(data.data)) {
+            setGalleryImages(data.data);
+          } else {
+            console.log('Gallery data is not array:', data);
+            setGalleryImages([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching gallery:', error);
+        setGalleryImages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGallery();
+  }, []);
+
+  const fallbackGalleryImages = [
     {
       id: 1,
       gradient: "from-amber-500 via-orange-500 to-red-500",
@@ -67,24 +96,26 @@ const GalleryCarousel = () => {
     },
   ];
 
+  const displayGalleryImages = loading ? [] : (galleryImages.length > 0 ? galleryImages : fallbackGalleryImages);
+
   // Auto-play functionality
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || displayGalleryImages.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
+      setCurrentIndex((prev) => (prev + 1) % displayGalleryImages.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, galleryImages.length]);
+  }, [isAutoPlaying, displayGalleryImages.length]);
 
   const nextImage = () => {
-    setCurrentIndex((prev) => (prev + 1) % galleryImages.length);
+    setCurrentIndex((prev) => (prev + 1) % displayGalleryImages.length);
   };
 
   const prevImage = () => {
     setCurrentIndex(
-      (prev) => (prev - 1 + galleryImages.length) % galleryImages.length
+      (prev) => (prev - 1 + displayGalleryImages.length) % displayGalleryImages.length
     );
   };
 
@@ -140,53 +171,81 @@ const GalleryCarousel = () => {
             onMouseEnter={() => setIsAutoPlaying(false)}
             onMouseLeave={() => setIsAutoPlaying(true)}
           >
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${galleryImages[currentIndex].gradient} transition-all duration-1000`}
-            >
-              {/* Overlay Pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <div
-                  className="w-full h-full"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                    backgroundSize: "60px 60px",
-                  }}
-                ></div>
+            {loading ? (
+              <div className="flex items-center justify-center h-full bg-gray-800/50">
+                <div className="text-center text-white">Loading gallery...</div>
               </div>
-            </div>
-
-            {/* Image Info Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-8">
-              <div className="max-w-4xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="px-3 py-1 text-xs font-semibold bg-white/20 backdrop-blur-sm text-white rounded-full">
-                    {galleryImages[currentIndex].style}
-                  </span>
-                  <span className="px-3 py-1 text-xs font-medium bg-amber-500/30 backdrop-blur-sm text-amber-200 rounded-full">
-                    {galleryImages[currentIndex].model}
-                  </span>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                  {galleryImages[currentIndex].prompt}
-                </h3>
-                <div className="flex items-center text-gray-300 text-sm">
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            ) : displayGalleryImages.length === 0 ? (
+              <div className="flex items-center justify-center h-full bg-gray-800/50">
+                <div className="text-center text-white">No gallery images available</div>
+              </div>
+            ) : (
+              <>
+                {/* Display actual image if available from API */}
+                {displayGalleryImages[currentIndex].image_url ? (
+                  <img 
+                    src={displayGalleryImages[currentIndex].image_url} 
+                    alt={displayGalleryImages[currentIndex].title || displayGalleryImages[currentIndex].prompt}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${displayGalleryImages[currentIndex].gradient || 'from-amber-500 to-orange-500'} transition-all duration-1000`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Generated with {galleryImages[currentIndex].model}
+                    {/* Overlay Pattern */}
+                    <div className="absolute inset-0 opacity-20">
+                      <div
+                        className="w-full h-full"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                          backgroundSize: "60px 60px",
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Image Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-8">
+                  <div className="max-w-4xl">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="px-3 py-1 text-xs font-semibold bg-white/20 backdrop-blur-sm text-white rounded-full">
+                        {displayGalleryImages[currentIndex].style || 'AI Generated'}
+                      </span>
+                      {(displayGalleryImages[currentIndex].model || displayGalleryImages[currentIndex].ai_model) && (
+                        <span className="px-3 py-1 text-xs font-medium bg-amber-500/30 backdrop-blur-sm text-amber-200 rounded-full">
+                          {displayGalleryImages[currentIndex].model || displayGalleryImages[currentIndex].ai_model?.name}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                      {displayGalleryImages[currentIndex].title || displayGalleryImages[currentIndex].prompt}
+                    </h3>
+                    {displayGalleryImages[currentIndex].description && (
+                      <p className="text-gray-300 text-sm mb-2 line-clamp-2">
+                        {displayGalleryImages[currentIndex].description}
+                      </p>
+                    )}
+                    <div className="flex items-center text-gray-300 text-sm">
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Generated with {displayGalleryImages[currentIndex].model || displayGalleryImages[currentIndex].ai_model?.name || 'AI'}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
             {/* Navigation Arrows */}
             <button
@@ -229,25 +288,35 @@ const GalleryCarousel = () => {
           </div>
 
           {/* Thumbnail Strip */}
-          <div className="flex justify-center mt-8">
-            <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
-              {galleryImages.map((image, index) => (
-                <button
-                  key={image.id}
-                  onClick={() => goToImage(index)}
-                  className={`w-16 h-16 rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                    index === currentIndex
-                      ? "ring-2 ring-white scale-105"
-                      : "opacity-60 hover:opacity-80"
-                  }`}
-                >
-                  <div
-                    className={`w-full h-full bg-gradient-to-br ${image.gradient} rounded-xl`}
-                  ></div>
-                </button>
-              ))}
+          {!loading && displayGalleryImages.length > 0 && (
+            <div className="flex justify-center mt-8">
+              <div className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+                {displayGalleryImages.map((image, index) => (
+                  <button
+                    key={image.id}
+                    onClick={() => goToImage(index)}
+                    className={`w-16 h-16 rounded-xl transition-all duration-300 transform hover:scale-105 ${
+                      index === currentIndex
+                        ? "ring-2 ring-white scale-105"
+                        : "opacity-60 hover:opacity-80"
+                    }`}
+                  >
+                    {image.thumbnail_url || image.image_url ? (
+                      <img 
+                        src={image.thumbnail_url || image.image_url} 
+                        alt={image.title || `Gallery ${index + 1}`}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div
+                        className={`w-full h-full bg-gradient-to-br ${image.gradient || 'from-amber-500 to-orange-500'} rounded-xl`}
+                      ></div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Gallery Stats */}

@@ -21,16 +21,24 @@ export default function PublicationsPage() {
     slug: "",
     abstract: "",
     authors: [],
-    publication_date: "",
-    journal_name: "",
-    volume: "",
-    issue: "",
-    pages: "",
+    venue: "",
+    citations: 0,
     doi: "",
     keywords: [],
+    impact: "",
+    pages: "",
+    volume: "",
+    issue: "",
+    publisher: "",
+    methodology: "",
+    results: "",
+    conclusions: "",
+    pdf_url: "",
+    journal_name: "",
+    year: new Date().getFullYear(),
+    graphical_abstract_url: "",
     access_level: "public",
     status: "draft",
-    file_url: "",
   });
   const [authorInput, setAuthorInput] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
@@ -155,13 +163,20 @@ export default function PublicationsPage() {
         abstract: formData.abstract.trim(),
         authors: formData.authors.filter((a) => a && a.trim()),
         journal_name: formData.journal_name.trim(),
+        year: formData.year,
         access_level: formData.access_level,
         status: formData.status,
       };
 
       // Add optional fields only if they have values
-      if (formData.publication_date && formData.publication_date.trim()) {
-        submitData.publication_date = formData.publication_date.trim();
+      if (formData.venue && formData.venue.trim()) {
+        submitData.venue = formData.venue.trim();
+      }
+      if (formData.citations !== undefined && formData.citations >= 0) {
+        submitData.citations = formData.citations;
+      }
+      if (formData.impact && formData.impact.trim()) {
+        submitData.impact = formData.impact.trim();
       }
       if (formData.volume && formData.volume.trim()) {
         submitData.volume = formData.volume.trim();
@@ -172,11 +187,26 @@ export default function PublicationsPage() {
       if (formData.pages && formData.pages.trim()) {
         submitData.pages = formData.pages.trim();
       }
+      if (formData.publisher && formData.publisher.trim()) {
+        submitData.publisher = formData.publisher.trim();
+      }
       if (formData.doi && formData.doi.trim()) {
         submitData.doi = formData.doi.trim();
       }
-      if (formData.file_url && formData.file_url.trim()) {
-        submitData.file_url = formData.file_url.trim();
+      if (formData.pdf_url && formData.pdf_url.trim()) {
+        submitData.pdf_url = formData.pdf_url.trim();
+      }
+      if (formData.graphical_abstract_url && formData.graphical_abstract_url.trim()) {
+        submitData.graphical_abstract_url = formData.graphical_abstract_url.trim();
+      }
+      if (formData.methodology && formData.methodology.trim()) {
+        submitData.methodology = formData.methodology.trim();
+      }
+      if (formData.results && formData.results.trim()) {
+        submitData.results = formData.results.trim();
+      }
+      if (formData.conclusions && formData.conclusions.trim()) {
+        submitData.conclusions = formData.conclusions.trim();
       }
       if (formData.keywords && formData.keywords.length > 0) {
         // Remove duplicates and empty strings
@@ -338,16 +368,24 @@ export default function PublicationsPage() {
         slug: publication.slug,
         abstract: publication.abstract || "",
         authors: publication.authors || [],
-        publication_date: publication.publication_date || "",
-        journal_name: publication.journal_name || "",
-        volume: publication.volume || "",
-        issue: publication.issue || "",
-        pages: publication.pages || "",
+        venue: publication.venue || "",
+        citations: publication.citations || 0,
         doi: publication.doi || "",
         keywords: publication.keywords || [],
+        impact: publication.impact || "",
+        pages: publication.pages || "",
+        volume: publication.volume || "",
+        issue: publication.issue || "",
+        publisher: publication.publisher || "",
+        methodology: publication.methodology || "",
+        results: publication.results || "",
+        conclusions: publication.conclusions || "",
+        pdf_url: publication.pdf_url || "",
+        journal_name: publication.journal_name || "",
+        year: publication.year || new Date().getFullYear(),
+        graphical_abstract_url: publication.graphical_abstract_url || "",
         access_level: publication.access_level || "public",
         status: publication.status || "draft",
-        file_url: publication.file_url || "",
       });
     }
   };
@@ -364,16 +402,24 @@ export default function PublicationsPage() {
       slug: "",
       abstract: "",
       authors: [],
-      publication_date: "",
-      journal_name: "",
-      volume: "",
-      issue: "",
-      pages: "",
+      venue: "",
+      citations: 0,
       doi: "",
       keywords: [],
+      impact: "",
+      pages: "",
+      volume: "",
+      issue: "",
+      publisher: "",
+      methodology: "",
+      results: "",
+      conclusions: "",
+      pdf_url: "",
+      journal_name: "",
+      year: new Date().getFullYear(),
+      graphical_abstract_url: "",
       access_level: "public",
       status: "draft",
-      file_url: "",
     });
     setAuthorInput("");
     setKeywordInput("");
@@ -1406,18 +1452,60 @@ export default function PublicationsPage() {
 
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">
-                        Publication Date
+                        Venue
                       </label>
                       <input
-                        type="date"
-                        value={formData.publication_date}
+                        type="text"
+                        value={formData.venue}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            publication_date: e.target.value,
+                            venue: e.target.value,
                           })
                         }
                         className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="Conference or Journal Venue"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        Year *
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.year}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            year: parseInt(e.target.value) || new Date().getFullYear(),
+                          })
+                        }
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="2024"
+                        min="1900"
+                        max="2100"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        Publisher
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.publisher}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            publisher: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="Publisher name"
                       />
                     </div>
                   </div>
@@ -1469,6 +1557,39 @@ export default function PublicationsPage() {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        Citations
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.citations}
+                        onChange={(e) =>
+                          setFormData({ ...formData, citations: parseInt(e.target.value) || 0 })
+                        }
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        Impact Factor
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.impact}
+                        onChange={(e) =>
+                          setFormData({ ...formData, impact: e.target.value })
+                        }
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="5.2"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">
                       DOI
@@ -1484,19 +1605,36 @@ export default function PublicationsPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">
-                      File URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.file_url}
-                      onChange={(e) =>
-                        setFormData({ ...formData, file_url: e.target.value })
-                      }
-                      className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
-                      placeholder="https://example.com/paper.pdf"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        PDF URL
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.pdf_url}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pdf_url: e.target.value })
+                        }
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="https://example.com/paper.pdf"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">
+                        Graphical Abstract URL
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.graphical_abstract_url}
+                        onChange={(e) =>
+                          setFormData({ ...formData, graphical_abstract_url: e.target.value })
+                        }
+                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="https://example.com/graphical_abstract.png"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -1512,6 +1650,51 @@ export default function PublicationsPage() {
                       placeholder="Enter publication abstract..."
                       rows={6}
                       required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Methodology
+                    </label>
+                    <textarea
+                      value={formData.methodology}
+                      onChange={(e) =>
+                        setFormData({ ...formData, methodology: e.target.value })
+                      }
+                      className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 resize-none"
+                      placeholder="Describe the research methodology..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Results
+                    </label>
+                    <textarea
+                      value={formData.results}
+                      onChange={(e) =>
+                        setFormData({ ...formData, results: e.target.value })
+                      }
+                      className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 resize-none"
+                      placeholder="Summarize the key results..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Conclusions
+                    </label>
+                    <textarea
+                      value={formData.conclusions}
+                      onChange={(e) =>
+                        setFormData({ ...formData, conclusions: e.target.value })
+                      }
+                      className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 resize-none"
+                      placeholder="State the main conclusions..."
+                      rows={4}
                     />
                   </div>
 

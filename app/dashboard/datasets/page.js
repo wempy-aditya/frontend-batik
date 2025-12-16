@@ -47,6 +47,7 @@ export default function ManageDatasetsPage() {
       minImagesPerCategory: 0,
     },
     sample_images: [],
+    sample_image_url: null,
     file_url: "",
     source: "",
     size: 0,
@@ -304,6 +305,7 @@ export default function ManageDatasetsPage() {
           minImagesPerCategory: 0,
         },
         sample_images: dataset.sample_images || [],
+        sample_image_url: dataset.sample_image_url || null,
         file_url: dataset.file_url || "",
         source: dataset.source || "",
         size: dataset.size || 0,
@@ -351,6 +353,7 @@ export default function ManageDatasetsPage() {
         minImagesPerCategory: 0,
       },
       sample_images: [],
+      sample_image_url: null,
       file_url: "",
       source: "",
       size: 0,
@@ -1772,6 +1775,67 @@ export default function ManageDatasetsPage() {
                       </div>
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Sample Images (URLs)
+                      </label>
+                      <div className="flex gap-2 mb-2">
+                        <input
+                          type="url"
+                          value={sampleImageInput}
+                          onChange={(e) => setSampleImageInput(e.target.value)}
+                          onKeyPress={(e) =>
+                            e.key === "Enter" &&
+                            (e.preventDefault(), handleAddSampleImage())
+                          }
+                          className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                          placeholder="https://example.com/image.jpg"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSampleImage}
+                          className="px-4 py-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-colors"
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.sample_images.map((image, index) => (
+                          <span
+                            key={index}
+                            className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm flex items-center gap-1"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            Image {index + 1}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSampleImage(image)}
+                              className="text-purple-500 hover:text-purple-700"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      {formData.sample_images.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          {formData.sample_images.length} sample image(s) added
+                        </p>
+                      )}
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1806,7 +1870,7 @@ export default function ManageDatasetsPage() {
                         >
                           <option value="draft">Draft</option>
                           <option value="published">Published</option>
-                          <option value="archived">Archived</option>
+                          {/* <option value="archived">Archived</option> */}
                         </select>
                       </div>
                     </div>

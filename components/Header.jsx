@@ -94,7 +94,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden xl:flex items-center gap-2">
             {navItems.map((item) => (
               <div
                 key={item.path}
@@ -115,7 +115,7 @@ const Header = () => {
           </div>
 
           {/* CTA Button */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden xl:flex items-center gap-3">
             <button
               // onClick={() => router.push("/demo")}
               onClick={() => router.push("/test-api")}
@@ -162,7 +162,7 @@ const Header = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${
+            className={`xl:hidden p-2 rounded-lg transition-colors duration-300 ${
               isScrolled
                 ? "text-gray-900 hover:bg-gray-100"
                 : "text-white hover:bg-white/10"
@@ -195,8 +195,8 @@ const Header = () => {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ${
-            isMobileMenuOpen ? "max-h-96 pb-6" : "max-h-0"
+          className={`xl:hidden overflow-y-auto transition-all duration-300 ${
+            isMobileMenuOpen ? "max-h-[calc(100vh-5rem)] pb-6" : "max-h-0"
           }`}
         >
           <div className="space-y-2 pt-4">

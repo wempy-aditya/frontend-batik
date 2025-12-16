@@ -1,354 +1,202 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DatasetsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedAccess, setSelectedAccess] = useState("all");
   const [hoveredDataset, setHoveredDataset] = useState(null);
-
-  const categories = [
-    { id: "all", name: "All Datasets", count: 18 },
-    { id: "object-detection", name: "Object Detection", count: 6 },
-    { id: "classification", name: "Classification", count: 5 },
-    { id: "segmentation", name: "Segmentation", count: 4 },
-    { id: "style-transfer", name: "Style Transfer", count: 3 },
-  ];
+  const [datasets, setDatasets] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const router = useRouter();
 
   const accessTypes = [
-    { id: "all", name: "All Access", count: 18 },
-    { id: "Public", name: "Public", count: 8 },
-    { id: "Registered", name: "Registered", count: 6 },
-    { id: "Premium", name: "Premium", count: 4 },
+    { id: "all", name: "All Access" },
+    { id: "Public", name: "Public" },
+    { id: "Registered", name: "Registered" },
+    { id: "Premium", name: "Premium" },
   ];
 
-  const datasets = [
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/datasets/categories');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            const allCategories = [
+              { id: "all", name: "All Datasets", slug: "all" },
+              ...data
+            ];
+            setCategories(allCategories);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([
+          { id: "all", name: "All Datasets", slug: "all" },
+        ]);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch datasets
+  useEffect(() => {
+    const fetchDatasets = async () => {
+      setLoading(true);
+      try {
+        let url = `/api/datasets/public?page=${currentPage}&items_per_page=12`;
+        
+        if (searchQuery) {
+          url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
+
+        if (selectedCategory !== "all") {
+          url = `/api/datasets/category/${selectedCategory}?page=${currentPage}&items_per_page=12`;
+        }
+        
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data && Array.isArray(data.data)) {
+            setDatasets(data.data);
+            setTotalPages(data.pages || 1);
+          } else if (Array.isArray(data)) {
+            setDatasets(data);
+          } else {
+            console.log('Datasets data structure:', data);
+            setDatasets([]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching datasets:', error);
+        setDatasets([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDatasets();
+  }, [selectedCategory, searchQuery, currentPage]);
+
+  const fallbackDatasets = [
     {
-      id: 1,
+      id: "019ae4b2-d4c7-7a18-890d-80db7143746a",
       name: "ImageNet-2024",
+      slug: "imagenet-2024",
       description:
         "Large-scale dataset with over 14 million images across 20,000+ categories for object recognition research and deep learning training.",
-      size: "150GB",
-      samples: "14.2M",
-      categories: "20K+",
-      accessType: "Public",
-      downloadCount: "250K+",
-      lastUpdated: "2024-01-15",
-      previewGradient: "from-amber-500 to-orange-500",
-      accessColor: "bg-green-100 text-green-800",
-      category: "classification",
-      format: "JPEG, XML",
+      tagline: "Large-scale visual recognition challenge dataset",
+      samples: 14200000,
+      download_count: 250000,
+      gradient: "#FF6B6B,#F59E0B",
+      version: "2024.1",
+      format: "JPEG",
       license: "Academic Use",
-    },
-    {
-      id: 2,
-      name: "COCO-Enhanced",
-      description:
-        "Extended version of MS COCO dataset with additional annotations for instance segmentation and panoptic understanding.",
-      size: "45GB",
-      samples: "330K",
-      categories: "150",
-      accessType: "Registered",
-      downloadCount: "125K+",
-      lastUpdated: "2023-11-20",
-      previewGradient: "from-orange-500 to-red-500",
-      accessColor: "bg-blue-100 text-blue-800",
-      category: "object-detection",
-      format: "JPEG, JSON",
-      license: "CC BY 4.0",
-    },
-    {
-      id: 3,
-      name: "Artistic Styles DB",
-      description:
-        "Curated collection of artistic images spanning various styles, periods, and techniques for neural style transfer research.",
-      size: "12GB",
-      samples: "85K",
-      categories: "50",
-      accessType: "Premium",
-      downloadCount: "45K+",
-      lastUpdated: "2024-02-10",
-      previewGradient: "from-yellow-500 to-amber-500",
-      accessColor: "bg-amber-100 text-amber-800",
-      category: "style-transfer",
-      format: "JPEG, PNG",
-      license: "Custom",
-    },
-    {
-      id: 4,
-      name: "Medical Imaging Dataset",
-      description:
-        "Comprehensive medical imaging collection including X-rays, MRIs, and CT scans with expert annotations for diagnostic AI.",
-      size: "200GB",
-      samples: "500K",
-      categories: "25",
-      accessType: "Registered",
-      downloadCount: "75K+",
-      lastUpdated: "2024-01-30",
-      previewGradient: "from-blue-500 to-cyan-500",
-      accessColor: "bg-blue-100 text-blue-800",
-      category: "classification",
-      format: "DICOM, PNG",
-      license: "Medical Research",
-    },
-    {
-      id: 5,
-      name: "Street View Segmentation",
-      description:
-        "Urban scene understanding dataset with pixel-level annotations for autonomous driving and smart city applications.",
-      size: "80GB",
-      samples: "150K",
-      categories: "30",
-      accessType: "Public",
-      downloadCount: "180K+",
-      lastUpdated: "2023-12-05",
-      previewGradient: "from-green-500 to-teal-500",
-      accessColor: "bg-green-100 text-green-800",
-      category: "segmentation",
-      format: "PNG, JSON",
-      license: "MIT",
-    },
-    {
-      id: 6,
-      name: "Fashion Product Images",
-      description:
-        "High-resolution fashion product dataset with detailed attribute annotations for e-commerce and style recommendation systems.",
-      size: "35GB",
-      samples: "250K",
-      categories: "100",
-      accessType: "Premium",
-      downloadCount: "60K+",
-      lastUpdated: "2024-02-20",
-      previewGradient: "from-pink-500 to-rose-500",
-      accessColor: "bg-amber-100 text-amber-800",
-      category: "classification",
-      format: "JPEG, JSON",
-      license: "Commercial",
-    },
-    {
-      id: 7,
-      name: "Satellite Earth Imagery",
-      description:
-        "Global satellite imagery dataset for environmental monitoring, agriculture analysis, and climate change research.",
-      size: "500GB",
-      samples: "2.5M",
-      categories: "15",
-      accessType: "Registered",
-      downloadCount: "95K+",
-      lastUpdated: "2024-01-10",
-      previewGradient: "from-emerald-500 to-green-500",
-      accessColor: "bg-blue-100 text-blue-800",
-      category: "classification",
-      format: "GeoTIFF, JSON",
-      license: "Research Only",
-    },
-    {
-      id: 8,
-      name: "3D Object Recognition",
-      description:
-        "Multi-view 3D object dataset with depth information and pose annotations for robotics and AR/VR applications.",
-      size: "120GB",
-      samples: "180K",
-      categories: "200",
-      accessType: "Public",
-      downloadCount: "85K+",
-      lastUpdated: "2023-11-15",
-      previewGradient: "from-purple-500 to-indigo-500",
-      accessColor: "bg-green-100 text-green-800",
-      category: "object-detection",
-      format: "PLY, JSON",
-      license: "Apache 2.0",
-    },
-    {
-      id: 9,
-      name: "Historic Art Collection",
-      description:
-        "Digitized historic artwork spanning centuries with detailed metadata for art history research and style analysis.",
-      size: "25GB",
-      samples: "120K",
-      categories: "40",
-      accessType: "Premium",
-      downloadCount: "35K+",
-      lastUpdated: "2024-01-25",
-      previewGradient: "from-amber-600 to-yellow-500",
-      accessColor: "bg-amber-100 text-amber-800",
-      category: "style-transfer",
-      format: "TIFF, XML",
-      license: "Museum License",
-    },
-    {
-      id: 10,
-      name: "Face Recognition Dataset",
-      description:
-        "Diverse facial recognition dataset with privacy-compliant annotations for identity verification and emotion analysis.",
-      size: "60GB",
-      samples: "500K",
-      categories: "1000",
-      accessType: "Registered",
-      downloadCount: "110K+",
-      lastUpdated: "2023-12-20",
-      previewGradient: "from-rose-500 to-pink-500",
-      accessColor: "bg-blue-100 text-blue-800",
-      category: "classification",
-      format: "JPEG, JSON",
-      license: "Privacy Compliant",
-    },
-    {
-      id: 11,
-      name: "Industrial Defect Detection",
-      description:
-        "Manufacturing defect dataset for quality control and automated inspection systems in industrial environments.",
-      size: "40GB",
-      samples: "300K",
-      categories: "50",
-      accessType: "Premium",
-      downloadCount: "25K+",
-      lastUpdated: "2024-02-01",
-      previewGradient: "from-gray-500 to-slate-500",
-      accessColor: "bg-amber-100 text-amber-800",
-      category: "object-detection",
-      format: "PNG, XML",
-      license: "Industrial Use",
-    },
-    {
-      id: 12,
-      name: "Document Text Extraction",
-      description:
-        "Document analysis dataset with OCR annotations for text extraction and document understanding applications.",
-      size: "15GB",
-      samples: "75K",
-      categories: "20",
-      accessType: "Public",
-      downloadCount: "65K+",
-      lastUpdated: "2023-10-30",
-      previewGradient: "from-indigo-500 to-blue-500",
-      accessColor: "bg-green-100 text-green-800",
-      category: "classification",
-      format: "PDF, JSON",
-      license: "Open Source",
-    },
-    {
-      id: 13,
-      name: "Semantic Segmentation Plus",
-      description:
-        "Advanced semantic segmentation dataset with fine-grained pixel annotations for computer vision research.",
-      size: "90GB",
-      samples: "200K",
-      categories: "80",
-      accessType: "Registered",
-      downloadCount: "70K+",
-      lastUpdated: "2024-01-05",
-      previewGradient: "from-cyan-500 to-blue-500",
-      accessColor: "bg-blue-100 text-blue-800",
-      category: "segmentation",
-      format: "PNG, JSON",
-      license: "Academic",
-    },
-    {
-      id: 14,
-      name: "Modern Art Styles",
-      description:
-        "Contemporary art dataset featuring modern artistic movements and styles for AI art generation and analysis.",
-      size: "18GB",
-      samples: "95K",
-      categories: "35",
-      accessType: "Premium",
-      downloadCount: "40K+",
-      lastUpdated: "2024-02-15",
-      previewGradient: "from-violet-500 to-purple-500",
-      accessColor: "bg-amber-100 text-amber-800",
-      category: "style-transfer",
-      format: "JPEG, JSON",
-      license: "Art License",
-    },
-    {
-      id: 15,
-      name: "Traffic Sign Detection",
-      description:
-        "Global traffic sign dataset for autonomous vehicle development and traffic management systems.",
-      size: "30GB",
-      samples: "180K",
-      categories: "100",
-      accessType: "Public",
-      downloadCount: "120K+",
-      lastUpdated: "2023-11-25",
-      previewGradient: "from-red-500 to-orange-500",
-      accessColor: "bg-green-100 text-green-800",
-      category: "object-detection",
-      format: "JPEG, XML",
-      license: "Traffic Authority",
-    },
-    {
-      id: 16,
-      name: "Panoptic Scene Understanding",
-      description:
-        "Comprehensive scene understanding dataset combining instance and semantic segmentation for holistic AI vision.",
-      size: "110GB",
-      samples: "220K",
-      categories: "120",
-      accessType: "Registered",
-      downloadCount: "55K+",
-      lastUpdated: "2024-01-20",
-      previewGradient: "from-teal-500 to-cyan-500",
-      accessColor: "bg-blue-100 text-blue-800",
-      category: "segmentation",
-      format: "PNG, JSON",
-      license: "Research",
-    },
-    {
-      id: 17,
-      name: "Abstract Art Generator",
-      description:
-        "Abstract art dataset for generative AI models and creative applications in digital art creation.",
-      size: "20GB",
-      samples: "110K",
-      categories: "25",
-      accessType: "Public",
-      downloadCount: "80K+",
-      lastUpdated: "2023-12-10",
-      previewGradient: "from-orange-500 to-amber-500",
-      accessColor: "bg-green-100 text-green-800",
-      category: "style-transfer",
-      format: "PNG, JSON",
-      license: "Creative Commons",
-    },
-    {
-      id: 18,
-      name: "Drone Surveillance Dataset",
-      description:
-        "Aerial surveillance dataset for security applications and crowd monitoring with privacy-preserving annotations.",
-      size: "75GB",
-      samples: "160K",
-      categories: "40",
-      accessType: "Premium",
-      downloadCount: "30K+",
-      lastUpdated: "2024-02-05",
-      previewGradient: "from-slate-500 to-gray-500",
-      accessColor: "bg-amber-100 text-amber-800",
-      category: "object-detection",
-      format: "MP4, JSON",
-      license: "Security License",
+      citation: "Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., & Fei-Fei, L. (2024). ImageNet: A large-scale hierarchical image database.",
+      key_features: [
+        "14.2 million annotated images",
+        "20,000+ hierarchical categories",
+        "Multiple annotation types",
+        "High-quality manual verification",
+      ],
+      use_cases: [
+        "Object Recognition",
+        "Image Classification",
+        "Transfer Learning",
+        "Model Benchmarking",
+      ],
+      technical_specs: {
+        type: "supervised",
+        access: "public",
+        format: "JPEG",
+        license: "Academic Use",
+        version: "2024.1",
+        lastUpdate: "2024-01-15",
+      },
+      statistics: {
+        avgImageSize: "482x482",
+        qualityScore: 9.85,
+        totalAnnotations: 14200000,
+        avgImagesPerCategory: 710,
+        maxImagesPerCategory: 1300,
+        minImagesPerCategory: 500,
+      },
+      sample_images: [],
+      sample_image_url: null,
+      file_url: "https://example.com/imagenet-2024.zip",
+      source: "Stanford Vision Lab",
+      size: 161061273600,
+      access_level: "public",
+      status: "published",
+      categories: ["Computer Vision", "Image Classification"],
+      creator_name: "ImageNet Team",
+      created_at: "2024-01-15T00:00:00Z",
+      updated_at: "2024-01-15T00:00:00Z",
     },
   ];
 
-  const filteredDatasets = datasets.filter((dataset) => {
-    const categoryMatch =
-      selectedCategory === "all" || dataset.category === selectedCategory;
+  // Display datasets with fallback
+  const displayDatasets = loading ? [] : (datasets.length > 0 ? datasets : fallbackDatasets);
+
+  // Local filter for access type (since API doesn't support this filter yet)
+  const filteredDatasets = displayDatasets.filter((dataset) => {
     const accessMatch =
-      selectedAccess === "all" || dataset.accessType === selectedAccess;
-    return categoryMatch && accessMatch;
+      selectedAccess === "all" || dataset.access_level === selectedAccess || dataset.accessType === selectedAccess;
+    return accessMatch;
   });
 
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(1);
+  };
+
   const getAccessColor = (accessType) => {
-    switch (accessType) {
-      case "Public":
+    const type = accessType?.toLowerCase();
+    switch (type) {
+      case "public":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Registered":
+      case "registered":
         return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Premium":
+      case "premium":
         return "bg-amber-100 text-amber-800 border-amber-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
+  };
+
+  // Helper functions
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const formatNumber = (num) => {
+    if (!num) return "0";
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    return num.toString();
+  };
+
+  const getGradientClass = (gradientString) => {
+    // Convert hex gradient to Tailwind classes or use default
+    if (!gradientString) return "from-amber-500 to-orange-500";
+    // Default gradient for now
+    return "from-amber-500 to-orange-500";
   };
 
   return (
@@ -462,6 +310,32 @@ export default function DatasetsPage() {
       {/* Datasets Section */}
       <section className="py-20">
         <div className="container mx-auto px-6 lg:px-8">
+          {/* Search Bar */}
+          <div className="mb-8 max-w-2xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearch}
+                placeholder="Search datasets by name or description..."
+                className="w-full px-6 py-4 pl-12 bg-white rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+              />
+              <svg
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+          </div>
+
           {/* Filters */}
           <div className="mb-12 space-y-6">
             {/* Category Filter */}
@@ -473,17 +347,14 @@ export default function DatasetsPage() {
                 {categories.map((category) => (
                   <button
                     key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
+                    onClick={() => handleCategoryChange(category.id || category.slug)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
-                      selectedCategory === category.id
+                      selectedCategory === (category.id || category.slug)
                         ? "bg-blue-500 text-white border-blue-500"
                         : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
                     }`}
                   >
                     {category.name}
-                    <span className="ml-2 text-sm opacity-75">
-                      ({category.count})
-                    </span>
                   </button>
                 ))}
               </div>
@@ -506,26 +377,28 @@ export default function DatasetsPage() {
                     }`}
                   >
                     {access.name}
-                    <span className="ml-2 text-sm opacity-75">
-                      ({access.count})
-                    </span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Results Count */}
-          <div className="mb-8">
-            <p className="text-gray-600">
-              Showing{" "}
-              <span className="font-semibold">{filteredDatasets.length}</span>{" "}
-              datasets
-            </p>
-          </div>
-
           {/* Datasets Grid */}
-          <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+              <p className="mt-4 text-gray-600">Loading datasets...</p>
+            </div>
+          ) : filteredDatasets.length === 0 ? (
+            <div className="text-center py-20">
+              <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xl text-gray-600">No datasets found</p>
+              <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
             {filteredDatasets.map((dataset) => (
               <div
                 key={dataset.id}
@@ -538,9 +411,9 @@ export default function DatasetsPage() {
                   {/* Header with Preview */}
                   <div className="relative h-40 overflow-hidden">
                     <div
-                      className={`absolute inset-0 bg-gradient-to-br ${
-                        dataset.previewGradient
-                      } transition-transform duration-700 ${
+                      className={`absolute inset-0 bg-gradient-to-br ${getGradientClass(
+                        dataset.gradient
+                      )} transition-transform duration-700 ${
                         hoveredDataset === dataset.id ? "scale-110" : ""
                       }`}
                     ></div>
@@ -562,10 +435,10 @@ export default function DatasetsPage() {
                     <div className="absolute top-4 right-4">
                       <span
                         className={`px-3 py-1 text-xs font-semibold rounded-full border ${getAccessColor(
-                          dataset.accessType
+                          dataset.access_level
                         )}`}
                       >
-                        {dataset.accessType}
+                        {dataset.access_level || 'Public'}
                       </span>
                     </div>
 
@@ -573,9 +446,9 @@ export default function DatasetsPage() {
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
                       <div className="flex justify-between text-white text-sm">
                         <span className="font-medium">
-                          {dataset.samples} samples
+                          {formatNumber(dataset.samples)} samples
                         </span>
-                        <span className="font-medium">{dataset.size}</span>
+                        <span className="font-medium">{formatFileSize(dataset.size)}</span>
                       </div>
                     </div>
                   </div>
@@ -614,13 +487,13 @@ export default function DatasetsPage() {
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-gray-50 rounded-lg p-3 text-center">
                         <div className="text-lg font-bold text-gray-900">
-                          {dataset.categories}
+                          {dataset.categories?.length || 0}
                         </div>
                         <div className="text-xs text-gray-600">Categories</div>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-3 text-center">
                         <div className="text-lg font-bold text-gray-900">
-                          {dataset.samples}
+                          {formatNumber(dataset.samples)}
                         </div>
                         <div className="text-xs text-gray-600">Samples</div>
                       </div>
@@ -639,7 +512,7 @@ export default function DatasetsPage() {
                       <div className="flex justify-between">
                         <span>Updated:</span>
                         <span className="font-medium">
-                          {new Date(dataset.lastUpdated).toLocaleDateString(
+                          {new Date(dataset.updated_at || dataset.created_at).toLocaleDateString(
                             "en-US",
                             {
                               year: "numeric",
@@ -657,7 +530,7 @@ export default function DatasetsPage() {
                         onClick={() =>
                           (window.location.href = `/datasets/${dataset.id}/download`)
                         }
-                        className={`w-full py-3 px-4 bg-gradient-to-r ${dataset.previewGradient} text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105`}
+                        className={`w-full py-3 px-4 bg-gradient-to-r ${getGradientClass(dataset.gradient)} text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105`}
                       >
                         <div className="flex items-center justify-center gap-2">
                           <svg
@@ -678,9 +551,7 @@ export default function DatasetsPage() {
                       </button>
 
                       <button
-                        onClick={() =>
-                          (window.location.href = `/datasets/${dataset.id}`)
-                        }
+                        onClick={() => router.push(`/datasets/${dataset.id}`)}
                         className="w-full py-2 px-4 text-gray-700 font-medium text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                       >
                         View Details
@@ -690,12 +561,58 @@ export default function DatasetsPage() {
 
                   {/* Dataset ID */}
                   <div className="absolute top-4 left-4 w-8 h-8 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-full flex items-center justify-center">
-                    {dataset.id}
+                    #
                   </div>
                 </div>
               </div>
             ))}
           </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredDatasets.length > 0 && totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-12">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
+                }`}
+              >
+                Previous
+              </button>
+              
+              <div className="flex gap-2">
+                {[...Array(totalPages)].map((_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => setCurrentPage(index + 1)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      currentPage === index + 1
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                        : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
+                    }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
 
           {/* CTA Section */}
           <div className="text-center mt-20">
