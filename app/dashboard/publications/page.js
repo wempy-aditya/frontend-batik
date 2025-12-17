@@ -2,6 +2,8 @@
 import { useAuth } from "../../../components/AuthProvider";
 import { useState, useEffect } from "react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function PublicationsPage() {
   const { getUserInfo } = useAuth();
   const [publications, setPublications] = useState([]);
@@ -10,6 +12,9 @@ export default function PublicationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
+  const [availableFiles, setAvailableFiles] = useState([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [modalMode, setModalMode] = useState("create"); // 'create', 'edit', 'view'
   const [selectedPublication, setSelectedPublication] = useState(null);
   const [publicationToDelete, setPublicationToDelete] = useState(null);
@@ -490,6 +495,45 @@ export default function PublicationsPage() {
       archived: "bg-red-100 text-red-700",
     };
     return badges[status] || badges.draft;
+  };
+
+  const fetchFilesForPicker = async () => {
+    setIsLoadingFiles(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        "/api/files?limit=100&file_type=image",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        setAvailableFiles(result.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  const openFilePicker = () => {
+    setIsFilePickerOpen(true);
+    fetchFilesForPicker();
+  };
+
+  const selectFile = (fileUrl) => {
+    // Convert relative path to full URL if needed
+    const fullUrl = fileUrl.startsWith('http') 
+      ? fileUrl 
+      : `${API_BASE_URL}${fileUrl}`;
+    setFormData({ ...formData, graphical_abstract_url: fullUrl });
+    setIsFilePickerOpen(false);
   };
 
   if (isLoading) {
@@ -1625,15 +1669,37 @@ export default function PublicationsPage() {
                       <label className="block text-sm font-bold text-slate-700 mb-2">
                         Graphical Abstract URL
                       </label>
-                      <input
-                        type="url"
-                        value={formData.graphical_abstract_url}
-                        onChange={(e) =>
-                          setFormData({ ...formData, graphical_abstract_url: e.target.value })
-                        }
-                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
-                        placeholder="https://example.com/graphical_abstract.png"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={formData.graphical_abstract_url}
+                          onChange={(e) =>
+                            setFormData({ ...formData, graphical_abstract_url: e.target.value })
+                          }
+                          className="flex-1 p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                          placeholder="https://example.com/graphical_abstract.png"
+                        />
+                        <button
+                          type="button"
+                          onClick={openFilePicker}
+                          className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                            />
+                          </svg>
+                          Browse
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -2095,6 +2161,191 @@ export default function PublicationsPage() {
                   Delete Publication
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Picker Modal */}
+      {isFilePickerOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden transform animate-slideUp">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-white">
+                  Select Image from File Manager
+                </h2>
+                <p className="text-white/90 text-sm mt-1">
+                  Choose an image for graphical abstract
+                </p>
+              </div>
+              <button
+                onClick={() => setIsFilePickerOpen(false)}
+                className="p-2.5 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-110"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* File Grid */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              {isLoadingFiles ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-4">
+                      <svg
+                        className="w-full h-full text-blue-600 animate-spin"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-slate-600 font-medium">Loading images...</p>
+                  </div>
+                </div>
+              ) : availableFiles.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-24 h-24 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                    <svg
+                      className="w-12 h-12 text-slate-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    No Images Found
+                  </h3>
+                  <p className="text-slate-600 mb-4">
+                    Upload images in File Manager first
+                  </p>
+                  <button
+                    onClick={() => window.open('/dashboard/files', '_blank')}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-2xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                      />
+                    </svg>
+                    Go to File Manager
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {availableFiles.map((file) => {
+                    const fullImageUrl = file.file_url.startsWith('http') 
+                      ? file.file_url 
+                      : `${API_BASE_URL}${file.file_url}`;
+                    
+                    return (
+                    <div
+                      key={file.id}
+                      onClick={() => selectFile(file.file_url)}
+                      className="group relative bg-white rounded-2xl border-2 border-slate-200 hover:border-blue-400 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                    >
+                      {/* Image Preview */}
+                      <div className="relative aspect-square bg-slate-100">
+                        <img
+                          src={fullImageUrl}
+                          alt={file.original_filename}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/20 transition-all duration-200 flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <div className="bg-white rounded-full p-3 shadow-lg">
+                              <svg
+                                className="w-6 h-6 text-blue-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* File Info */}
+                      <div className="p-3">
+                        <p className="text-sm font-medium text-slate-900 truncate mb-1">
+                          {file.original_filename}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {(file.file_size / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
+
+                      {/* Selected Indicator */}
+                      {formData.graphical_abstract_url === fullImageUrl && (
+                        <div className="absolute top-2 right-2">
+                          <div className="bg-green-500 rounded-full p-1.5 shadow-lg">
+                            <svg
+                              className="w-4 h-4 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
