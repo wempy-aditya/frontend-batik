@@ -84,6 +84,12 @@ export default function PublicationDetailPage() {
     chicago: `${displayPublication?.authors?.join(", ") || 'Authors'}. "${displayPublication?.title || 'Title'}." ${
       displayPublication?.journal_name || displayPublication?.venue || 'Venue'
     } (${displayPublication?.year || '2024'}). https://doi.org/${displayPublication?.doi || 'DOI'}`,
+    ieee: `${displayPublication?.authors?.map((author, index) => {
+      const parts = author.trim().split(' ');
+      const lastName = parts[parts.length - 1];
+      const initials = parts.slice(0, -1).map(n => n.charAt(0) + '.').join(' ');
+      return `${initials} ${lastName}`;
+    }).join(', ') || 'Authors'}, "${displayPublication?.title || 'Title'}," ${displayPublication?.journal_name || displayPublication?.venue || 'Venue'}, vol. ${displayPublication?.volume || 'X'}, no. ${displayPublication?.issue || 'X'}, pp. ${displayPublication?.pages || 'X-X'}, ${displayPublication?.year || '2024'}, doi: ${displayPublication?.doi || 'DOI'}.`,
   };
 
   // Helper function for impact color
@@ -492,7 +498,7 @@ export default function PublicationDetailPage() {
                   <div className="space-y-6">
                     {/* Citation Format Selector */}
                     <div className="flex flex-wrap gap-3">
-                      {["bibtex", "apa", "mla", "chicago"].map((format) => (
+                      {["bibtex", "apa", "mla", "chicago", "ieee"].map((format) => (
                         <button
                           key={format}
                           onClick={() => setSelectedCitation(format)}

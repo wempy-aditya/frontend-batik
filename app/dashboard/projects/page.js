@@ -11,9 +11,14 @@ export default function Projects() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showContributorModal, setShowContributorModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [contributors, setContributors] = useState([]);
+  const [projectContributors, setProjectContributors] = useState([]);
+  const [selectedContributorIds, setSelectedContributorIds] = useState([]);
+  const [contributorRoles, setContributorRoles] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterComplexity, setFilterComplexity] = useState("all");
@@ -50,6 +55,7 @@ export default function Projects() {
     if (token) {
       fetchProjects();
       fetchCategories();
+      fetchContributors();
     }
   }, [token, currentPage]);
 
@@ -106,6 +112,42 @@ export default function Projects() {
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchContributors = async () => {
+    try {
+      const response = await fetch("/api/contributors?limit=100");
+      if (response.ok) {
+        const data = await response.json();
+        setContributors(data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching contributors:", error);
+    }
+  };
+
+  const fetchProjectContributors = async (projectId) => {
+    try {
+      const response = await fetch(`/api/contributors/project/${projectId}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Deduplicate contributors by ID to prevent React key errors
+        const uniqueContributors = Array.from(
+          new Map((data.data || []).map(c => [c.id, c])).values()
+        );
+        
+        setProjectContributors(uniqueContributors);
+        setSelectedContributorIds(uniqueContributors.map(c => c.id));
+        const roles = {};
+        uniqueContributors.forEach(c => {
+          roles[c.id] = c.role_in_project || '';
+        });
+        setContributorRoles(roles);
+      }
+    } catch (error) {
+      console.error("Error fetching project contributors:", error);
     }
   };
 
@@ -257,6 +299,39 @@ export default function Projects() {
       }
     } catch (error) {
       console.error("Error assigning categories:", error);
+    }
+  };
+
+  const handleAssignContributors = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const contributorIds = selectedContributorIds;
+      const roles = contributorIds.map(id => contributorRoles[id] || '');
+      
+      const response = await fetch(
+        `/api/contributors/assign/project/${selectedProject.id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ 
+            contributor_ids: contributorIds,
+            roles: roles 
+          }),
+        }
+      );
+
+      if (response.ok) {
+        await fetchProjects();
+        setShowContributorModal(false);
+        setSelectedContributorIds([]);
+        setContributorRoles({});
+      }
+    } catch (error) {
+      console.error("Error assigning contributors:", error);
     }
   };
 
@@ -689,6 +764,29 @@ export default function Projects() {
                           />
                         </svg>
                         <span className="hidden xs:inline">Tags</span>
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setSelectedProject(project);
+                          await fetchProjectContributors(project.id);
+                          setShowContributorModal(true);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
+                      >
+                        <svg
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                          />
+                        </svg>
+                        <span className="hidden xs:inline">Team</span>
                       </button>
                       <button
                         onClick={() => handleDelete(project)}
@@ -1837,6 +1935,140 @@ export default function Projects() {
                       />
                     </svg>
                     Delete Project
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Contributor Assignment Modal */}
+        {showContributorModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                  Assign Contributors to {selectedProject?.title}
+                </h3>
+
+                {/* Current Contributors */}
+                {projectContributors.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                      Currently Assigned ({projectContributors.length})
+                    </h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto bg-gray-50 rounded-lg p-3">
+                      {projectContributors.map((contributor) => (
+                        <div
+                          key={`current-${contributor.id}`}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="font-medium text-gray-900">
+                            {contributor.name}
+                          </span>
+                          <span className="text-gray-600">
+                            {contributor.role_in_project || 'No role specified'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Available Contributors */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                    Select Contributors
+                  </h4>
+                  <div className="space-y-3 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    {contributors.map((contributor) => {
+                      const isSelected = selectedContributorIds.includes(contributor.id);
+                      
+                      return (
+                        <div
+                          key={`available-${contributor.id}`}
+                          className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedContributorIds([...selectedContributorIds, contributor.id]);
+                              } else {
+                                setSelectedContributorIds(
+                                  selectedContributorIds.filter((id) => id !== contributor.id)
+                                );
+                                const newRoles = { ...contributorRoles };
+                                delete newRoles[contributor.id];
+                                setContributorRoles(newRoles);
+                              }
+                            }}
+                            className="mt-1 w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              {contributor.profile_image && (
+                                <img
+                                  src={contributor.profile_image}
+                                  alt={contributor.name}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              )}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {contributor.name}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {contributor.email}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {isSelected && (
+                              <div className="mt-2">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Role in Project (optional)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={contributorRoles[contributor.id] || ''}
+                                  onChange={(e) => {
+                                    setContributorRoles({
+                                      ...contributorRoles,
+                                      [contributor.id]: e.target.value
+                                    });
+                                  }}
+                                  placeholder="e.g., Lead Developer, Data Analyst"
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setShowContributorModal(false);
+                      setSelectedContributorIds([]);
+                      setContributorRoles({});
+                      setProjectContributors([]);
+                    }}
+                    className="flex-1 px-6 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignContributors}
+                    disabled={selectedContributorIds.length === 0}
+                    className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    Assign Contributors ({selectedContributorIds.length})
                   </button>
                 </div>
               </div>
