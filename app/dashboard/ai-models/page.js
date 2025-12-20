@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../components/AuthProvider';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
+
 export default function ManageAIModelsPage() {
   const { getUserInfo } = useAuth();
   const [aiModels, setAiModels] = useState([]);
@@ -10,6 +12,9 @@ export default function ManageAIModelsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
+  const [availableFiles, setAvailableFiles] = useState([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
   const [selectedModel, setSelectedModel] = useState(null);
   const [modelToDelete, setModelToDelete] = useState(null);
@@ -417,6 +422,42 @@ export default function ManageAIModelsPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setError('');
+  };
+
+  const fetchFilesForPicker = async () => {
+    try {
+      setIsLoadingFiles(true);
+      const token = localStorage.getItem('access_token');
+      
+      const response = await fetch('/api/files', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableFiles(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  const openFilePicker = () => {
+    setIsFilePickerOpen(true);
+    fetchFilesForPicker();
+  };
+
+  const selectFile = (fileUrl) => {
+    const fullUrl = fileUrl.startsWith('http') 
+      ? fileUrl 
+      : `${API_BASE_URL}${fileUrl}`;
+    setFormData({ ...formData, model_file_url: fullUrl });
+    setIsFilePickerOpen(false);
   };
 
   if (isLoading) {
@@ -923,14 +964,38 @@ export default function ManageAIModelsPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Model File URL</label>
-                    <input
-                      type="url"
-                      name="model_file_url"
-                      value={formData.model_file_url}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                      disabled={modalMode === 'view'}
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        name="model_file_url"
+                        value={formData.model_file_url}
+                        onChange={handleInputChange}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        disabled={modalMode === 'view'}
+                      />
+                      {modalMode !== 'view' && (
+                        <button
+                          type="button"
+                          onClick={openFilePicker}
+                          className="px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                            />
+                          </svg>
+                          Browse
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
@@ -1052,6 +1117,67 @@ export default function ManageAIModelsPage() {
             </div>
           </div>
         )}
+
+      {/* File Picker Modal */}
+      {isFilePickerOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-gray-900">Select Model File</h3>
+                <button
+                  onClick={() => setIsFilePickerOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+              {isLoadingFiles ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                </div>
+              ) : availableFiles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      onClick={() => selectFile(file.file_url)}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:shadow-md cursor-pointer transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <svg className="w-10 h-10 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{file.filename}</p>
+                          <p className="text-sm text-gray-500 truncate">{file.file_type}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {file.size ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : 'Size unknown'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <p>No files available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (

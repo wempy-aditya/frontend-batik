@@ -15,6 +15,7 @@ export default function PublicationsPage() {
   const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
   const [availableFiles, setAvailableFiles] = useState([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [filePickerTarget, setFilePickerTarget] = useState('graphical_abstract'); // 'graphical_abstract' or 'pdf'
   const [modalMode, setModalMode] = useState("create"); // 'create', 'edit', 'view'
   const [selectedPublication, setSelectedPublication] = useState(null);
   const [publicationToDelete, setPublicationToDelete] = useState(null);
@@ -522,7 +523,8 @@ export default function PublicationsPage() {
     }
   };
 
-  const openFilePicker = () => {
+  const openFilePicker = (targetField = 'graphical_abstract') => {
+    setFilePickerTarget(targetField);
     setIsFilePickerOpen(true);
     fetchFilesForPicker();
   };
@@ -532,7 +534,12 @@ export default function PublicationsPage() {
     const fullUrl = fileUrl.startsWith('http') 
       ? fileUrl 
       : `${API_BASE_URL}${fileUrl}`;
-    setFormData({ ...formData, graphical_abstract_url: fullUrl });
+    
+    if (filePickerTarget === 'pdf') {
+      setFormData({ ...formData, pdf_url: fullUrl });
+    } else {
+      setFormData({ ...formData, graphical_abstract_url: fullUrl });
+    }
     setIsFilePickerOpen(false);
   };
 
@@ -1654,15 +1661,37 @@ export default function PublicationsPage() {
                       <label className="block text-sm font-bold text-slate-700 mb-2">
                         PDF URL
                       </label>
-                      <input
-                        type="url"
-                        value={formData.pdf_url}
-                        onChange={(e) =>
-                          setFormData({ ...formData, pdf_url: e.target.value })
-                        }
-                        className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
-                        placeholder="https://example.com/paper.pdf"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          value={formData.pdf_url}
+                          onChange={(e) =>
+                            setFormData({ ...formData, pdf_url: e.target.value })
+                          }
+                          className="flex-1 p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                          placeholder="https://example.com/paper.pdf"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => openFilePicker('pdf')}
+                          className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                            />
+                          </svg>
+                          Browse
+                        </button>
+                      </div>
                     </div>
 
                     <div>
@@ -1681,7 +1710,7 @@ export default function PublicationsPage() {
                         />
                         <button
                           type="button"
-                          onClick={openFilePicker}
+                          onClick={() => openFilePicker('graphical_abstract')}
                           className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2"
                         >
                           <svg
