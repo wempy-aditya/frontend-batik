@@ -58,7 +58,7 @@ export default function Contributors() {
     }
   };
 
-  const fetchContributors = async () => {
+  const fetchContributors = async () {
     try {
       setLoading(true);
       const offset = (currentPage - 1) * itemsPerPage;
@@ -87,35 +87,28 @@ export default function Contributors() {
       alert("Authentication required. Please log in again.");
       return;
     }
-
-    // Validate required fields
-    if (!formData.name.trim()) {
-      alert("Name is required");
-      return;
-    }
-    if (!formData.email.trim()) {
-      alert("Email is required");
-      return;
-    }
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      alert("Please enter a valid email address");
-      return;
-    }
-    if (!formData.role.trim()) {
-      alert("Role is required");
-      return;
-    }
     
     try {
+      // Use formData.id instead of selectedContributor.id
       const url = formData.id
         ? `/api/contributors/${formData.id}`
         : "/api/contributors";
 
       const method = formData.id ? "PUT" : "POST";
 
+      console.log("Submitting contributor:");
+      console.log("- URL:", url);
+      console.log("- Method:", method);
+      console.log("- Token exists:", !!token);
+      console.log("- Token length:", token?.length);
+
+      // Remove id from the data being sent to API
       const { id, ...dataToSend } = formData;
+
+      console.log("Headers being sent:", {
+        "Content-Type": "application/json",
+        "authorization": `Bearer ${token.substring(0, 20)}...`,
+      });
 
       const response = await fetch(url, {
         method,
@@ -221,11 +214,13 @@ export default function Contributors() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Contributors Management</h1>
               <p className="text-gray-600 mt-1">Manage team members and contributors</p>
+              {/* Debug: Show user info */}
               {currentUser && (
                 <p className="text-xs text-gray-400 mt-1">
                   Logged in as: {currentUser.email || currentUser.username} 
@@ -248,6 +243,7 @@ export default function Contributors() {
             </button>
           </div>
 
+          {/* Search */}
           <div className="flex gap-4">
             <div className="flex-1">
               <input
@@ -264,6 +260,7 @@ export default function Contributors() {
           </div>
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
@@ -280,6 +277,7 @@ export default function Contributors() {
           </div>
         </div>
 
+        {/* Contributors Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading ? (
             <div className="flex justify-center items-center py-12">
@@ -377,6 +375,7 @@ export default function Contributors() {
             </div>
           )}
 
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
@@ -440,6 +439,7 @@ export default function Contributors() {
         </div>
       </div>
 
+      {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -557,6 +557,7 @@ export default function Contributors() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">

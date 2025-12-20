@@ -46,7 +46,7 @@ const HeroSection = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <button
-                onClick={() => router.push("/features")}
+                onClick={() => router.push("/projects")}
                 onMouseEnter={() => setHoverButton("explore")}
                 onMouseLeave={() => setHoverButton(null)}
                 className="group relative px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/25"
@@ -73,7 +73,7 @@ const HeroSection = () => {
               </button>
 
               <button
-                onClick={() => router.push("/demo")}
+                onClick={() => router.push("/test-api")}
                 onMouseEnter={() => setHoverButton("demo")}
                 onMouseLeave={() => setHoverButton(null)}
                 className="group px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-white/20 hover:shadow-xl"

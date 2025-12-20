@@ -5,16 +5,18 @@ import { useParams, useRouter } from "next/navigation";
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const projectId = params.id;
+  const id = params.id;
   const [activeTab, setActiveTab] = useState("overview");
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [contributors, setContributors] = useState([]);
+  const [loadingContributors, setLoadingContributors] = useState(false);
 
   // Fetch project detail from API
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await fetch(`/api/projects/public/${projectId}`);
+        const response = await fetch(`/api/projects/public/${id}`);
         if (response.ok) {
           const data = await response.json();
           setProject(data);
@@ -26,10 +28,33 @@ export default function ProjectDetailPage() {
       }
     };
     
-    if (projectId) {
+    if (id) {
       fetchProject();
     }
-  }, [projectId, router]);
+  }, [id, router]);
+
+  // Fetch contributors when Contributors tab is active
+  useEffect(() => {
+    const fetchContributors = async () => {
+      if (activeTab === 'contributors' && id && contributors.length === 0) {
+        setLoadingContributors(true);
+        try {
+          const response = await fetch(`/api/contributors/project/${id}/contributors`);
+          if (response.ok) {
+            const data = await response.json();
+            setContributors(data.data || []);
+          }
+        } catch (error) {
+          console.error('Error fetching contributors:', error);
+          setContributors([]);
+        } finally {
+          setLoadingContributors(false);
+        }
+      }
+    };
+    
+    fetchContributors();
+  }, [activeTab, id, contributors.length]);
 
   // Helper functions for status and complexity colors
   const getStatusColor = (status) => {
@@ -213,7 +238,7 @@ export default function ProjectDetailPage() {
           {/* Tabs */}
           <div className="mb-12">
             <div className="flex flex-wrap gap-4 border-b-2 border-gray-200">
-              {["overview", "technologies"].map((tab) => (
+              {["overview", "technologies", "demo", "contributors"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -223,7 +248,7 @@ export default function ProjectDetailPage() {
                       : "border-transparent text-gray-600 hover:text-amber-600"
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === "demo" ? "Demo Project" : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>
@@ -321,6 +346,168 @@ export default function ProjectDetailPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Demo Tab */}
+            {activeTab === "demo" && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6">Project Demo</h2>
+                  <p className="text-lg text-gray-700 mb-8">
+                    Experience the project in action through our live demo or prototype.
+                  </p>
+                </div>
+
+                {project.demo_url ? (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-200">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="flex-1 text-center md:text-left">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Live Demo Available</h3>
+                        <p className="text-gray-600 mb-4">Click the button below to access the live demo or prototype of this project.</p>
+                        <a
+                          href={project.demo_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Open Demo
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl">
+                    <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">Demo Not Available</h3>
+                    <p className="text-gray-500">No demo link has been provided for this project yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Contributors Tab */}
+            {activeTab === "contributors" && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-6">Project Contributors</h2>
+                  <p className="text-lg text-gray-700 mb-8">
+                    Meet the talented team members who contributed to this project.
+                  </p>
+                </div>
+
+                {loadingContributors ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading contributors...</p>
+                  </div>
+                ) : contributors.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {contributors.map((contributor, index) => (
+                      <div
+                        key={`${contributor.id}-${index}`}
+                        className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-amber-300 hover:shadow-lg transition-all duration-300"
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Profile Image */}
+                          <div className="flex-shrink-0">
+                            {contributor.profile_image ? (
+                              <img
+                                src={contributor.profile_image}
+                                alt={contributor.name}
+                                className="w-16 h-16 rounded-full object-cover border-2 border-amber-200"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextElementSibling.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white text-xl font-bold"
+                              style={{ display: contributor.profile_image ? 'none' : 'flex' }}
+                            >
+                              {contributor.name.charAt(0).toUpperCase()}
+                            </div>
+                          </div>
+
+                          {/* Contributor Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-xl font-bold text-gray-900 mb-1">{contributor.name}</h3>
+                            <p className="text-sm text-amber-600 font-semibold mb-2">{contributor.role_in_project}</p>
+                            <p className="text-sm text-gray-600 mb-1">{contributor.role}</p>
+                            {contributor.bio && (
+                              <p className="text-sm text-gray-500 mb-3 line-clamp-2">{contributor.bio}</p>
+                            )}
+
+                            {/* Social Links */}
+                            <div className="flex flex-wrap gap-2">
+                              {contributor.github_url && (
+                                <a
+                                  href={contributor.github_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-full transition-colors"
+                                >
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                                  </svg>
+                                  GitHub
+                                </a>
+                              )}
+                              {contributor.linkedin_url && (
+                                <a
+                                  href={contributor.linkedin_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs rounded-full transition-colors"
+                                >
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                                  </svg>
+                                  LinkedIn
+                                </a>
+                              )}
+                              {contributor.website_url && (
+                                <a
+                                  href={contributor.website_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs rounded-full transition-colors"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                  </svg>
+                                  Website
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-2xl">
+                    <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Contributors Found</h3>
+                    <p className="text-gray-500">No contributors have been assigned to this project yet.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

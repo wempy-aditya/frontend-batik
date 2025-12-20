@@ -39,18 +39,22 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    
     if (!token) {
       return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/contributors`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/contributors/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'User-Agent': 'PostmanRuntime/7.36.0',
       },
       body: JSON.stringify(body),
     });

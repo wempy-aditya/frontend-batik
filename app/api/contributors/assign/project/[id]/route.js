@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.c
 export async function POST(request, { params }) {
   try {
     // Await params in Next.js 15
-    const { projectId } = await params;
+    const { id } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {
@@ -14,7 +14,7 @@ export async function POST(request, { params }) {
 
     const body = await request.json();
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/contributors/assign/project/${projectId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/contributors/assign/project/${id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

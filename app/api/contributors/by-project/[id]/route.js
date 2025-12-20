@@ -5,9 +5,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.c
 export async function GET(request, { params }) {
   try {
     // Await params in Next.js 15
-    const { projectId } = await params;
+    const { id } = await params;
 
-    const response = await fetch(`${API_BASE_URL}/api/v1/contributors/project/${projectId}/contributors`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/contributors/project/${id}/contributors`, {
       headers: {
         'Content-Type': 'application/json',
       },

@@ -200,9 +200,9 @@ export default function DatasetsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Hero Section */}
-      <section className="relative py-20 pt-32 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -215,13 +215,13 @@ export default function DatasetsPage() {
 
         {/* Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
         </div>
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
-          <div className="flex items-center text-sm text-gray-300 mb-8">
+          <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
               onClick={() => router.push("/")}
               className="hover:text-white transition-colors"
@@ -247,7 +247,7 @@ export default function DatasetsPage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
               <svg
-                className="w-4 h-4 text-blue-400"
+                className="w-4 h-4 text-amber-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -259,7 +259,7 @@ export default function DatasetsPage() {
                   d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
                 />
               </svg>
-              <span className="text-sm font-semibold text-gray-200">
+              <span className="text-sm font-semibold text-amber-200">
                 Complete Dataset Library
               </span>
             </div>

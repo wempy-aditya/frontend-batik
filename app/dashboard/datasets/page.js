@@ -2,6 +2,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../components/AuthProvider";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
+
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function ManageDatasetsPage() {
   const { getUserInfo } = useAuth();
   const [datasets, setDatasets] = useState([]);
@@ -16,6 +20,18 @@ export default function ManageDatasetsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [error, setError] = useState("");
+  
+  // File Picker states
+  const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
+  const [filePickerMode, setFilePickerMode] = useState('file_url'); // 'file_url' or 'sample_image'
+  const [availableFiles, setAvailableFiles] = useState([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  
+  // // File Picker states
+  // const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
+  // const [filePickerMode, setFilePickerMode] = useState('file_url'); // 'file_url' or 'sample_image'
+  // const [availableFiles, setAvailableFiles] = useState([]);
+  // const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -472,6 +488,54 @@ export default function ManageDatasetsPage() {
       premium: "bg-amber-100 text-amber-700",
     };
     return badges[accessLevel] || badges.public;
+  };
+
+  // Fetch files for file picker
+  const fetchFilesForPicker = async () => {
+    try {
+      setIsLoadingFiles(true);
+      const token = localStorage.getItem('access_token');
+      const response = await fetch('/api/files?limit=100&file_type=image', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableFiles(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  // Open file picker modal
+  const openFilePicker = (mode = 'file_url') => {
+    setFilePickerMode(mode);
+    setIsFilePickerOpen(true);
+    fetchFilesForPicker();
+  };
+
+  // Select file from picker for file_url
+  const selectFileUrl = (fileUrl) => {
+    const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE_URL}${fileUrl}`;
+    setFormData({ ...formData, file_url: fullUrl });
+    setIsFilePickerOpen(false);
+  };
+
+  // Select file from picker for sample_images
+  const selectSampleImage = (fileUrl) => {
+    const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE_URL}${fileUrl}`;
+    if (!formData.sample_images.includes(fullUrl)) {
+      setFormData({
+        ...formData,
+        sample_images: [...formData.sample_images, fullUrl],
+      });
+    }
+    setIsFilePickerOpen(false);
   };
 
   if (isLoading) {
@@ -1659,18 +1723,27 @@ export default function ManageDatasetsPage() {
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           File URL
                         </label>
-                        <input
-                          type="url"
-                          value={formData.file_url}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              file_url: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
-                          placeholder="https://example.com/dataset.zip"
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={formData.file_url}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                file_url: e.target.value,
+                              })
+                            }
+                            className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
+                            placeholder="https://example.com/dataset.zip"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => openFilePicker('file_url')}
+                            className="px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors whitespace-nowrap"
+                          >
+                            Browse
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -1791,6 +1864,13 @@ export default function ManageDatasetsPage() {
                           className="flex-1 p-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none transition-colors"
                           placeholder="https://example.com/image.jpg"
                         />
+                        <button
+                          type="button"
+                          onClick={() => openFilePicker('sample_image')}
+                          className="px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors whitespace-nowrap"
+                        >
+                          Browse
+                        </button>
                         <button
                           type="button"
                           onClick={handleAddSampleImage}
@@ -2156,6 +2236,106 @@ export default function ManageDatasetsPage() {
                     />
                   </svg>
                   Delete Dataset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* File Picker Modal */}
+      {isFilePickerOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Select File from File Manager
+                </h3>
+                <button
+                  onClick={() => setIsFilePickerOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {isLoadingFiles ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading files...</p>
+                  </div>
+                </div>
+              ) : availableFiles.length === 0 ? (
+                <div className="text-center py-12">
+                  <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-500 mb-2">No files available</p>
+                  <a href="/dashboard/files" className="text-amber-600 hover:text-amber-700 font-medium">
+                    Go to File Manager to upload files
+                  </a>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {availableFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      onClick={() => filePickerMode === 'file_url' ? selectFileUrl(file.file_url) : selectSampleImage(file.file_url)}
+                      className="group relative bg-white border-2 border-gray-200 rounded-xl overflow-hidden cursor-pointer hover:border-amber-500 hover:shadow-lg transition-all duration-200"
+                    >
+                      {/* Image Preview */}
+                      <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                        <img
+                          src={file.file_url.startsWith('http') ? file.file_url : `${API_BASE_URL}${file.file_url}`}
+                          alt={file.filename}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%239ca3af' font-size='20' dy='.3em'%3ENo Preview%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
+                        
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+                          <svg className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* File Info */}
+                      <div className="p-3 bg-white">
+                        <p className="text-sm font-medium text-gray-900 truncate" title={file.filename}>
+                          {file.filename}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {(file.file_size / 1024).toFixed(2)} KB
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  {availableFiles.length} file(s) available
+                </p>
+                <button
+                  onClick={() => setIsFilePickerOpen(false)}
+                  className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Close
                 </button>
               </div>
             </div>

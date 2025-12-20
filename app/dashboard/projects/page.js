@@ -134,7 +134,7 @@ export default function Projects() {
 
   const fetchProjectContributors = async (projectId) => {
     try {
-      const response = await fetch(`/api/contributors/project/${projectId}`);
+      const response = await fetch(`/api/contributors/by-project/${projectId}`);
       if (response.ok) {
         const data = await response.json();
         

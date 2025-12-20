@@ -6,6 +6,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMoreDropdownOpen, setIsMoreDropdownOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -20,7 +21,15 @@ const Header = () => {
       setIsAuthenticated(!!token);
     };
 
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (isMoreDropdownOpen && !event.target.closest('.dropdown-container')) {
+        setIsMoreDropdownOpen(false);
+      }
+    };
+
     window.addEventListener("scroll", handleScroll);
+    document.addEventListener("mousedown", handleClickOutside);
     checkAuth();
 
     // Listen for storage changes (logout from dashboard)
@@ -28,21 +37,26 @@ const Header = () => {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("storage", checkAuth);
     };
-  }, []);
+  }, [isMoreDropdownOpen]);
 
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Projects", path: "/projects" },
     { name: "Datasets", path: "/datasets" },
     { name: "Publications", path: "/publications" },
+  ];
+
+  const moreItems = [
     { name: "News", path: "/news" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
 
   const isActive = (path) => pathname === path;
+  const isMoreActive = () => moreItems.some(item => pathname === item.path);
 
   return (
     <header
@@ -112,11 +126,54 @@ const Header = () => {
                 {item.name}
               </div>
             ))}
+            
+            {/* More Dropdown */}
+            <div className="relative dropdown-container">
+              <div
+                onClick={() => setIsMoreDropdownOpen(!isMoreDropdownOpen)}
+                className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 flex items-center gap-1 ${
+                  isMoreActive()
+                    ? isScrolled
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
+                      : "bg-white/20 backdrop-blur-sm text-white"
+                    : isScrolled
+                    ? "text-gray-700 hover:bg-gray-100"
+                    : "text-white hover:bg-white/10"
+                }`}
+              >
+                More
+                <svg className={`w-4 h-4 transition-transform duration-200 ${isMoreDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              
+              {/* Dropdown Menu */}
+              {isMoreDropdownOpen && (
+                <div className="absolute top-full mt-2 right-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                  {moreItems.map((item) => (
+                    <div
+                      key={item.path}
+                      onClick={() => {
+                        router.push(item.path);
+                        setIsMoreDropdownOpen(false);
+                      }}
+                      className={`px-4 py-2.5 cursor-pointer transition-all duration-200 ${
+                        isActive(item.path)
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {item.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* CTA Button */}
           <div className="hidden xl:flex items-center gap-3">
-            <button
+            {/* <button
               // onClick={() => router.push("/demo")}
               onClick={() => router.push("/test-api")}
               className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
@@ -126,7 +183,7 @@ const Header = () => {
               }`}
             >
               Create Batik
-            </button>
+            </button> */}
 
             {isAuthenticated ? (
               <button
@@ -218,6 +275,30 @@ const Header = () => {
                 {item.name}
               </div>
             ))}
+            
+            {/* More Section in Mobile */}
+            <div className={`px-4 py-2 font-semibold text-xs ${isScrolled ? "text-gray-500" : "text-white/70"}`}>
+              MORE
+            </div>
+            {moreItems.map((item) => (
+              <div
+                key={item.path}
+                onClick={() => {
+                  router.push(item.path);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
+                  isActive(item.path)
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
+                    : isScrolled
+                    ? "text-gray-700 hover:bg-gray-100"
+                    : "text-white hover:bg-white/10 backdrop-blur-sm"
+                }`}
+              >
+                {item.name}
+              </div>
+            ))}
+            
             <button
               onClick={() => {
                 //router.push("/demo");

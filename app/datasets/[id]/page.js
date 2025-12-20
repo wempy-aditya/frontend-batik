@@ -44,6 +44,8 @@ export default function DatasetDetailPage() {
         if (response.ok) {
           const data = await response.json();
           setDataset(data);
+          // Increment view count after successful fetch
+          incrementViewCount();
         } else {
           // API failed, will use fallback data
           setDataset(null);
@@ -61,6 +63,38 @@ export default function DatasetDetailPage() {
       fetchDataset();
     }
   }, [datasetId]);
+
+  // Increment view count
+  const incrementViewCount = async () => {
+    try {
+      await fetch(`/api/datasets/public/${datasetId}/view`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+    }
+  };
+
+  // Increment download count and trigger download
+  const handleDownloadDataset = async () => {
+    try {
+      // Increment download counter
+      await fetch(`/api/datasets/public/${datasetId}/download`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Error incrementing download count:', error);
+    }
+    
+    // Open download - this could be file_url or a download page
+    if (displayDataset?.file_url) {
+      window.open(displayDataset.file_url, '_blank');
+    } else {
+      // Scroll to download section if no direct URL
+      setActiveTab('overview');
+      // You can add logic to show download modal or instructions
+    }
+  };
 
   // Fallback dataset data (API-compliant structure)
   const datasets = {
@@ -353,9 +387,26 @@ export default function DatasetDetailPage() {
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
                 {displayDataset?.name}
               </h1>
-              <p className="text-xl text-white/90 mb-8 leading-relaxed">
+              <p className="text-xl text-white/90 mb-6 leading-relaxed">
                 {displayDataset?.tagline}
               </p>
+
+              {/* Counter Badges */}
+              <div className="flex flex-wrap gap-3 mb-8">
+                <span className="px-4 py-2 text-sm font-medium rounded-full bg-white/10 text-white border border-white/20">
+                  <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {displayDataset?.view_count || 0} Views
+                </span>
+                <span className="px-4 py-2 text-sm font-medium rounded-full bg-white/10 text-white border border-white/20">
+                  <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  {displayDataset?.download_count || 0} Downloads
+                </span>
+              </div>
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -388,7 +439,7 @@ export default function DatasetDetailPage() {
                 </h3>
                 <div className="space-y-3">
                   <button
-                    onClick={() => setActiveTab("download")}
+                    onClick={handleDownloadDataset}
                     className="w-full px-6 py-3 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <svg

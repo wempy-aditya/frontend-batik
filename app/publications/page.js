@@ -194,10 +194,31 @@ export default function PublicationsPage() {
     }
   };
 
+  // Handle PDF download with counter
+  const handleDownloadPDF = async (publicationId, pdfUrl) => {
+    try {
+      // Increment download counter
+      await fetch(`/api/publications/public/${publicationId}/download`, {
+        method: 'POST',
+      });
+      
+      // Open PDF in new tab
+      if (pdfUrl) {
+        window.open(pdfUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Error incrementing download count:', error);
+      // Still open PDF even if counter fails
+      if (pdfUrl) {
+        window.open(pdfUrl, '_blank');
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Hero Section */}
-      <section className="relative py-20 pt-32 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -210,13 +231,13 @@ export default function PublicationsPage() {
 
         {/* Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
         </div>
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
-          <div className="flex items-center text-sm text-gray-300 mb-8">
+          <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
               onClick={() => (window.location.href = "/")}
               className="hover:text-white transition-colors"
@@ -242,7 +263,7 @@ export default function PublicationsPage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
               <svg
-                className="w-4 h-4 text-blue-400"
+                className="w-4 h-4 text-amber-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -254,13 +275,13 @@ export default function PublicationsPage() {
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
               </svg>
-              <span className="text-sm font-semibold text-gray-200">
+              <span className="text-sm font-semibold text-amber-200">
                 Complete Research Portfolio
               </span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
-              <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
                 Research Publications
               </span>
             </h1>
@@ -312,7 +333,7 @@ export default function PublicationsPage() {
                 type="text"
                 placeholder="Search publications by title, authors, or keywords..."
                 onKeyDown={handleSearch}
-                className="w-full px-6 py-4 pl-14 pr-4 text-lg border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-300"
+                className="w-full px-6 py-4 pl-14 pr-4 text-lg border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all duration-300"
               />
               <svg
                 className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400"
@@ -344,8 +365,8 @@ export default function PublicationsPage() {
                     onClick={() => handleCategoryChange(category.id)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
                       selectedCategory === category.id
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
                     }`}
                   >
                     {category.name}
@@ -369,8 +390,8 @@ export default function PublicationsPage() {
                     onClick={() => handleYearChange(year.id)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
                       selectedYear === year.id
-                        ? "bg-purple-500 text-white border-purple-500"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
                     }`}
                   >
                     {year.name}
@@ -397,7 +418,7 @@ export default function PublicationsPage() {
           {/* Loading State */}
           {loading && (
             <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500"></div>
             </div>
           )}
 
@@ -441,7 +462,7 @@ export default function PublicationsPage() {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
                         <svg
                           className="w-6 h-6 text-white"
                           fill="none"
@@ -491,7 +512,7 @@ export default function PublicationsPage() {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-4">
                       {/* Title */}
-                      <h3 className="text-2xl font-bold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors duration-300">
+                      <h3 className="text-2xl font-bold text-gray-900 leading-tight group-hover:text-amber-600 transition-colors duration-300">
                         {paper.title}
                       </h3>
 
@@ -526,7 +547,7 @@ export default function PublicationsPage() {
                           {paper.keywords.map((keyword, index) => (
                             <span
                               key={index}
-                              className="text-sm text-purple-700 bg-purple-100 px-3 py-1 rounded-full"
+                              className="text-sm text-amber-700 bg-amber-100 px-3 py-1 rounded-full"
                             >
                               {keyword}
                             </span>
@@ -568,10 +589,8 @@ export default function PublicationsPage() {
                       {/* Actions */}
                       <div className="space-y-3">
                         <button
-                          onClick={() =>
-                            (window.location.href = `/publications/${paper.id}/pdf`)
-                          }
-                          className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
+                          onClick={() => handleDownloadPDF(paper.id, paper.pdf_url)}
+                          className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg shadow-amber-500/30"
                         >
                           <div className="flex items-center justify-center gap-2">
                             <svg
@@ -643,7 +662,7 @@ export default function PublicationsPage() {
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                   currentPage === 1
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-amber-300 hover:bg-amber-50'
                 }`}
               >
                 Previous
@@ -662,8 +681,8 @@ export default function PublicationsPage() {
                       onClick={() => setCurrentPage(pageNumber)}
                       className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                         currentPage === pageNumber
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
+                          : 'bg-white text-gray-700 border border-gray-200 hover:border-amber-300 hover:bg-amber-50'
                       }`}
                     >
                       {pageNumber}
@@ -684,7 +703,7 @@ export default function PublicationsPage() {
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                   currentPage === totalPages
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:border-amber-300 hover:bg-amber-50'
                 }`}
               >
                 Next
@@ -695,7 +714,7 @@ export default function PublicationsPage() {
           {/* CTA Section */}
           <div className="text-center mt-20">
             <div className="max-w-3xl mx-auto">
-              <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-2xl p-8 mb-8">
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-8 mb-8">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                   Want to Collaborate?
                 </h2>
@@ -708,13 +727,13 @@ export default function PublicationsPage() {
                     onClick={() =>
                       (window.location.href = "/research/collaborate")
                     }
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                    className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl shadow-lg shadow-amber-500/30"
                   >
                     Research Collaboration
                   </button>
                   <button
                     onClick={() => (window.location.href = "/contact")}
-                    className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
+                    className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300"
                   >
                     Contact Us
                   </button>
