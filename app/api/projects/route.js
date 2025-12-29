@@ -45,13 +45,19 @@ export async function POST(request) {
 
     const body = await request.json();
 
+    // Ensure demo_url is an array (even if empty)
+    const cleanedBody = {
+      ...body,
+      demo_url: Array.isArray(body.demo_url) ? body.demo_url : []
+    };
+
     const response = await fetch(`${API_BASE_URL}/projects/`, {
       method: 'POST',
       headers: {
         'Authorization': token,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(cleanedBody),
     });
 
     if (!response.ok) {
@@ -62,7 +68,6 @@ export async function POST(request) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Projects create error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

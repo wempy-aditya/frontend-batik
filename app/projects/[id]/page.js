@@ -359,32 +359,61 @@ export default function ProjectDetailPage() {
                   </p>
                 </div>
 
-                {project.demo_url ? (
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border-2 border-amber-200">
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                      <div className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {project.demo_url && Array.isArray(project.demo_url) && project.demo_url.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border-2 border-amber-200">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {project.demo_url.length} Demo Link{project.demo_url.length > 1 ? 's' : ''} Available
+                          </h3>
+                          <p className="text-sm text-gray-600">Click any link below to access the demos</p>
+                        </div>
                       </div>
-                      <div className="flex-1 text-center md:text-left">
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Live Demo Available</h3>
-                        <p className="text-gray-600 mb-4">Click the button below to access the live demo or prototype of this project.</p>
-                        <a
-                          href={project.demo_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {project.demo_url.map((url, index) => (
+                        <div
+                          key={index}
+                          className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-amber-300 hover:shadow-lg transition-all duration-300 group"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                          Open Demo
-                        </a>
-                      </div>
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center group-hover:from-amber-500 group-hover:to-orange-500 transition-all duration-300">
+                                <span className="text-amber-600 group-hover:text-white font-bold text-lg">
+                                  {index + 1}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                                Demo {index + 1}
+                              </h4>
+                              <p className="text-xs text-gray-500 mb-3 truncate" title={url}>
+                                {url}
+                              </p>
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Open Demo
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ) : (

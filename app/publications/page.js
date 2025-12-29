@@ -10,8 +10,12 @@ export default function PublicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedAuthor, setSelectedAuthor] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [sortBy, setSortBy] = useState("latest");
   const [hoveredPaper, setHoveredPaper] = useState(null);
 
   const fallbackCategories = [
@@ -26,6 +30,14 @@ export default function PublicationsPage() {
     { id: "2024", name: "2024", count: 8 },
     { id: "2023", name: "2023", count: 12 },
     { id: "2022", name: "2022", count: 5 },
+  ];
+
+  const sortOptions = [
+    { id: "latest", name: "Latest" },
+    { id: "oldest", name: "Oldest" },
+    { id: "title", name: "Title (A-Z)" },
+    { id: "year", name: "Year (Newest)" },
+    { id: "views", name: "Most Viewed" },
   ];
 
   // Fetch categories from API
@@ -58,83 +70,112 @@ export default function PublicationsPage() {
     const fetchPublications = async () => {
       setLoading(true);
       try {
-        let url = `/api/publications/public?page=${currentPage}&items_per_page=12`;
+        // Build query params sesuai dokumentasi API
+        const params = new URLSearchParams();
         
+        // Pagination - convert page to offset/limit
+        const limit = 12;
+        const offset = (currentPage - 1) * limit;
+        params.append('offset', offset.toString());
+        params.append('limit', limit.toString());
+        
+        // Search
         if (searchQuery) {
-          url += `&search=${encodeURIComponent(searchQuery)}`;
+          params.append('search', searchQuery);
         }
+        
+        // Year filter
+        if (selectedYear !== "all") {
+          params.append('year', selectedYear);
+        }
+        
+        // Category filter
+        if (selectedCategory !== "all") {
+          params.append('category_id', selectedCategory);
+        }
+        
+        // Author filter
+        if (selectedAuthor && selectedAuthor.trim()) {
+          params.append('author', selectedAuthor.trim());
+        }
+        
+        // Featured filter
+        if (isFeatured) {
+          params.append('is_featured', 'true');
+        }
+        
+        // Sort
+        params.append('sort_by', sortBy);
+        
+        const url = `/api/publications/public?${params.toString()}`;
 
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
-          const pubs = Array.isArray(data) ? data : (data.data || []);
-          setPublications(pubs);
-          setTotalPages(data.pages || 1);
+          
+          if (data && Array.isArray(data.data)) {
+            setPublications(data.data);
+            setTotalItems(data.total || 0);
+            setTotalPages(Math.ceil((data.total || 0) / limit));
+          } else if (Array.isArray(data)) {
+            setPublications(data);
+            setTotalItems(data.length);
+            setTotalPages(1);
+          } else {
+            setPublications([]);
+            setTotalItems(0);
+            setTotalPages(1);
+          }
         } else {
           setPublications([]);
+          setTotalItems(0);
+          setTotalPages(1);
         }
       } catch (error) {
         console.error('Error fetching publications:', error);
         setPublications([]);
+        setTotalItems(0);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPublications();
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, selectedYear, selectedCategory, selectedAuthor, isFeatured, sortBy]);
 
   const fallbackPublications = [
-    {
-      id: "019ae469-7627-7a6f-ae4f-8aae5cc42513",
-      title: "Advanced ML for Computer Vision",
-      slug: "advanced-ml-for-computer-vision",
-      abstract: "This paper presents novel approaches to machine learning in computer vision applications",
-      authors: ["Dr. John Smith", "Prof. Jane Doe", "Dr. Mike Johnson"],
-      venue: "IEEE Conference on Computer Vision and Pattern Recognition",
-      year: 2024,
-      citations: 25,
-      doi: "10.1109/CVPR.2024.12345",
-      keywords: ["machine learning", "computer vision", "deep learning"],
-      status: "published",
-      impact: "5.2",
-      pdf_url: "https://s2.q4cdn.com/175719177/files/doc_presentations/Placeholder-PDF.pdf",
-      journal_name: "IEEE Transactions on Pattern Analysis and Machine Intelligence",
-      graphical_abstract_url: "https://picsum.photos/200/300?random=4",
-      access_level: "public",
-    },
-    {
-      id: "019ae469-7627-7a6f-ae4f-8aae5cc42514",
-      title: "Generative Adversarial Networks for High-Resolution Image Synthesis",
-      slug: "generative-adversarial-networks",
-      abstract: "We explore recent developments in generative adversarial networks (GANs) for creating high-resolution, photorealistic images.",
-      authors: ["Dr. James Park", "Dr. Lisa Wang", "Prof. David Thompson"],
-      venue: "IEEE Conference on Computer Vision and Pattern Recognition (CVPR)",
-      year: 2024,
-      citations: 89,
-      doi: "10.1109/CVPR.2024.00892",
-      keywords: ["GANs", "Image Synthesis", "Deep Learning"],
-      status: "published",
-      impact: "4.8",
-      journal_name: "CVPR Proceedings",
-      access_level: "public",
-    },
   ];
 
   // Display logic: use API data if available, otherwise use fallback
   const displayPublications = loading ? [] : (publications.length > 0 ? publications : fallbackPublications);
 
-  // Local filtering for category and year
-  const filteredPublications = displayPublications.filter((paper) => {
-    const categoryMatch =
-      selectedCategory === "all" || paper.category === selectedCategory || paper.category_id?.toString() === selectedCategory;
-    const yearMatch =
-      selectedYear === "all" || paper.year?.toString() === selectedYear || paper.publication_year?.toString() === selectedYear;
-    return categoryMatch && yearMatch;
-  });
+  // HAPUS local filtering - sekarang filtering dilakukan di API
+  const filteredPublications = displayPublications;
 
   // Display categories: use API data if available, otherwise use fallback
   const displayCategories = categories.length > 0 ? categories : fallbackCategories;
+
+  // Handle clear all filters
+  const handleClearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+    setSelectedYear("all");
+    setSelectedAuthor("");
+    setIsFeatured(false);
+    setSortBy("latest");
+    setCurrentPage(1);
+  };
+
+  // Count active filters
+  const activeFiltersCount = [
+    searchQuery !== "",
+    selectedCategory !== "all",
+    selectedYear !== "all",
+    selectedAuthor !== "",
+    isFeatured,
+    sortBy !== "latest",
+  ].filter(Boolean).length;
 
   // Handle search
   const handleSearch = (e) => {
@@ -353,64 +394,216 @@ export default function PublicationsPage() {
 
           {/* Filters */}
           <div className="mb-12 space-y-6">
-            {/* Category Filter */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Filter by Type
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {displayCategories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryChange(category.id)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
-                      selectedCategory === category.id
-                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
-                    }`}
-                  >
-                    {category.name}
-                    <span className="ml-2 text-sm opacity-75">
-                      ({category.count})
-                    </span>
-                  </button>
-                ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Publication Type
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
+                >
+                  <option value="all">All Types</option>
+                  {displayCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Year Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Year
+                </label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => {
+                    setSelectedYear(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
+                >
+                  <option value="all">All Years</option>
+                  {years.map((year) => (
+                    <option key={year.id} value={year.id}>
+                      {year.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sort Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Sort By
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Author Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Author Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search by author..."
+                  value={selectedAuthor}
+                  onChange={(e) => {
+                    setSelectedAuthor(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
+                />
+              </div>
+
+              {/* Featured Toggle */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Featured Only
+                </label>
+                <button
+                  onClick={() => {
+                    setIsFeatured(!isFeatured);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-300 border-2 ${
+                    isFeatured
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    {isFeatured ? "Showing Featured" : "Show Featured"}
+                  </div>
+                </button>
               </div>
             </div>
 
-            {/* Year Filter */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Filter by Year
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {years.map((year) => (
-                  <button
-                    key={year.id}
-                    onClick={() => handleYearChange(year.id)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
-                      selectedYear === year.id
-                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
-                    }`}
-                  >
-                    {year.name}
-                    <span className="ml-2 text-sm opacity-75">
-                      ({year.count})
+            {/* Active Filters Summary */}
+            {activeFiltersCount > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-semibold text-gray-700">
+                      Active Filters ({activeFiltersCount}):
                     </span>
+                    {searchQuery && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-amber-300 rounded-lg text-sm">
+                        Search: "{searchQuery}"
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {selectedCategory !== "all" && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-amber-300 rounded-lg text-sm">
+                        Type: {displayCategories.find(c => c.id === selectedCategory)?.name}
+                        <button
+                          onClick={() => setSelectedCategory("all")}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {selectedYear !== "all" && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-amber-300 rounded-lg text-sm">
+                        Year: {selectedYear}
+                        <button
+                          onClick={() => setSelectedYear("all")}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {selectedAuthor && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-amber-300 rounded-lg text-sm">
+                        Author: "{selectedAuthor}"
+                        <button
+                          onClick={() => setSelectedAuthor("")}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {isFeatured && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-amber-300 rounded-lg text-sm">
+                        Featured Only
+                        <button
+                          onClick={() => setIsFeatured(false)}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {sortBy !== "latest" && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-white border border-amber-300 rounded-lg text-sm">
+                        Sort: {sortOptions.find(s => s.id === sortBy)?.name}
+                        <button
+                          onClick={() => setSortBy("latest")}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    Clear All
                   </button>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Results Count */}
           <div className="mb-8">
             <p className="text-gray-600">
               Showing{" "}
-              <span className="font-semibold">
+              <span className="font-semibold text-amber-600">
                 {filteredPublications.length}
-              </span>{" "}
+              </span>
+              {totalItems > 0 && (
+                <>
+                  {" "}of{" "}
+                  <span className="font-semibold text-amber-600">
+                    {totalItems}
+                  </span>
+                </>
+              )}{" "}
               publications
             </p>
           </div>

@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 export default function DatasetsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedAccess, setSelectedAccess] = useState("all");
+  const [selectedFormat, setSelectedFormat] = useState("all");
+  const [selectedLicense, setSelectedLicense] = useState("all");
+  const [selectedVersion, setSelectedVersion] = useState("all");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [sortBy, setSortBy] = useState("latest");
   const [hoveredDataset, setHoveredDataset] = useState(null);
   const [datasets, setDatasets] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -12,6 +17,7 @@ export default function DatasetsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const router = useRouter();
 
   const accessTypes = [
@@ -19,6 +25,34 @@ export default function DatasetsPage() {
     { id: "Public", name: "Public" },
     { id: "Registered", name: "Registered" },
     { id: "Premium", name: "Premium" },
+  ];
+
+  const formatOptions = [
+    { id: "all", name: "All Formats" },
+    { id: "CSV", name: "CSV" },
+    { id: "JSON", name: "JSON" },
+    { id: "Parquet", name: "Parquet" },
+    { id: "HDF5", name: "HDF5" },
+    { id: "TFRecord", name: "TFRecord" },
+    { id: "Arrow", name: "Arrow" },
+    { id: "XML", name: "XML" },
+  ];
+
+  const licenseOptions = [
+    { id: "all", name: "All Licenses" },
+    { id: "MIT", name: "MIT" },
+    { id: "Apache-2.0", name: "Apache 2.0" },
+    { id: "GPL-3.0", name: "GPL 3.0" },
+    { id: "BSD", name: "BSD" },
+    { id: "CC-BY-4.0", name: "CC BY 4.0" },
+    { id: "Public Domain", name: "Public Domain" },
+  ];
+
+  const sortOptions = [
+    { id: "latest", name: "Latest" },
+    { id: "oldest", name: "Oldest" },
+    { id: "name", name: "Name (A-Z)" },
+    { id: "downloads", name: "Most Downloads" },
   ];
 
   // Fetch categories
@@ -51,15 +85,49 @@ export default function DatasetsPage() {
     const fetchDatasets = async () => {
       setLoading(true);
       try {
-        let url = `/api/datasets/public?page=${currentPage}&items_per_page=12`;
+        // Build query params sesuai dokumentasi API
+        const params = new URLSearchParams();
         
+        // Pagination - convert page to offset/limit
+        const limit = 12;
+        const offset = (currentPage - 1) * limit;
+        params.append('offset', offset.toString());
+        params.append('limit', limit.toString());
+        
+        // Search
         if (searchQuery) {
-          url += `&search=${encodeURIComponent(searchQuery)}`;
+          params.append('search', searchQuery);
         }
-
+        
+        // Category filter
         if (selectedCategory !== "all") {
-          url = `/api/datasets/category/${selectedCategory}?page=${currentPage}&items_per_page=12`;
+          params.append('category_id', selectedCategory);
         }
+        
+        // Format filter
+        if (selectedFormat !== "all") {
+          params.append('format', selectedFormat);
+        }
+        
+        // License filter
+        if (selectedLicense !== "all") {
+          params.append('license', selectedLicense);
+        }
+        
+        // Version filter
+        if (selectedVersion !== "all") {
+          params.append('version', selectedVersion);
+        }
+        
+        // Featured filter
+        if (isFeatured) {
+          params.append('is_featured', 'true');
+        }
+        
+        // Sort
+        params.append('sort_by', sortBy);
+        
+        const url = `/api/datasets/public?${params.toString()}`;
         
         const response = await fetch(url);
         if (response.ok) {
@@ -67,79 +135,32 @@ export default function DatasetsPage() {
           
           if (data && Array.isArray(data.data)) {
             setDatasets(data.data);
-            setTotalPages(data.pages || 1);
+            setTotalItems(data.total || 0);
+            setTotalPages(Math.ceil((data.total || 0) / limit));
           } else if (Array.isArray(data)) {
             setDatasets(data);
+            setTotalItems(data.length);
+            setTotalPages(1);
           } else {
             console.log('Datasets data structure:', data);
             setDatasets([]);
+            setTotalItems(0);
+            setTotalPages(1);
           }
         }
       } catch (error) {
         console.error('Error fetching datasets:', error);
         setDatasets([]);
+        setTotalItems(0);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
     fetchDatasets();
-  }, [selectedCategory, searchQuery, currentPage]);
+  }, [selectedCategory, selectedFormat, selectedLicense, selectedVersion, isFeatured, sortBy, searchQuery, currentPage]);
 
   const fallbackDatasets = [
-    {
-      id: "019ae4b2-d4c7-7a18-890d-80db7143746a",
-      name: "ImageNet-2024",
-      slug: "imagenet-2024",
-      description:
-        "Large-scale dataset with over 14 million images across 20,000+ categories for object recognition research and deep learning training.",
-      tagline: "Large-scale visual recognition challenge dataset",
-      samples: 14200000,
-      download_count: 250000,
-      gradient: "#FF6B6B,#F59E0B",
-      version: "2024.1",
-      format: "JPEG",
-      license: "Academic Use",
-      citation: "Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., & Fei-Fei, L. (2024). ImageNet: A large-scale hierarchical image database.",
-      key_features: [
-        "14.2 million annotated images",
-        "20,000+ hierarchical categories",
-        "Multiple annotation types",
-        "High-quality manual verification",
-      ],
-      use_cases: [
-        "Object Recognition",
-        "Image Classification",
-        "Transfer Learning",
-        "Model Benchmarking",
-      ],
-      technical_specs: {
-        type: "supervised",
-        access: "public",
-        format: "JPEG",
-        license: "Academic Use",
-        version: "2024.1",
-        lastUpdate: "2024-01-15",
-      },
-      statistics: {
-        avgImageSize: "482x482",
-        qualityScore: 9.85,
-        totalAnnotations: 14200000,
-        avgImagesPerCategory: 710,
-        maxImagesPerCategory: 1300,
-        minImagesPerCategory: 500,
-      },
-      sample_images: [],
-      sample_image_url: null,
-      file_url: "https://example.com/imagenet-2024.zip",
-      source: "Stanford Vision Lab",
-      size: 161061273600,
-      access_level: "public",
-      status: "published",
-      categories: ["Computer Vision", "Image Classification"],
-      creator_name: "ImageNet Team",
-      created_at: "2024-01-15T00:00:00Z",
-      updated_at: "2024-01-15T00:00:00Z",
-    },
   ];
 
   // Display datasets with fallback
@@ -154,11 +175,6 @@ export default function DatasetsPage() {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1);
-  };
-
-  const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId);
     setCurrentPage(1);
   };
 
@@ -338,48 +354,192 @@ export default function DatasetsPage() {
 
           {/* Filters */}
           <div className="mb-12 space-y-6">
-            {/* Category Filter */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Filter by Category
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => handleCategoryChange(category.id || category.slug)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
-                      selectedCategory === (category.id || category.slug)
-                        ? "bg-blue-500 text-white border-blue-500"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-                    }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
+            {/* Top Row: Category, Format, License */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Category Filter */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Category
+                </h3>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id || category.slug}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Format Filter */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Format
+                </h3>
+                <select
+                  value={selectedFormat}
+                  onChange={(e) => {
+                    setSelectedFormat(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+                >
+                  {formatOptions.map((format) => (
+                    <option key={format.id} value={format.id}>
+                      {format.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* License Filter */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  License
+                </h3>
+                <select
+                  value={selectedLicense}
+                  onChange={(e) => {
+                    setSelectedLicense(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+                >
+                  {licenseOptions.map((license) => (
+                    <option key={license.id} value={license.id}>
+                      {license.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* Access Type Filter */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                Filter by Access
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {accessTypes.map((access) => (
-                  <button
-                    key={access.id}
-                    onClick={() => setSelectedAccess(access.id)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 border ${
-                      selectedAccess === access.id
-                        ? "bg-green-500 text-white border-green-500"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-green-300 hover:bg-green-50"
-                    }`}
-                  >
-                    {access.name}
-                  </button>
-                ))}
+            {/* Bottom Row: Sort, Featured Toggle, Access (legacy) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Sort Filter */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Sort By
+                </h3>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+
+              {/* Featured Toggle */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Featured Only
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsFeatured(!isFeatured);
+                    setCurrentPage(1);
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl font-medium transition-all duration-300 border-2 ${
+                    isFeatured
+                      ? "bg-amber-500 text-white border-amber-500"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                  }`}
+                >
+                  {isFeatured ? "✓ Featured Only" : "All Datasets"}
+                </button>
+              </div>
+
+              {/* Access Type (Legacy - local filter) */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Access Level
+                </h3>
+                <select
+                  value={selectedAccess}
+                  onChange={(e) => setSelectedAccess(e.target.value)}
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-green-500 focus:outline-none transition-colors"
+                >
+                  {accessTypes.map((access) => (
+                    <option key={access.id} value={access.id}>
+                      {access.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Active Filters Summary */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm font-medium text-gray-600">Active Filters:</span>
+              {selectedCategory !== "all" && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  Category: {categories.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name}
+                  <button onClick={() => setSelectedCategory("all")} className="ml-2 hover:text-blue-900">×</button>
+                </span>
+              )}
+              {selectedFormat !== "all" && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  Format: {selectedFormat}
+                  <button onClick={() => setSelectedFormat("all")} className="ml-2 hover:text-blue-900">×</button>
+                </span>
+              )}
+              {selectedLicense !== "all" && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  License: {selectedLicense}
+                  <button onClick={() => setSelectedLicense("all")} className="ml-2 hover:text-blue-900">×</button>
+                </span>
+              )}
+              {isFeatured && (
+                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                  Featured
+                  <button onClick={() => setIsFeatured(false)} className="ml-2 hover:text-amber-900">×</button>
+                </span>
+              )}
+              {sortBy !== "latest" && (
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  Sort: {sortOptions.find(s => s.id === sortBy)?.name}
+                </span>
+              )}
+              {(selectedCategory !== "all" || selectedFormat !== "all" || selectedLicense !== "all" || isFeatured || sortBy !== "latest") && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setSelectedFormat("all");
+                    setSelectedLicense("all");
+                    setIsFeatured(false);
+                    setSortBy("latest");
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium hover:bg-red-200"
+                >
+                  Clear All
+                </button>
+              )}
+              {selectedCategory === "all" && selectedFormat === "all" && selectedLicense === "all" && !isFeatured && sortBy === "latest" && (
+                <span className="text-sm text-gray-500">None</span>
+              )}
+            </div>
+
+            {/* Results Count */}
+            <div className="text-center">
+              <p className="text-gray-600">
+                Showing <span className="font-semibold text-gray-900">{datasets.length}</span> of{" "}
+                <span className="font-semibold text-gray-900">{totalItems}</span> datasets
+              </p>
             </div>
           </div>
 

@@ -42,6 +42,7 @@ export default function Projects() {
     achievements: [],
     future_work: [],
     thumbnail_url: "",
+    demo_url: [],
     tags: [],
     complexity: "medium",
     start_at: "",
@@ -55,6 +56,7 @@ export default function Projects() {
   const [achievementInput, setAchievementInput] = useState("");
   const [futureWorkInput, setFutureWorkInput] = useState("");
   const [tagInput, setTagInput] = useState("");
+  const [demoUrlInput, setDemoUrlInput] = useState("");
 
   useEffect(() => {
     if (token) {
@@ -202,6 +204,7 @@ export default function Projects() {
           (achievement) => achievement.trim() !== ""
         ),
         future_work: formData.future_work.filter((work) => work.trim() !== ""),
+        demo_url: formData.demo_url.filter((url) => url.trim() !== ""),
         tags: formData.tags.filter((tag) => tag.trim() !== ""),
         start_at: formData.start_at || new Date().toISOString(),
       };
@@ -241,6 +244,7 @@ export default function Projects() {
       achievements: project.achievements || [],
       future_work: project.future_work || [],
       thumbnail_url: project.thumbnail_url || "",
+      demo_url: Array.isArray(project.demo_url) ? project.demo_url : [],
       tags: project.tags || [],
       complexity: project.complexity || "medium",
       start_at: project.start_at ? project.start_at.split("T")[0] : "",
@@ -370,6 +374,7 @@ export default function Projects() {
       achievements: [],
       future_work: [],
       thumbnail_url: "",
+      demo_url: [],
       tags: [],
       complexity: "medium",
       start_at: "",
@@ -381,6 +386,7 @@ export default function Projects() {
     setAchievementInput("");
     setFutureWorkInput("");
     setTagInput("");
+    setDemoUrlInput("");
   };
 
   // Auto-generate slug from title
@@ -1325,6 +1331,53 @@ export default function Projects() {
                     </div>
                   </div>
 
+                  {/* Demo URLs */}
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Demo URLs
+                    </label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="url"
+                        value={demoUrlInput}
+                        onChange={(e) => setDemoUrlInput(e.target.value)}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" &&
+                          (e.preventDefault(),
+                          addToArray("demo_url", demoUrlInput, setDemoUrlInput))
+                        }
+                        className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
+                        placeholder="https://demo.example.com"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          addToArray("demo_url", demoUrlInput, setDemoUrlInput)
+                        }
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105"
+                      >
+                        Add
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.demo_url.map((url, index) => (
+                        <span
+                          key={index}
+                          className="bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 px-4 py-1.5 rounded-xl text-sm font-medium border border-indigo-200 flex items-center gap-2 max-w-md"
+                        >
+                          <span className="truncate">{url}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFromArray("demo_url", index)}
+                            className="text-indigo-600 hover:text-indigo-800 hover:scale-125 transition-transform flex-shrink-0"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Complexity */}
                     <div>
@@ -1728,6 +1781,67 @@ export default function Projects() {
                               >
                                 {tag}
                               </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Demo URLs */}
+                    {selectedProject.demo_url &&
+                      Array.isArray(selectedProject.demo_url) &&
+                      selectedProject.demo_url.length > 0 && (
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-indigo-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            Demo URLs ({selectedProject.demo_url.length})
+                          </h3>
+                          <div className="space-y-2">
+                            {selectedProject.demo_url.map((url, index) => (
+                              <a
+                                key={index}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-indigo-100 hover:from-indigo-100 hover:to-indigo-200 border border-indigo-200 rounded-xl transition-all duration-200 group"
+                              >
+                                <div className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-lg flex items-center justify-center font-bold text-sm">
+                                  {index + 1}
+                                </div>
+                                <span className="flex-1 text-indigo-700 font-medium text-sm truncate">
+                                  {url}
+                                </span>
+                                <svg
+                                  className="w-5 h-5 text-indigo-500 group-hover:translate-x-1 transition-transform"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                  />
+                                </svg>
+                              </a>
                             ))}
                           </div>
                         </div>

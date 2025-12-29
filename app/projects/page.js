@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 
 export default function ProjectsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [sortBy, setSortBy] = useState("latest");
   const [hoveredProject, setHoveredProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -11,7 +13,14 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const router = useRouter();
+
+  const sortOptions = [
+    { id: "latest", name: "Latest" },
+    { id: "oldest", name: "Oldest" },
+    { id: "title", name: "Title (A-Z)" },
+  ];
 
   // Fetch categories
   useEffect(() => {
@@ -45,16 +54,34 @@ export default function ProjectsPage() {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        let url = `/api/projects/public?page=${currentPage}&items_per_page=12`;
+        // Build query params sesuai dokumentasi API
+        const params = new URLSearchParams();
         
+        // Pagination - convert page to offset/limit
+        const limit = 12;
+        const offset = (currentPage - 1) * limit;
+        params.append('offset', offset.toString());
+        params.append('limit', limit.toString());
+        
+        // Search
         if (searchQuery) {
-          url += `&search=${encodeURIComponent(searchQuery)}`;
+          params.append('search', searchQuery);
         }
-
-        // If category is selected (not "all"), fetch by category
+        
+        // Category filter
         if (selectedCategory !== "all") {
-          url = `/api/projects/category/${selectedCategory}?page=${currentPage}&items_per_page=12`;
+          params.append('category_id', selectedCategory);
         }
+        
+        // Featured filter
+        if (isFeatured) {
+          params.append('is_featured', 'true');
+        }
+        
+        // Sort
+        params.append('sort_by', sortBy);
+        
+        const url = `/api/projects/public?${params.toString()}`;
         
         const response = await fetch(url);
         if (response.ok) {
@@ -62,235 +89,40 @@ export default function ProjectsPage() {
           
           if (data && Array.isArray(data.data)) {
             setProjects(data.data);
-            setTotalPages(data.pages || 1);
+            setTotalItems(data.total || 0);
+            setTotalPages(Math.ceil((data.total || 0) / limit));
           } else if (Array.isArray(data)) {
             setProjects(data);
+            setTotalItems(data.length);
+            setTotalPages(1);
           } else {
             console.log('Projects data structure:', data);
             setProjects([]);
+            setTotalItems(0);
+            setTotalPages(1);
           }
         }
       } catch (error) {
         console.error('Error fetching projects:', error);
         setProjects([]);
+        setTotalItems(0);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
     fetchProjects();
-  }, [selectedCategory, searchQuery, currentPage]);
+  }, [selectedCategory, isFeatured, sortBy, searchQuery, currentPage]);
 
   const fallbackProjects = [
-    {
-      id: "019afd30-2d9c-78de-a48b-10c172214c9d",
-      title: "Neural Style Transfer",
-      slug: "neural-style-transfer",
-      description:
-        "Transform artistic styles using advanced neural networks. Create stunning artwork by combining content and style images through deep learning algorithms powered by VGG-19 architecture.",
-      full_description: "Detailed description...",
-      technologies: [
-        "TensorFlow",
-        "VGG-19",
-        "Neural Networks",
-        "Style Transfer",
-      ],
-      thumbnail_url: "https://picsum.photos/720/480?random=1",
-      tags: ["AI", "Art", "Computer Vision"],
-      complexity: "hard",
-      start_at: "2024-01-01T00:00:00Z",
-      access_level: "public",
-      status: "published",
-      created_at: "2024-01-01T00:00:00Z",
-      updated_at: "2024-01-15T00:00:00Z",
-      challenges: [],
-      achievements: [],
-      future_work: [],
-    },
-    {
-      id: 2,
-      title: "Object Detection & Segmentation",
-      description:
-        "Real-time object detection and instance segmentation using YOLO and Mask R-CNN architectures for precise image analysis with high accuracy rates.",
-      technologies: ["YOLO", "Mask R-CNN", "OpenCV", "PyTorch"],
-      thumbnail: "from-orange-500 to-red-500",
-      category: "computer-vision",
-      status: "Completed",
-      complexity: "Expert",
-      duration: "8 months",
-      team: 6,
-    },
-    {
-      id: 3,
-      title: "Image Super-Resolution",
-      description:
-        "Enhance image quality and resolution using ESRGAN and SRCNN models. Upscale images while preserving fine details and textures with GANs technology.",
-      technologies: ["ESRGAN", "SRCNN", "GANs", "Image Enhancement"],
-      thumbnail: "from-yellow-500 to-amber-500",
-      category: "enhancement",
-      status: "Beta",
-      complexity: "Advanced",
-      duration: "4 months",
-      team: 3,
-    },
-    {
-      id: 4,
-      title: "Facial Recognition System",
-      description:
-        "Advanced facial recognition and analysis with privacy-focused design, emotion detection, and real-time processing capabilities for security applications.",
-      technologies: [
-        "OpenCV",
-        "Face Recognition",
-        "Deep Learning",
-        "Privacy AI",
-      ],
-      thumbnail: "from-amber-600 to-orange-600",
-      category: "computer-vision",
-      status: "Active",
-      complexity: "Expert",
-      duration: "10 months",
-      team: 5,
-    },
-    {
-      id: 5,
-      title: "Text-to-Image Generator",
-      description:
-        "Generate high-quality images from text descriptions using diffusion models and transformer architectures. Create art, illustrations, and concept designs from prompts.",
-      technologies: ["Stable Diffusion", "CLIP", "Transformers", "PyTorch"],
-      thumbnail: "from-red-500 to-orange-500",
-      category: "generative-ai",
-      status: "Beta",
-      complexity: "Expert",
-      duration: "12 months",
-      team: 8,
-    },
-    {
-      id: 6,
-      title: "Medical Image Analysis",
-      description:
-        "AI-powered medical imaging analysis for X-rays, MRIs, and CT scans. Detect anomalies, assist diagnosis, and provide detailed medical reports.",
-      technologies: ["Medical AI", "DICOM", "3D Analysis", "TensorFlow"],
-      thumbnail: "from-orange-600 to-amber-600",
-      category: "research",
-      status: "In Progress",
-      complexity: "Expert",
-      duration: "15 months",
-      team: 7,
-    },
-    {
-      id: 7,
-      title: "Automated Video Editing",
-      description:
-        "Smart video editing using AI for automatic scene detection, transition effects, and content optimization. Perfect for content creators and marketers.",
-      technologies: ["OpenCV", "Video Processing", "ML", "FFmpeg"],
-      thumbnail: "from-yellow-600 to-amber-600",
-      category: "enhancement",
-      status: "Active",
-      complexity: "Advanced",
-      duration: "6 months",
-      team: 4,
-    },
-    {
-      id: 8,
-      title: "3D Object Reconstruction",
-      description:
-        "Reconstruct 3D objects from 2D images using photogrammetry and neural networks. Create detailed 3D models for gaming, AR/VR, and design.",
-      technologies: [
-        "3D Reconstruction",
-        "Photogrammetry",
-        "Neural Radiance Fields",
-        "Blender",
-      ],
-      thumbnail: "from-amber-500 to-yellow-500",
-      category: "computer-vision",
-      status: "Research",
-      complexity: "Expert",
-      duration: "18 months",
-      team: 6,
-    },
-    {
-      id: 9,
-      title: "AI Art Restoration",
-      description:
-        "Restore damaged artwork and historical images using advanced inpainting techniques and style-aware neural networks to preserve cultural heritage.",
-      technologies: [
-        "Inpainting",
-        "Style Transfer",
-        "Cultural Heritage AI",
-        "Restoration",
-      ],
-      thumbnail: "from-orange-400 to-amber-400",
-      category: "enhancement",
-      status: "Active",
-      complexity: "Advanced",
-      duration: "9 months",
-      team: 5,
-    },
-    {
-      id: 10,
-      title: "Voice-to-Image Synthesis",
-      description:
-        "Generate images from voice descriptions using multimodal AI. Convert speech to visual content with emotion and tone awareness for creative applications.",
-      technologies: [
-        "Speech Recognition",
-        "Multimodal AI",
-        "Voice Processing",
-        "Image Synthesis",
-      ],
-      thumbnail: "from-red-400 to-orange-400",
-      category: "generative-ai",
-      status: "Beta",
-      complexity: "Expert",
-      duration: "14 months",
-      team: 9,
-    },
-    {
-      id: 11,
-      title: "Drone Image Analysis",
-      description:
-        "Analyze aerial and drone footage for environmental monitoring, agriculture, and urban planning using computer vision and geospatial AI technologies.",
-      technologies: [
-        "Drone AI",
-        "Geospatial Analysis",
-        "Environmental AI",
-        "Satellite Imagery",
-      ],
-      thumbnail: "from-yellow-400 to-orange-400",
-      category: "research",
-      status: "In Progress",
-      complexity: "Advanced",
-      duration: "12 months",
-      team: 6,
-    },
-    {
-      id: 12,
-      title: "Real-time Style Transfer",
-      description:
-        "Apply artistic styles to live video feeds and camera streams in real-time. Perfect for live streaming, video calls, and interactive art installations.",
-      technologies: [
-        "Real-time Processing",
-        "Style Transfer",
-        "WebRTC",
-        "Edge Computing",
-      ],
-      thumbnail: "from-amber-400 to-red-400",
-      category: "generative-ai",
-      status: "Active",
-      complexity: "Advanced",
-      duration: "7 months",
-      team: 4,
-    },
+    
   ];
 
   const displayProjects = loading ? [] : (projects.length > 0 ? projects : fallbackProjects);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
-  };
-
-  const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId);
-    setCurrentPage(1); // Reset to first page on category change
+    setCurrentPage(1);
   };
 
   const getStatusColor = (status) => {
@@ -459,21 +291,120 @@ export default function ProjectsPage() {
           </div>
 
           {/* Category Filter */}
-          <div className="mb-12">
-            <div className="flex flex-wrap justify-center gap-4">
-              {categories.map((category) => (
+          <div className="mb-12 space-y-6">
+            {/* Category Buttons */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
+                Filter by Category
+              </h3>
+              <div className="flex flex-wrap justify-center gap-4">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setSelectedCategory(category.id || category.slug);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
+                      selectedCategory === (category.id || category.slug)
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort and Featured Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              {/* Sort Filter */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Sort By
+                </h3>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Featured Toggle */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Featured Only
+                </h3>
                 <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.id || category.slug)}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
-                    selectedCategory === (category.id || category.slug)
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
+                  onClick={() => {
+                    setIsFeatured(!isFeatured);
+                    setCurrentPage(1);
+                  }}
+                  className={`w-full px-4 py-3 rounded-xl font-medium transition-all duration-300 border-2 ${
+                    isFeatured
+                      ? "bg-amber-500 text-white border-amber-500"
                       : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
                   }`}
                 >
-                  {category.name}
+                  {isFeatured ? "✓ Featured Only" : "All Projects"}
                 </button>
-              ))}
+              </div>
+            </div>
+
+            {/* Active Filters Summary */}
+            <div className="flex flex-wrap gap-2 items-center justify-center">
+              <span className="text-sm font-medium text-gray-600">Active Filters:</span>
+              {selectedCategory !== "all" && (
+                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                  Category: {categories.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name}
+                  <button onClick={() => setSelectedCategory("all")} className="ml-2 hover:text-amber-900">×</button>
+                </span>
+              )}
+              {isFeatured && (
+                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                  Featured
+                  <button onClick={() => setIsFeatured(false)} className="ml-2 hover:text-amber-900">×</button>
+                </span>
+              )}
+              {sortBy !== "latest" && (
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  Sort: {sortOptions.find(s => s.id === sortBy)?.name}
+                </span>
+              )}
+              {(selectedCategory !== "all" || isFeatured || sortBy !== "latest") && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setIsFeatured(false);
+                    setSortBy("latest");
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium hover:bg-red-200"
+                >
+                  Clear All
+                </button>
+              )}
+              {selectedCategory === "all" && !isFeatured && sortBy === "latest" && (
+                <span className="text-sm text-gray-500">None</span>
+              )}
+            </div>
+
+            {/* Results Count */}
+            <div className="text-center">
+              <p className="text-gray-600">
+                Showing <span className="font-semibold text-gray-900">{displayProjects.length}</span> of{" "}
+                <span className="font-semibold text-gray-900">{totalItems}</span> projects
+              </p>
             </div>
           </div>
 

@@ -5,15 +5,65 @@ const API_BASE_URL = 'https://spmb1.wempyaw.com/api/v1/public';
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = searchParams.get('page') || '1';
-    const items_per_page = searchParams.get('items_per_page') || '12';
-    const search = searchParams.get('search') || '';
-
-    let url = `${API_BASE_URL}/publications?page=${page}&items_per_page=${items_per_page}`;
     
-    if (search) {
-      url += `&search=${encodeURIComponent(search)}`;
+    // Build query params sesuai dokumentasi API
+    const params = new URLSearchParams();
+    
+    // Pagination - support both old (page/items_per_page) and new (offset/limit)
+    const offset = searchParams.get('offset');
+    const limit = searchParams.get('limit');
+    const page = searchParams.get('page');
+    const items_per_page = searchParams.get('items_per_page');
+    
+    if (offset !== null) {
+      params.append('offset', offset);
+    } else if (page !== null) {
+      params.append('page', page);
     }
+    
+    if (limit !== null) {
+      params.append('limit', limit);
+    } else if (items_per_page !== null) {
+      params.append('items_per_page', items_per_page);
+    }
+    
+    // Search filter
+    const search = searchParams.get('search');
+    if (search) {
+      params.append('search', search);
+    }
+    
+    // Year filter
+    const year = searchParams.get('year');
+    if (year) {
+      params.append('year', year);
+    }
+    
+    // Category filter
+    const category_id = searchParams.get('category_id');
+    if (category_id) {
+      params.append('category_id', category_id);
+    }
+    
+    // Author filter
+    const author = searchParams.get('author');
+    if (author) {
+      params.append('author', author);
+    }
+    
+    // Featured filter
+    const is_featured = searchParams.get('is_featured');
+    if (is_featured) {
+      params.append('is_featured', is_featured);
+    }
+    
+    // Sort filter
+    const sort_by = searchParams.get('sort_by');
+    if (sort_by) {
+      params.append('sort_by', sort_by);
+    }
+
+    const url = `${API_BASE_URL}/publications?${params.toString()}`;
 
     const response = await fetch(url);
     
