@@ -48,21 +48,28 @@ export default function GalleryManagement() {
   const fetchGalleries = async () => {
     try {
       const token = localStorage.getItem("access_token");
+      
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
       const response = await fetch(
         `/api/gallery?offset=${offset}&limit=${limit}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
           },
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch galleries");
+        const errorText = await response.text();
+        console.error('Gallery fetch error response:', errorText);
+        throw new Error(`Failed to fetch galleries: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Gallery Response:", data);
 
       let galleriesArray = [];
       let total = 0;
@@ -106,7 +113,6 @@ export default function GalleryManagement() {
       }
 
       const data = await response.json();
-      console.log("Gallery Categories Response:", data);
 
       let categoriesArray = [];
       if (data.data && Array.isArray(data.data)) {
@@ -136,7 +142,6 @@ export default function GalleryManagement() {
       }
 
       const data = await response.json();
-      console.log("Models Response:", data);
 
       let modelsArray = [];
       if (data.data?.data && Array.isArray(data.data.data)) {

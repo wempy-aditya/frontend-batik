@@ -4,8 +4,6 @@ import { useAuth } from "../../../components/AuthProvider";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
 
-// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export default function ManageDatasetsPage() {
   const { getUserInfo } = useAuth();
   const [datasets, setDatasets] = useState([]);

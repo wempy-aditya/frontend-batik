@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: my-app-frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      # Default backend URL — override via env or use backend service name when connected to same docker network
+      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://backend:8000}
+    restart: unless-stopped
+    networks:
+      - frontend_net
+      - backend_network
+
+networks:
+  frontend_net:
+    driver: bridge
+  # External network (set this to the network used by your backend docker-compose)
+  backend_network:
+    external: true
