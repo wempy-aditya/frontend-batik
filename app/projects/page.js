@@ -26,24 +26,22 @@ export default function ProjectsPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/projects/categories');
+        const response = await fetch("/api/projects/categories");
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
             // Add "All" category at the beginning
             const allCategories = [
               { id: "all", name: "All Projects", slug: "all" },
-              ...data
+              ...data,
             ];
             setCategories(allCategories);
           }
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
         // Set default categories if API fails
-        setCategories([
-          { id: "all", name: "All Projects", slug: "all" },
-        ]);
+        setCategories([{ id: "all", name: "All Projects", slug: "all" }]);
       }
     };
     fetchCategories();
@@ -56,37 +54,37 @@ export default function ProjectsPage() {
       try {
         // Build query params sesuai dokumentasi API
         const params = new URLSearchParams();
-        
+
         // Pagination - convert page to offset/limit
         const limit = 12;
         const offset = (currentPage - 1) * limit;
-        params.append('offset', offset.toString());
-        params.append('limit', limit.toString());
-        
+        params.append("offset", offset.toString());
+        params.append("limit", limit.toString());
+
         // Search
         if (searchQuery) {
-          params.append('search', searchQuery);
+          params.append("search", searchQuery);
         }
-        
+
         // Category filter
         if (selectedCategory !== "all") {
-          params.append('category_id', selectedCategory);
+          params.append("category_id", selectedCategory);
         }
-        
+
         // Featured filter
         if (isFeatured) {
-          params.append('is_featured', 'true');
+          params.append("is_featured", "true");
         }
-        
+
         // Sort
-        params.append('sort_by', sortBy);
-        
+        params.append("sort_by", sortBy);
+
         const url = `/api/projects/public?${params.toString()}`;
-        
+
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
-          
+
           if (data && Array.isArray(data.data)) {
             setProjects(data.data);
             setTotalItems(data.total || 0);
@@ -96,14 +94,14 @@ export default function ProjectsPage() {
             setTotalItems(data.length);
             setTotalPages(1);
           } else {
-            console.log('Projects data structure:', data);
+            console.log("Projects data structure:", data);
             setProjects([]);
             setTotalItems(0);
             setTotalPages(1);
           }
         }
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        console.error("Error fetching projects:", error);
         setProjects([]);
         setTotalItems(0);
         setTotalPages(1);
@@ -114,11 +112,13 @@ export default function ProjectsPage() {
     fetchProjects();
   }, [selectedCategory, isFeatured, sortBy, searchQuery, currentPage]);
 
-  const fallbackProjects = [
-    
-  ];
+  const fallbackProjects = [];
 
-  const displayProjects = loading ? [] : (projects.length > 0 ? projects : fallbackProjects);
+  const displayProjects = loading
+    ? []
+    : projects.length > 0
+    ? projects
+    : fallbackProjects;
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -264,73 +264,77 @@ export default function ProjectsPage() {
       {/* Projects Section */}
       <section className="py-20">
         <div className="container mx-auto px-6 lg:px-8">
-          {/* Search Bar */}
-          <div className="mb-8 max-w-2xl mx-auto">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearch}
-                placeholder="Search projects by title or description..."
-                className="w-full px-6 py-4 pl-12 bg-white rounded-2xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors"
-              />
-              <svg
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          {/* Filters Section - Compact Unified Container */}
+          <div className="mb-12 bg-white rounded-2xl border-2 border-gray-100 p-6 shadow-lg">
+            {/* Main Filter Bar */}
+            <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center mb-4">
+              {/* Search Bar */}
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  placeholder="Search projects..."
+                  className="w-full px-6 py-3 pl-12 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all"
                 />
-              </svg>
-            </div>
-          </div>
-
-          {/* Category Filter */}
-          <div className="mb-12 space-y-6">
-            {/* Category Buttons */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
-                Filter by Category
-              </h3>
-              <div className="flex flex-wrap justify-center gap-4">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      setSelectedCategory(category.id || category.slug);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
-                      selectedCategory === (category.id || category.slug)
-                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
-                    }`}
-                  >
-                    {category.name}
-                  </button>
-                ))}
+                <svg
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </div>
-            </div>
 
-            {/* Sort and Featured Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              {/* Sort Filter */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Sort By
-                </h3>
+              {/* Category Dropdown */}
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full lg:w-48 px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
+                >
+                  {categories.map((category) => (
+                    <option
+                      key={category.id}
+                      value={category.id || category.slug}
+                    >
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <svg
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="relative">
                 <select
                   value={sortBy}
                   onChange={(e) => {
                     setSortBy(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:outline-none transition-colors"
+                  className="w-full lg:w-40 px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
                 >
                   {sortOptions.map((option) => (
                     <option key={option.id} value={option.id}>
@@ -338,73 +342,147 @@ export default function ProjectsPage() {
                     </option>
                   ))}
                 </select>
+                <svg
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </div>
 
-              {/* Featured Toggle */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Featured Only
-                </h3>
-                <button
-                  onClick={() => {
-                    setIsFeatured(!isFeatured);
-                    setCurrentPage(1);
-                  }}
-                  className={`w-full px-4 py-3 rounded-xl font-medium transition-all duration-300 border-2 ${
-                    isFeatured
-                      ? "bg-amber-500 text-white border-amber-500"
-                      : "bg-white text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
-                  }`}
-                >
-                  {isFeatured ? "✓ Featured Only" : "All Projects"}
-                </button>
+              {/* Featured Toggle Button */}
+              <button
+                onClick={() => {
+                  setIsFeatured(!isFeatured);
+                  setCurrentPage(1);
+                }}
+                className={`px-5 py-3 rounded-xl font-semibold transition-all duration-300 border-2 whitespace-nowrap ${
+                  isFeatured
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md"
+                    : "bg-gray-50 text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
+                }`}
+              >
+                Featured
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-200 my-4"></div>
+
+            {/* Active Filters & Results Count Row */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              {/* Active Filters */}
+              <div className="flex flex-wrap gap-2 items-center flex-1">
+                <span className="text-sm font-semibold text-gray-700">
+                  Active filters:
+                </span>
+
+                {selectedCategory !== "all" && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-lg text-sm font-medium">
+                    <span className="font-semibold">Category:</span>
+                    {
+                      categories.find(
+                        (c) =>
+                          c.id === selectedCategory ||
+                          c.slug === selectedCategory
+                      )?.name
+                    }
+                    <button
+                      onClick={() => {
+                        setSelectedCategory("all");
+                        setCurrentPage(1);
+                      }}
+                      className="ml-1 hover:bg-amber-200 rounded-full w-4 h-4 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+
+                {isFeatured && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-lg text-sm font-medium">
+                    Featured
+                    <button
+                      onClick={() => {
+                        setIsFeatured(false);
+                        setCurrentPage(1);
+                      }}
+                      className="ml-1 hover:bg-amber-200 rounded-full w-4 h-4 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+
+                {sortBy !== "latest" && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-800 rounded-lg text-sm font-medium">
+                    <span className="font-semibold">Sort:</span>
+                    {sortOptions.find((s) => s.id === sortBy)?.name}
+                  </span>
+                )}
+
+                {searchQuery && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                    <span className="font-semibold">Search:</span>"
+                    {searchQuery.substring(0, 20)}
+                    {searchQuery.length > 20 ? "..." : ""}"
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setCurrentPage(1);
+                      }}
+                      className="ml-1 hover:bg-blue-200 rounded-full w-4 h-4 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+
+                {selectedCategory === "all" &&
+                  !isFeatured &&
+                  sortBy === "latest" &&
+                  !searchQuery && (
+                    <span className="text-sm text-gray-500">None</span>
+                  )}
+
+                {(selectedCategory !== "all" ||
+                  isFeatured ||
+                  sortBy !== "latest" ||
+                  searchQuery) && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("all");
+                      setIsFeatured(false);
+                      setSortBy("latest");
+                      setSearchQuery("");
+                      setCurrentPage(1);
+                    }}
+                    className="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors border border-red-200"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
-            </div>
 
-            {/* Active Filters Summary */}
-            <div className="flex flex-wrap gap-2 items-center justify-center">
-              <span className="text-sm font-medium text-gray-600">Active Filters:</span>
-              {selectedCategory !== "all" && (
-                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-                  Category: {categories.find(c => c.id === selectedCategory || c.slug === selectedCategory)?.name}
-                  <button onClick={() => setSelectedCategory("all")} className="ml-2 hover:text-amber-900">×</button>
-                </span>
-              )}
-              {isFeatured && (
-                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-                  Featured
-                  <button onClick={() => setIsFeatured(false)} className="ml-2 hover:text-amber-900">×</button>
-                </span>
-              )}
-              {sortBy !== "latest" && (
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                  Sort: {sortOptions.find(s => s.id === sortBy)?.name}
-                </span>
-              )}
-              {(selectedCategory !== "all" || isFeatured || sortBy !== "latest") && (
-                <button
-                  onClick={() => {
-                    setSelectedCategory("all");
-                    setIsFeatured(false);
-                    setSortBy("latest");
-                    setCurrentPage(1);
-                  }}
-                  className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium hover:bg-red-200"
-                >
-                  Clear All
-                </button>
-              )}
-              {selectedCategory === "all" && !isFeatured && sortBy === "latest" && (
-                <span className="text-sm text-gray-500">None</span>
-              )}
-            </div>
-
-            {/* Results Count */}
-            <div className="text-center">
-              <p className="text-gray-600">
-                Showing <span className="font-semibold text-gray-900">{displayProjects.length}</span> of{" "}
-                <span className="font-semibold text-gray-900">{totalItems}</span> projects
-              </p>
+              {/* Results Count */}
+              <div className="lg:border-l lg:border-gray-200 lg:pl-6">
+                <p className="text-gray-600 text-sm whitespace-nowrap">
+                  Showing{" "}
+                  <span className="font-bold text-gray-900">
+                    {displayProjects.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-bold text-gray-900">{totalItems}</span>{" "}
+                  projects
+                </p>
+              </div>
             </div>
           </div>
 
@@ -416,166 +494,187 @@ export default function ProjectsPage() {
             </div>
           ) : displayProjects.length === 0 ? (
             <div className="text-center py-20">
-              <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-24 h-24 mx-auto text-gray-300 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               <p className="text-xl text-gray-600">No projects found</p>
-              <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
+              <p className="text-gray-500 mt-2">
+                Try adjusting your search or filters
+              </p>
             </div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
               {displayProjects.map((project) => (
-              <div
-                key={project.id}
-                className="group relative"
-                onMouseEnter={() => setHoveredProject(project.id)}
-                onMouseLeave={() => setHoveredProject(null)}
-              >
-                {/* Project Card */}
-                <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full">
-                  {/* Gradient Background on Hover */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
-                  ></div>
+                <div
+                  key={project.id}
+                  className="group relative"
+                  onMouseEnter={() => setHoveredProject(project.id)}
+                  onMouseLeave={() => setHoveredProject(null)}
+                >
+                  {/* Project Card */}
+                  <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full">
+                    {/* Gradient Background on Hover */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                    ></div>
 
-                  {/* Animated Border Glow */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-r ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-20 blur-sm transition-all duration-500 scale-105`}
-                  ></div>
+                    {/* Animated Border Glow */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-20 blur-sm transition-all duration-500 scale-105`}
+                    ></div>
 
-                  {/* Thumbnail/Hero Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    {project.thumbnail_url ? (
-                      <img
-                        src={project.thumbnail_url}
-                        alt={project.title}
-                        className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextElementSibling.style.display = 'block';
+                    {/* Thumbnail/Hero Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      {project.thumbnail_url ? (
+                        <img
+                          src={project.thumbnail_url}
+                          alt={project.title}
+                          className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.nextElementSibling.style.display = "block";
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 transition-all duration-700 group-hover:scale-110`}
+                        style={{
+                          display: project.thumbnail_url ? "none" : "block",
                         }}
-                      />
-                    ) : null}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 transition-all duration-700 group-hover:scale-110`}
-                      style={{ display: project.thumbnail_url ? 'none' : 'block' }}
-                    >
-                      {/* Animated Overlay */}
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
-                    </div>
-
-                    {/* Floating Particles */}
-                    <div className="absolute inset-0 opacity-30">
-                      <div className="absolute top-4 right-8 w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                      <div className="absolute top-12 right-16 w-1 h-1 bg-white rounded-full animate-bounce"></div>
-                      <div className="absolute top-8 right-4 w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
-                    </div>
-
-                    {/* Status & Complexity Badges */}
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(
-                          project.status
-                        )}`}
                       >
-                        {project.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : 'Published'}
-                      </span>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <span
-                        className={`px-3 py-1 text-xs font-medium rounded-full ${getComplexityColor(
-                          project.complexity
-                        )}`}
-                      >
-                        {project.complexity ? project.complexity.charAt(0).toUpperCase() + project.complexity.slice(1) : 'Medium'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="relative z-10 p-6 space-y-4">
-                    {/* Title & Description */}
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">
-                        {project.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
-                        {project.description}
-                      </p>
-                    </div>
-
-                    {/* Technologies */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-900 mb-2">
-                        Technologies:
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {project.technologies.slice(0, 3).map((tech, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-md border border-amber-200"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                        {project.technologies.length > 3 && (
-                          <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded-md">
-                            +{project.technologies.length - 3} more
-                          </span>
-                        )}
+                        {/* Animated Overlay */}
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
                       </div>
-                    </div>
 
-                    {/* Tags */}
-                    {project.tags && project.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {project.tags.slice(0, 3).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {project.tags.length > 3 && (
-                          <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-50 rounded-md">
-                            +{project.tags.length - 3}
-                          </span>
-                        )}
+                      {/* Floating Particles */}
+                      <div className="absolute inset-0 opacity-30">
+                        <div className="absolute top-4 right-8 w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                        <div className="absolute top-12 right-16 w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                        <div className="absolute top-8 right-4 w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
                       </div>
-                    )}
 
-                    {/* Action Button */}
-                    <div
-                      onClick={() => {
-                        console.log(
-                          `Navigating to project ${project.id} details`
-                        );
-                        window.location.href = `/projects/${project.id}`;
-                      }}
-                      className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 mt-4 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <span>View Details</span>
-                        <svg
-                          className="w-4 h-4 transition-transform duration-300"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      {/* Status & Complexity Badges */}
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(
+                            project.status
+                          )}`}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                          {project.status
+                            ? project.status.charAt(0).toUpperCase() +
+                              project.status.slice(1)
+                            : "Published"}
+                        </span>
+                      </div>
+                      <div className="absolute top-4 right-4">
+                        <span
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${getComplexityColor(
+                            project.complexity
+                          )}`}
+                        >
+                          {project.complexity
+                            ? project.complexity.charAt(0).toUpperCase() +
+                              project.complexity.slice(1)
+                            : "Medium"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative z-10 p-6 space-y-4">
+                      {/* Title & Description */}
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">
+                          {project.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                          {project.description}
+                        </p>
+                      </div>
+
+                      {/* Technologies */}
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-900 mb-2">
+                          Technologies:
+                        </h4>
+                        <div className="flex flex-wrap gap-1">
+                          {project.technologies
+                            .slice(0, 3)
+                            .map((tech, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-md border border-amber-200"
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                          {project.technologies.length > 3 && (
+                            <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded-md">
+                              +{project.technologies.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      {project.tags && project.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {project.tags.slice(0, 3).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {project.tags.length > 3 && (
+                            <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-50 rounded-md">
+                              +{project.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      <div
+                        onClick={() => {
+                          console.log(
+                            `Navigating to project ${project.id} details`
+                          );
+                          window.location.href = `/projects/${project.id}`;
+                        }}
+                        className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 mt-4 cursor-pointer"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <span>View Details</span>
+                          <svg
+                            className="w-4 h-4 transition-transform duration-300"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </div>
-
                 </div>
-              </div>
               ))}
             </div>
           )}
@@ -584,17 +683,17 @@ export default function ProjectsPage() {
           {!loading && displayProjects.length > 0 && totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-12">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   currentPage === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-amber-50 border border-gray-200"
                 }`}
               >
                 Previous
               </button>
-              
+
               <div className="flex gap-2">
                 {[...Array(totalPages)].map((_, index) => (
                   <button
@@ -602,8 +701,8 @@ export default function ProjectsPage() {
                     onClick={() => setCurrentPage(index + 1)}
                     className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       currentPage === index + 1
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
-                        : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                        : "bg-white text-gray-700 hover:bg-amber-50 border border-gray-200"
                     }`}
                   >
                     {index + 1}
@@ -612,12 +711,14 @@ export default function ProjectsPage() {
               </div>
 
               <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
                 disabled={currentPage === totalPages}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   currentPage === totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-amber-50 border border-gray-200'
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-amber-50 border border-gray-200"
                 }`}
               >
                 Next
