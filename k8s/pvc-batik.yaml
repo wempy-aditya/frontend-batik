@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-batik
+  namespace: web-batik
+spec:
+  accessModes:
+    - ReadWriteMany # Atau ReadWriteMany jika ingin diakses banyak pod
+  resources:
+    requests:
+      storage: 2Gi # Sesuaikan ukurannya (misal 5Gi, 10Gi)
+  # storageClassName: standard # Un-comment dan sesuaikan jika perlu

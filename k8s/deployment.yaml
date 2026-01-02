@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-batik-frontend
+  namespace: web-batik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-batik-frontend
+  template:
+    metadata:
+      labels:
+        app: web-batik-frontend
+    spec:
+      containers:
+      - name: web-batik-frontend
+        # Ganti ke image registry yang benar jika perlu
+        image: 10.10.11.235:5000/it-research-center:37 
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3050
+        envFrom:
+        - configMapRef:
+            name: batik-configmap
+        volumeMounts:
+        - name: data
+          mountPath: /app/public/storage
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pvc-batik
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-batik-frontend
+  namespace: web-batik
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3050
+  selector:
+    app: web-batik-frontend
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: web-batik-ingress
+  namespace: web-batik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`rispro.umm.ac.id`)
+    kind: Rule
+    services:
+    - name: web-batik-frontend
+      port: 80
+  tls:
+    secretName: tls-secret
