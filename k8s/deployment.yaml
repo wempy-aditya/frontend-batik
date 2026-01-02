@@ -52,6 +52,7 @@ metadata:
   namespace: web-batik
 spec:
   entryPoints:
+    - web
     - websecure
   routes:
   - match: Host(`rispro.umm.ac.id`)
