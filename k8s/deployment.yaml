@@ -16,7 +16,7 @@ spec:
       containers:
       - name: web-batik-frontend
         # Ganti ke image registry yang benar jika perlu
-        image: frontend-web-batik:latest
+        image: 10.10.11.235:5000/frontend-web-batik:latest
         imagePullPolicy: Always
         ports:
           - containerPort: 3050
