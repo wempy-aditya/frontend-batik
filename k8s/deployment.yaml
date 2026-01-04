@@ -56,25 +56,3 @@ spec:
       targetPort: 3050
   selector:
     app: web-batik-frontend
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: web-batik-ingress
-  namespace: web-batik
-  annotations:
-    kubernetes.io/ingress.class: traefik
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - kind: Rule
-    match: Host(`rispro.umm.ac.id`)
-    priority: 100
-    services:
-    - name: web-batik-frontend
-      port: 80
-  tls:
-    secretName: tls-secret
-    domains:
-    - main: rispro.umm.ac.id
