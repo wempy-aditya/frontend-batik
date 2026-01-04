@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: web-batik-ingress
+  namespace: web-batik
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+  - match: Host(`rispro.umm.ac.id`)
+    kind: Rule
+    services:
+    - name: web-batik-frontend
+      port: 80
+  tls:
+    secretName: tls-secret
