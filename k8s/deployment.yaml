@@ -13,6 +13,18 @@ spec:
       labels:
         app: web-batik-frontend
     spec:
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+        searches:
+          - web-batik.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "2"
       containers:
       - name: web-batik-frontend
         # Ganti ke image registry yang benar jika perlu
