@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function POST(request, context) {
   try {
@@ -8,21 +8,21 @@ export async function POST(request, context) {
     const { id } = params;
 
     const response = await fetch(`${API_BASE_URL}/api/v1/public/datasets/${id}/view`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
-      console.error('Failed to increment view count');
-      return NextResponse.json({ error: 'Failed to increment view count' }, { status: response.status });
+      console.error("Failed to increment view count");
+      return NextResponse.json({ error: "Failed to increment view count" }, { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error incrementing view count:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Error incrementing view count:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

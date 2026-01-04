@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const offset = searchParams.get('offset') || '0';
-    const limit = searchParams.get('limit') || '50';
-    const search = searchParams.get('search') || '';
+    const offset = searchParams.get("offset") || "0";
+    const limit = searchParams.get("limit") || "50";
+    const search = searchParams.get("search") || "";
 
     let url = `${API_BASE_URL}/api/v1/contributors?offset=${offset}&limit=${limit}`;
     if (search) {
@@ -16,9 +16,9 @@ export async function GET(request) {
 
     const response = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -29,32 +29,29 @@ export async function GET(request) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching contributors:', error);
-    return NextResponse.json(
-      { detail: 'Failed to fetch contributors' },
-      { status: 500 }
-    );
+    console.error("Error fetching contributors:", error);
+    return NextResponse.json({ detail: "Failed to fetch contributors" }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
+    const authHeader = request.headers.get("authorization");
+    const token = authHeader?.replace("Bearer ", "");
+
     if (!token) {
-      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
 
     const response = await fetch(`${API_BASE_URL}/api/v1/contributors/`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-        'User-Agent': 'PostmanRuntime/7.36.0',
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        "User-Agent": "PostmanRuntime/7.36.0",
       },
       body: JSON.stringify(body),
     });
@@ -67,10 +64,7 @@ export async function POST(request) {
     const data = await response.json();
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error('Error creating contributor:', error);
-    return NextResponse.json(
-      { detail: 'Failed to create contributor' },
-      { status: 500 }
-    );
+    console.error("Error creating contributor:", error);
+    return NextResponse.json({ detail: "Failed to create contributor" }, { status: 500 });
   }
 }

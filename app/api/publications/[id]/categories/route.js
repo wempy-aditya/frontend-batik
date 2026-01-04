@@ -1,26 +1,26 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const API_BASE_URL = 'https://spmb1.wempyaw.com/api/v1';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/v1`;
 
 export async function POST(request, { params }) {
   try {
     // Await params for Next.js 15+ compatibility
     const resolvedParams = await params;
     const { id } = resolvedParams;
-    
-    const token = request.headers.get('authorization');
-    
+
+    const token = request.headers.get("authorization");
+
     if (!token) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 });
+      return NextResponse.json({ error: "Authorization header required" }, { status: 401 });
     }
 
     const body = await request.json();
 
     const response = await fetch(`${API_BASE_URL}/publications/${id}/categories`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': token,
-        'Content-Type': 'application/json',
+        Authorization: token,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
     });
@@ -33,7 +33,7 @@ export async function POST(request, { params }) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Publication category assignment error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Publication category assignment error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

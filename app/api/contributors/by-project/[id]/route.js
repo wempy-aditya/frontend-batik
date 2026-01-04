@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function GET(request, { params }) {
   try {
@@ -9,9 +9,9 @@ export async function GET(request, { params }) {
 
     const response = await fetch(`${API_BASE_URL}/api/v1/contributors/project/${id}/contributors`, {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -22,10 +22,7 @@ export async function GET(request, { params }) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching project contributors:', error);
-    return NextResponse.json(
-      { detail: 'Failed to fetch project contributors' },
-      { status: 500 }
-    );
+    console.error("Error fetching project contributors:", error);
+    return NextResponse.json({ detail: "Failed to fetch project contributors" }, { status: 500 });
   }
 }

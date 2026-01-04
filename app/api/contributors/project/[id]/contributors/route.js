@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const API_BASE_URL = 'https://spmb1.wempyaw.com/api/v1';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/v1`;
 
 export async function GET(request, { params }) {
   try {
@@ -9,9 +9,9 @@ export async function GET(request, { params }) {
     const { id } = resolvedParams;
 
     const response = await fetch(`${API_BASE_URL}/contributors/project/${id}/contributors`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -23,7 +23,7 @@ export async function GET(request, { params }) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Contributors fetch error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("Contributors fetch error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
