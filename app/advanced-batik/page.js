@@ -31,27 +31,32 @@ export default function AdvancedBatikPage() {
     {
       value: "scenario2",
       label: "Scenario 2",
-      description: "Classic traditional style",
+      description: "Tiled Patch 1",
     },
     {
       value: "scenario2_1",
       label: "Scenario 2.1",
-      description: "Enhanced detail variation",
+      description: "Tiled Patch 2",
     },
     {
       value: "scenario2_2",
       label: "Scenario 2.2",
-      description: "Modern interpretation",
+      description: "Tiled Patch 3",
     },
     {
       value: "scenario2_3",
       label: "Scenario 2.3",
-      description: "Artistic variation",
+      description: "Tiled Patch 4",
     },
     {
       value: "scenario2_4",
       label: "Scenario 2.4",
-      description: "Contemporary fusion",
+      description: "Tiled Patch 5",
+    },
+    {
+      value: "scenario2_5",
+      label: "Scenario 2.5",
+      description: "Tiled Patch 6",
     },
   ];
 
@@ -210,7 +215,7 @@ export default function AdvancedBatikPage() {
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
               <span className="bg-gradient-to-r from-white via-purple-100 to-indigo-100 bg-clip-text text-transparent">
-                Advanced Batik Studio
+                Batik Text To Image: Nitik
               </span>
             </h1>
 
