@@ -1,0 +1,318 @@
+<style>
+  #page-title {
+    padding: 3rem 0;
+  }
+
+  .image-patch img {
+    width: 150px;
+    cursor: pointer;
+  }
+
+  .gallery-section {
+    background-color: #f8f9fa;
+  }
+
+  .gallery-section .sec-title {
+    color: #2c3e50;
+    font-size: 2.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .gallery-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .image-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .gallery-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .gallery-image:hover {
+    transform: scale(1.05);
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .gallery-item:hover .image-overlay {
+    opacity: 1;
+  }
+
+  .no-images-message {
+    padding: 3rem 0;
+  }
+
+  #galleryTabs .nav-link {
+    color: #6c757d;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    font-weight: 500;
+    padding: 1rem 2rem;
+    transition: all 0.3s ease;
+  }
+
+  #galleryTabs .nav-link:hover {
+    color: #495057;
+    border-bottom-color: #dee2e6;
+  }
+
+  #galleryTabs .nav-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+    background: none;
+  }
+
+  /* Modal customizations */
+  #modalImage {
+    max-height: 70vh;
+    object-fit: contain;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .gallery-image {
+      height: 150px;
+    }
+
+    .gallery-section .sec-title {
+      font-size: 1.8rem;
+    }
+
+    #galleryTabs .nav-link {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .gallery-image {
+      height: 120px;
+    }
+  }
+</style>
+{% extends 'base.html' %}
+
+
+{% load static %}
+{% block content %}
+<section id="page-title">
+  <div class="container clearfix">
+    <h1>Application Product Details</h1>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="https://batik.umm.ac.id/">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Product</li>
+      <li class="breadcrumb-item active" aria-current="page">{{product_name}}</li>
+    </ol>
+  </div>
+</section>
+
+
+<section class="contact-section pt-5" id="predict">
+  <div class="container">
+    <div class="title-box centred">
+      <div class="sec-title">Select Patch Image to Generate Batik</div><br>
+    </div>
+
+    <!-- Bootstrap Tabs Navigation -->
+
+    <ul class="nav nav-tabs justify-content-center" id="galleryTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="nitik-tab" data-bs-toggle="tab" data-bs-target="#nitik" type="button"
+          role="tab" aria-controls="nitik" aria-selected="true">
+          <i class="fas fa-images me-2"></i>Nitik Patch
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="patchTabsContent">
+      <!-- First Tab - Original 18 Images -->
+      <div class="tab-pane fade show active" id="nitik" role="tabpanel" aria-labelledby="nitik-tab">
+        <form action="{% url 'select_patch' %}" method="POST" id="patchForm1">
+          {% csrf_token %}
+          <input type="hidden" name="dataset" value="nitik">
+          <div class="row">
+            {% for paths, index_patch in nitik_patches %}
+            <div class="col d-flex justify-content-center">
+              <div style="width:180px">
+                <input type="radio" class="visually-hidden" id='radio-select-img-patch1-{{ forloop.counter }}'
+                  value='{{ index_patch }}' name="index" />
+                <label for="radio-select-img-patch1-{{ forloop.counter }}">
+                  <img src="{% static 'images/nitik_patches_webp/'|add:paths %}"
+                    onclick="selectAndSubmit(1, {{ forloop.counter }})" />
+                </label>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </form>
+      </div>
+
+      <!-- Second Tab - New Set of Images -->
+      <div class="tab-pane fade" id="itb" role="tabpanel" aria-labelledby="itb-tab">
+        <form action="{% url 'select_patch' %}" method="POST" id="patchForm2">
+          {% csrf_token %}
+          <input type="hidden" name="dataset" value="itb">
+          <div class="row">
+            {% for paths, index_patch in itb_patches %}
+            <div class="col d-flex justify-content-center">
+              <div style="width:180px">
+                <input type="radio" class="visually-hidden" id='radio-select-img-patch2-{{ forloop.counter }}'
+                  value='{{ index_patch }}' name="index" />
+                <label for="radio-select-img-patch2-{{ forloop.counter }}">
+                  <img src="{% static 'images/itb_patches_webp/'|add:paths %}"
+                    onclick="selectAndSubmit(2, {{ forloop.counter }})" />
+                </label>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Gallery Section - Add this below the predict section -->
+<section class="gallery-section pt-5 pb-5" id="gallery">
+  <div class="container">
+    <div class="title-box centred">
+      <div class="sec-title">Generated Batik Gallery</div>
+      <p class="text-muted">Browse through our collection of AI-generated batik patterns</p><br>
+    </div>
+
+    <!-- Bootstrap Tabs Navigation for Gallery -->
+    <ul class="nav nav-tabs justify-content-center" id="galleryTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="gallery-nitik-tab" data-bs-toggle="tab" data-bs-target="#gallery-nitik"
+          type="button" role="tab" aria-controls="gallery-nitik" aria-selected="true">
+          <i class="fas fa-images me-2"></i>Nitik Gallery
+        </button>
+      </li>
+      
+    </ul>
+
+    <!-- Tab Content for Gallery -->
+    <div class="tab-content mt-4" id="galleryTabsContent">
+      <!-- Nitik Gallery Tab -->
+      <div class="tab-pane fade show active" id="gallery-nitik" role="tabpanel" aria-labelledby="gallery-nitik-tab">
+        <div class="row g-3">
+          {% for image in nitik_gallery_images %}
+          <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+            <div class="gallery-item">
+              <div class="image-wrapper">
+                <img src="{{ image.image.url }}" class="img-fluid gallery-image" alt="Nitik Batik {{ forloop.counter }}"
+                  data-bs-toggle="modal" data-bs-target="#imageModal" data-image-src="{{ image.image.url }}"
+                  data-image-title="Nitik Batik {{ forloop.counter }}">
+                <div class="image-overlay">
+                  <i class="fas fa-search-plus"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12 text-center">
+            <div class="no-images-message">
+              <i class="fas fa-image fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No Nitik batik images available yet.</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+
+      <!-- ITB Gallery Tab -->
+      <div class="tab-pane fade" id="gallery-itb" role="tabpanel" aria-labelledby="gallery-itb-tab">
+        <div class="row g-3">
+          {% for image in itb_gallery_images %}
+          <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+            <div class="gallery-item">
+              <div class="image-wrapper">
+                <img src="{{ image.image.url }}" class="img-fluid gallery-image" alt="ITB Batik {{ forloop.counter }}"
+                  data-bs-toggle="modal" data-bs-target="#imageModal" data-image-src="{{ image.image.url }}"
+                  data-image-title="ITB Batik {{ forloop.counter }}">
+                <div class="image-overlay">
+                  <i class="fas fa-search-plus"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="col-12 text-center">
+            <div class="no-images-message">
+              <i class="fas fa-image fa-3x text-muted mb-3"></i>
+              <p class="text-muted">No ITB batik images available yet.</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Image Modal for Full View -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imageModalLabel">Batik Image</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" class="img-fluid" alt="Full size image">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <a id="downloadBtn" href="" download class="btn btn-primary">
+          <i class="fas fa-download me-2"></i>Download
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function selectAndSubmit(setNumber, idx) {
+    document.getElementById('radio-select-img-patch' + setNumber + '-' + idx).checked = true;
+    document.getElementById('patchForm' + setNumber).submit();
+  }
+</script>
+
+{% endblock %}

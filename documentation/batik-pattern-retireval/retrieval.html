@@ -1,0 +1,231 @@
+<style>
+    input[type="checkbox"][id^="checkbox-select-img-patch"] {
+      display: none;
+    }
+  
+    label.img-patch {
+      /* border: 1px solid #fff;
+      padding: 10px; */
+      display: block;
+      position: relative;
+      margin: 5px;
+      cursor: pointer;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+  
+    label.img-patch::before {
+      background-color: white;
+      color: white;
+      content: " ";
+      display: block;
+      border-radius: 50%;
+      border: 1px solid grey;
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      width: 25px;
+      height: 25px;
+      text-align: center;
+      line-height: 28px;
+      transition-duration: 0.4s;
+      transform: scale(0);
+    }
+  
+    label.img-patch img {
+      /* height: 100px; */
+      width: 150px;
+      transition-duration: 0.2s;
+      transform-origin: 50% 50%;
+    }
+  
+    :checked+label.img-patch {
+      /* border-color: #ddd; */
+    }
+  
+    :checked+label.img-patch::before {
+      content: "✓";
+      background-color: grey;
+      transform: scale(1);
+    }
+  
+    :checked+label.img-patch img {
+      transform: scale(0.95);
+      /* box-shadow: 0 0 5px #333; */
+      z-index: -1;
+    }
+  
+    #image-preview-patchA,
+    #image-preview-patchB {
+      display: none;
+      margin: auto;
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+    }
+  </style>
+  
+  {% extends 'base.html' %}
+  {% block content %}
+  <!-- Page Title ============================================= -->
+  <section id="page-title">
+    <div class="container clearfix">
+      <h1>Application Product Details</h1>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="https://batik.umm.ac.id/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Product</li>
+        <li class="breadcrumb-item active" aria-current="page">{{product_name}}</li>
+      </ol>
+    </div>
+  </section><!-- #page-title end -->
+  
+  
+  <!-- grid-section -->
+  <section class="contact-section centred" style="padding-top:100px;" id="predict">
+    <div class="container">
+      <div class="title-box centred">
+        <div class="sec-title">Select Patch Image to Generate Batik</div><br>
+      </div>
+      <!-- EDIT START-->
+      <form id="patch-form" action="{{url_for('generate_page')}}" method="POST">
+        <!-- EDIT END -->
+        <div class="row" style=" width: 100%; margin: auto; padding: 15px;">
+          <div class="row" style=" width: 100%; margin: auto; padding: 15px;">
+            <div class="column">
+              <div class="form-check form-check-inline">
+                <p style="font-weight: bold; color: black;">Compare Model : </p>
+              </div>
+            </div>
+            <div class="column">
+              <div class="form-check form-check-inline">
+                <div class="checkboxes">
+                  <!-- EDIT START-->                  
+                  <label style="padding-left:2em">
+                    <input name="select_model" type="checkbox" class="chose_model" value='GAN-SL' />
+                    <span>Batik GAN SL</span>
+                  </label>
+                  <label style="padding-left:2em">
+                    <input name="select_model" type="checkbox" class="chose_model" value='GAN-CL' />
+                    <span>Batik GAN CL</span>
+                  </label>
+                  <label style="padding-left:2em">
+                    <input name="select_model" type="checkbox" class="chose_model" value='RVGAN'/>
+                    <span>Batik RVGAN</span>
+                  </label>
+                  <!-- EDIT END -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- EDIT START-->
+        <div class="row justify-content-center col-mb-50 mb-5">
+          {% for idx in range(list_patch|length) %}
+          <input 
+          type="checkbox" 
+          class="checkbox-img-patch" 
+          id='checkbox-select-img-patch{{idx+1}}' 
+          value="{{list_patch[idx]}}" 
+          name="select_image_patch"
+          />
+  
+          <label class="img-patch" for="checkbox-select-img-patch{{idx+1}}" style="width: 260px; height: 250px">
+            <img style="height: 230px;width:230px;" src="{{ url_for('static', filename='patch/'+list_patch[idx])}}" />
+
+          </label>
+          {% endfor %}
+        </div>
+        <!-- EDIT END -->
+        <div class="container-login100-form-btn" style=" margin-bottom: 80px;">
+          <button class="login100-form-btn" id="send" type="submit">
+            Execute
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+  <!-- grid-section end -->
+  
+  <script>
+  document.addEventListener('DOMContentLoaded', initializePage);
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    initializePage();
+  }
+});
+
+function initializePage() {
+  const MAX_SELECTIONS = 2;
+  const form = document.getElementById('patch-form');
+  const checkboxes = document.querySelectorAll('.checkbox-img-patch');
+  const modelCheckboxes = document.getElementsByName('select_model');
+
+  function updateState() {
+    const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const selectedModelCount = Array.from(modelCheckboxes).filter(cb => cb.checked).length;
+    const clickOrder = Array.from(checkboxes)
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+    
+    return { selectedCount, selectedModelCount, clickOrder };
+  }
+
+  function handleCheckboxChange(event) {
+    const { selectedCount, clickOrder } = updateState();
+    
+    if (selectedCount > MAX_SELECTIONS) {
+      event.target.checked = false;
+      alert(`You can only select up to ${MAX_SELECTIONS} patch images.`);
+    }
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    const { selectedCount, selectedModelCount, clickOrder } = updateState();
+
+    if (selectedCount !== MAX_SELECTIONS) {
+      alert(`Please select exactly ${MAX_SELECTIONS} patch images.`);
+      return;
+    }
+    if (selectedModelCount === 0) {
+      alert(`Please select at least one model.`);
+      return;
+    }
+
+    // Remove any existing hidden inputs
+    form.querySelectorAll('input[name^="clickOrder"]').forEach(el => el.remove());
+
+    // Add new hidden inputs for the click order
+    clickOrder.forEach((item, index) => {
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = `clickOrder[${index}]`;
+      hiddenInput.value = item;
+      form.appendChild(hiddenInput);
+    });
+
+    // Submit the form
+    form.submit();
+  }
+
+  // Remove existing event listeners (in case this function runs multiple times)
+  checkboxes.forEach(checkbox => {
+    checkbox.removeEventListener('change', handleCheckboxChange);
+    checkbox.addEventListener('change', handleCheckboxChange);
+  });
+
+  modelCheckboxes.forEach(checkbox => {
+    checkbox.removeEventListener('change', updateState);
+    checkbox.addEventListener('change', updateState);
+  });
+
+  form.removeEventListener('submit', handleFormSubmit);
+  form.addEventListener('submit', handleFormSubmit);
+}
+  </script>
+  
+  {% endblock %}

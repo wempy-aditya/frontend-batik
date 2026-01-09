@@ -1,0 +1,211 @@
+<style>
+  input[type="checkbox"][id^="checkbox-select-img-patch"] {
+    display: none;
+  }
+
+  label.img-patch {
+    /* border: 1px solid #fff;
+    padding: 10px; */
+    display: block;
+    position: relative;
+    margin: 5px;
+    cursor: pointer;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  label.img-patch::before {
+    background-color: white;
+    color: white;
+    content: " ";
+    display: block;
+    border-radius: 50%;
+    border: 1px solid grey;
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    line-height: 28px;
+    transition-duration: 0.4s;
+    transform: scale(0);
+  }
+
+  label.img-patch img {
+    /* height: 100px; */
+    width: 150px;
+    transition-duration: 0.2s;
+    transform-origin: 50% 50%;
+  }
+
+  :checked+label.img-patch {
+    /* border-color: #ddd; */
+  }
+
+  :checked+label.img-patch::before {
+    content: "✓";
+    background-color: grey;
+    transform: scale(1);
+  }
+
+  :checked+label.img-patch img {
+    transform: scale(0.95);
+    /* box-shadow: 0 0 5px #333; */
+    z-index: -1;
+  }
+
+  #image-preview-patchA,
+  #image-preview-patchB {
+    display: none;
+    margin: auto;
+    width: 100px;
+    height: 100px;
+    padding: 10px;
+  }
+</style>
+
+{% extends 'base.html' %}
+{% block content %}
+<!-- Page Title ============================================= -->
+<section id="page-title">
+  <div class="container clearfix">
+    <h1>Application Product Details</h1>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="https://batik.umm.ac.id/">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Product</li>
+      <li class="breadcrumb-item active" aria-current="page">{{product_name}}</li>
+    </ol>
+  </div>
+</section><!-- #page-title end -->
+
+
+<!-- grid-section -->
+<section class="contact-section centred" style="padding-top:100px;" id="predict">
+  <div class="container">
+    <div class="title-box centred">
+      <div class="sec-title">Select Patch Image to Generate Batik</div><br>
+    </div>
+    <!-- EDIT START-->
+    <form action="{{url_for('generate_compare')}}" method="POST" onsubmit="return selectImageRequire()">
+      <!-- EDIT END -->
+      <div class="row" style=" width: 100%; margin: auto; padding: 15px;">
+        <div class="column">
+          <div class="form-check form-check-inline">
+            <p style="font-weight: bold; color: black;">Compare Model : </p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="form-check form-check-inline">
+            <div class="checkboxes">
+              <!-- EDIT START-->
+              <input type="hidden" name="select_model" id="chose_model" value="GAN_C1">
+              <label style="padding-left:2em">
+                <input name="select_model" type="checkbox" id="chose_model" value='GAN_C1' checked disabled />
+                <span>BatikGAN SL C-1 </span>
+              </label>
+              <label style="padding-left:2em">
+                <input name="select_model" type="checkbox" id="chose_model" value='GAN_C10' />
+                <span>BatikGAN SL C-10 </span>
+              </label>
+              <label style="padding-left:2em">
+                <input name="select_model" type="checkbox" id="chose_model" value='GAN_C100' />
+                <span>BatikGAN SL C-100</span>
+              </label>
+              <label style="padding-left:2em">
+                <input name="select_model" type="checkbox" id="chose_model" value='GAN_AUG' />
+                <span>BatikGAN SL Aug </span>
+              </label>
+              <label style="padding-left:2em">
+                <input name="select_model" type="checkbox" id="chose_model" value='GAN_NO_AUG' />
+                <span>BatikGAN SL No Aug </span>
+              </label>
+              <!-- <label style="padding-left:2em">
+                <input name="select_model" type="checkbox" id="chose_model" value='PATCHGAN' />
+                <span>PatchGAN </span>
+              </label> -->
+              <!-- EDIT END -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- EDIT START-->
+      <div class="row justify-content-center col-mb-50 mb-5">
+        {% for idx in range(list_patch|length) %}
+        <input 
+        type="checkbox" 
+        class="checkbox-img-patch" 
+        id='checkbox-select-img-patch{{idx+1}}' 
+        value="static/{{list_patch[idx]}}" 
+        name="select_image_patch"
+        />
+
+        <label class="img-patch" for="checkbox-select-img-patch{{idx+1}}" style="width: 180px">
+          <img style="max-height: 235px;max-width: 235px;" src="{{ url_for('static', filename=list_patch[idx])}}" />
+        </label>
+        {% endfor %}
+      </div>
+      <!-- EDIT END -->
+      <div class="container-login100-form-btn" style=" margin-bottom: 80px;">
+        <button class="login100-form-btn" id="send" type="submit">
+          Execute
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+<!-- grid-section end -->
+
+<script>
+  var checks = document.querySelectorAll(".checkbox-img-patch");
+  var max = 2;
+  for (var i = 0; i < checks.length; i++)
+    checks[i].onclick = selectiveCheck;
+
+  function selectiveCheck(event) {
+    var checkedChecks = document.querySelectorAll(".checkbox-img-patch:checked");
+    if (checkedChecks.length >= max + 1)
+      return false;
+  }
+
+  function selectImageRequire() {
+    var inputElems = document.getElementsByName("select_image_patch")
+    count = 0;
+    for (var i = 0; i < inputElems.length; i++) {
+      if (inputElems[i].type === "checkbox" && inputElems[i].checked === true) {
+        count++;
+      }
+    }
+    if (count !== 2) {
+      alert('Select 2 patch image batik.')
+      return false;
+    }
+    return true;
+  };
+
+  function previewImagePatchA() {
+    document.getElementById("image-preview-patchA").style.display = "inline";
+    var oFReader = new FileReader();
+    oFReader.readAsDataURL(document.getElementById("image-source-patchA").files[0]);
+
+    oFReader.onload = function(oFREvent) {
+      document.getElementById("image-preview-patchA").src = oFREvent.target.result;
+    };
+  };
+
+  function previewImagePatchB() {
+    document.getElementById("image-preview-patchB").style.display = "inline";
+    var oFReader = new FileReader();
+    oFReader.readAsDataURL(document.getElementById("image-source-patchB").files[0]);
+
+    oFReader.onload = function(oFREvent) {
+      document.getElementById("image-preview-patchB").src = oFREvent.target.result;
+    };
+  };
+</script>
+
+{% endblock %}

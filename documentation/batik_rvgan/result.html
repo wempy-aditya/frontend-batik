@@ -1,0 +1,151 @@
+<style>
+  #page-title {
+    padding: 3rem 0;
+  }
+
+  .image-patch img {
+    width: 150px;
+    cursor: pointer;
+  }
+</style>
+{% extends 'base.html' %}
+
+
+{% load static %}
+{% block content %}
+<section id="page-title">
+  <div class="container clearfix">
+    <h1>Application Product Details</h1>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="https://batik.umm.ac.id/">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Product</li>
+      <li class="breadcrumb-item active" aria-current="page">{{product_name}}</li>
+    </ol>
+  </div>
+</section>
+
+
+<section class="contact-section pt-5 mb-5" id="predict">
+  <div class="container">
+    <div class="fancy-title title-border title-center mb-3">
+      <h3>Query Patch Batik</h3>
+    </div>
+    <div class="row d-flex justify-content-center">
+      <div class="col-sm-2">
+        <img src="{% static 'images/'|add:path_a %}" alt="">
+      </div>
+      <div class="col-sm-2">
+        <img src="{% static 'images/'|add:path_b %}" alt="">
+      </div>
+    </div>
+  </div>
+  <div class="container mt-3">
+    <div class="fancy-title title-border title-center">
+      <h3>Result</h3>
+    </div>
+    <div id="result-container" class="row d-flex justify-content-center"></div>
+  </div>
+</section>
+
+
+<script>
+  const modelNames = {{model_names| safe }};
+  const models = {
+    'batikgancl': 'Batik GAN CL',
+    'batikgansl': 'Batik GAN SL',
+    'batikrvgan': 'Batik RVGAN'
+  }
+  const patchA = "{{ patch_a }}";
+  const patchB = "{{ patch_b }}";
+  const base_urls = "{{ base_urls }}";
+  const dataset = "{{dataset}}";
+
+  // Queue to manage image requests
+  const requestQueue = [];
+  let isProcessing = false; // Flag to track if a request is being processed
+
+  function fetchImage(imgElement, modelName) {
+    return fetch(`${base_urls}/generate_image/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}', // Include CSRF token if necessary
+      },
+      body: JSON.stringify({
+        model_name: modelName,
+        dataset: dataset,
+        patch_a: patchA,
+        patch_b: patchB,
+      }),
+    })
+      .then(response => response.blob()) // Assuming the response is an image blob
+      .then(blob => {
+        const imageUrl = URL.createObjectURL(blob);
+        imgElement.alt = `Batik Image for ${models[modelName]}`;
+        imgElement.src = imageUrl; // Set the src to trigger lazy loading
+        imgElement.style.opacity = 1; // Fade in the image once loaded
+        imgElement.removeAttribute('data-src'); // Remove the data-src attribute
+      })
+      .catch(error => {
+        console.error('Error fetching image:', error);
+        imgElement.style.opacity = 1; // Ensure the placeholder is visible
+        imgElement.removeAttribute('data-src'); // Remove the data-src attribute
+      })
+      .finally(() => {
+        isProcessing = false; // Mark the current request as complete
+        processQueue(); // Process the next request in the queue
+      });
+  }
+
+  function processQueue() {
+    if (!isProcessing && requestQueue.length > 0) {
+      const {imgElement, modelName} = requestQueue.shift(); // Get the next request
+      isProcessing = true; // Mark that a request is being processed
+      fetchImage(imgElement, modelName); // Start processing the request
+    }
+  }
+
+  // Create image placeholders with lazy loading
+  const imageContainer = document.getElementById('result-container');
+
+  modelNames.forEach(modelName => {
+    // Create the outer div with class 'col-md-4'
+    const colDiv = document.createElement('div');
+    colDiv.className = 'col-md-4';
+
+    // Create the fancy-title div with class 'fancy-title title-border title-center mb-2'
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'fancy-title title-border title-center mb-2';
+
+    // Create the h4 element with the model name
+    const h4Element = document.createElement('h4');
+    h4Element.textContent = models[modelName];
+
+    // Append the h4 element to the title div
+    titleDiv.appendChild(h4Element);
+
+    // Append the title div to the col div
+    colDiv.appendChild(titleDiv);
+
+    // Create the img element with loading="lazy"
+    const imgElement = document.createElement('img');
+    imgElement.alt = `Loading Image for ${models[modelName]}`;
+    imgElement.setAttribute('data-src', models[modelName]); // Use data-src to identify the model
+    imgElement.style.opacity = 0.5; // Indicate that the image is loading
+    imgElement.className = 'img-placeholder';
+
+    // Append the img element to the col div
+    colDiv.appendChild(imgElement);
+
+    // Append the col div to the image container
+    imageContainer.appendChild(colDiv);
+
+    // Add the image request to the queue
+    requestQueue.push({imgElement, modelName});
+  });
+
+  // Start processing the queue
+  processQueue();
+</script>
+
+{% endblock %}
