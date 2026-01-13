@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_RVGAN_API_URL || 'http://localhost:5000';
+// Use local proxy to avoid CORS issues
+const API_BASE_URL = '/api/batik-rvgan';
 
 export default function BatikGalleryPage() {
   const router = useRouter();
@@ -20,21 +21,21 @@ export default function BatikGalleryPage() {
   const fetchGallery = async () => {
     setIsLoading(true);
     try {
-      // Fetch Nitik gallery
-      const nitikResponse = await fetch(`${API_BASE_URL}/api/gallery/nitik`);
-      if (nitikResponse.ok) {
-        const nitikData = await nitikResponse.json();
-        if (nitikData.success) {
-          setNitikGallery(nitikData.images || []);
-        }
-      }
-
-      // Fetch ITB gallery
-      const itbResponse = await fetch(`${API_BASE_URL}/api/gallery/itb`);
-      if (itbResponse.ok) {
-        const itbData = await itbResponse.json();
-        if (itbData.success) {
-          setItbGallery(itbData.images || []);
+      // Fetch all generated images
+      const response = await fetch(`${API_BASE_URL}/gallery`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.images) {
+          // Group images by dataset based on filename
+          const nitikImages = data.images.filter(img => 
+            img.filename.toLowerCase().includes('nitik')
+          );
+          const itbImages = data.images.filter(img => 
+            img.filename.toLowerCase().includes('itb')
+          );
+          
+          setNitikGallery(nitikImages);
+          setItbGallery(itbImages);
         }
       }
     } catch (err) {
@@ -169,7 +170,7 @@ export default function BatikGalleryPage() {
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <img
-                      src={`${API_BASE_URL}/${image.path}`}
+                      src={`${API_BASE_URL}${image.image_url}`}
                       alt={`Batik ${index + 1}`}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       loading="lazy"
@@ -208,7 +209,12 @@ export default function BatikGalleryPage() {
           >
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-purple-600 to-fuchsia-600 p-4 flex justify-between items-center">
-              <h3 className="text-white font-bold text-xl">Batik Pattern</h3>
+              <div>
+                <h3 className="text-white font-bold text-xl">{selectedImage.filename}</h3>
+                {selectedImage.size_kb && (
+                  <p className="text-purple-100 text-sm">{selectedImage.size_kb.toFixed(2)} KB</p>
+                )}
+              </div>
               <button
                 onClick={closeModal}
                 className="text-white hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-colors"
@@ -220,7 +226,7 @@ export default function BatikGalleryPage() {
             {/* Modal Body */}
             <div className="p-6 max-h-[calc(90vh-8rem)] overflow-auto">
               <img
-                src={`${API_BASE_URL}/${selectedImage.path}`}
+                src={`${API_BASE_URL}${selectedImage.image_url}`}
                 alt="Full size batik"
                 className="w-full h-auto rounded-lg"
               />
@@ -236,8 +242,8 @@ export default function BatikGalleryPage() {
                 )}
               </div>
               <a
-                href={`${API_BASE_URL}/${selectedImage.path}`}
-                download={`batik-${Date.now()}.jpg`}
+                href={`${API_BASE_URL}${selectedImage.download_url}`}
+                download={selectedImage.filename}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
               >
                 📥 Download

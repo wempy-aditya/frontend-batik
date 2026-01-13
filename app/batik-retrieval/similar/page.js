@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_RETRIEVAL_API_URL || 'http://localhost:5003';
+// Use local proxy to avoid CORS issues
+const API_BASE_URL = '/api/batik-retrieval';
 
 export default function SimilarPatchesPage() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function SimilarPatchesPage() {
   const fetchSimilarPatches = async (index) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/patches/similar`, {
+      const response = await fetch(`${API_BASE_URL}/patches/similar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,13 +48,38 @@ export default function SimilarPatchesPage() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Similar patches response:', data); // Debug log
         if (data.success) {
           setSimilarPatches(data.similar_patches || []);
-          // Set query patch info
-          setQueryPatch({
-            index: data.query_index,
-            path: `patch/image${data.query_index}.jpg`,
-          });
+          
+          // Try to get query patch from response
+          // Method 1: Check if there's a query_patch field
+          if (data.query_patch) {
+            setQueryPatch({
+              index: data.query_patch.index || index,
+              image_url: data.query_patch.image_url,
+              path: data.query_patch.path,
+            });
+          }
+          // Method 2: Get first patch with distance 0 (query itself)
+          else if (data.similar_patches && data.similar_patches.length > 0) {
+            const queryPatchData = data.similar_patches.find(p => p.distance === 0);
+            if (queryPatchData) {
+              setQueryPatch({
+                index: queryPatchData.index,
+                image_url: queryPatchData.image_url,
+                path: queryPatchData.path,
+              });
+            } else {
+              // Method 3: Use first patch as query if no distance 0 found
+              const firstPatch = data.similar_patches[0];
+              setQueryPatch({
+                index: index,
+                image_url: firstPatch.image_url,
+                path: firstPatch.path,
+              });
+            }
+          }
         }
       }
     } catch (err) {
@@ -79,6 +105,11 @@ export default function SimilarPatchesPage() {
   };
 
   const handleGenerate = () => {
+    if (!queryPatch) {
+      setError("Query patch not loaded");
+      setTimeout(() => setError(""), 3000);
+      return;
+    }
     if (!selectedPatch) {
       setError("Please select a similar patch");
       setTimeout(() => setError(""), 3000);
@@ -92,7 +123,7 @@ export default function SimilarPatchesPage() {
 
     // Navigate to result page
     const params = new URLSearchParams({
-      patchA: queryPatch.path,
+      patchA: queryPatch.image_url,
       patchB: selectedPatch,
       models: selectedModels.join(","),
     });
@@ -147,7 +178,7 @@ export default function SimilarPatchesPage() {
                 {queryPatch && (
                   <div className="w-64 h-64 rounded-xl overflow-hidden shadow-lg border-4 border-orange-200 mx-auto">
                     <img
-                      src={`${API_BASE_URL}/${queryPatch.path}`}
+                      src={`${API_BASE_URL}${queryPatch.image_url}`}
                       alt="Query Patch"
                       className="w-full h-full object-cover"
                     />
@@ -244,12 +275,12 @@ export default function SimilarPatchesPage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {similarPatches.map((patch, index) => {
-                  const isSelected = selectedPatch === patch.path;
+                  const isSelected = selectedPatch === patch.image_url;
                   
                   return (
                     <div
                       key={index}
-                      onClick={() => handlePatchSelect(patch.path)}
+                      onClick={() => handlePatchSelect(patch.image_url)}
                       className={`relative cursor-pointer group rounded-xl overflow-hidden transition-all duration-300 ${
                         isSelected
                           ? "ring-4 ring-orange-500 shadow-xl scale-95"
@@ -258,7 +289,7 @@ export default function SimilarPatchesPage() {
                     >
                       <div className="relative aspect-square overflow-hidden">
                         <img
-                          src={`${API_BASE_URL}/${patch.path}`}
+                          src={`${API_BASE_URL}${patch.image_url}`}
                           alt={`Similar patch ${index + 1}`}
                           className="w-full h-full object-cover"
                           loading="lazy"

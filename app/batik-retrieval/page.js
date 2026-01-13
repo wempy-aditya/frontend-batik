@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_RETRIEVAL_API_URL || 'http://localhost:5003';
+// Use local proxy to avoid CORS issues
+const API_BASE_URL = '/api/batik-retrieval';
 
 export default function BatikRetrievalPage() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function BatikRetrievalPage() {
   const fetchRandomPatches = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/patches/random`);
+      const response = await fetch(`${API_BASE_URL}/patches/random`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -155,7 +156,7 @@ export default function BatikRetrievalPage() {
                   >
                     <div className="relative aspect-square overflow-hidden">
                       <img
-                        src={`${API_BASE_URL}/${patch.path}`}
+                        src={`${API_BASE_URL}${patch.image_url}`}
                         alt={`Patch ${patch.index}`}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                         loading="lazy"

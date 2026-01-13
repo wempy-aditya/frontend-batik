@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BATIKGAN_API_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BATIKGAN_API_URL || 'https://batik-gan-cl.wempyaw.com';
 
 export default function BatikGANResultPage() {
   const router = useRouter();

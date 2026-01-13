@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_RVGAN_API_URL || 'http://localhost:5000';
+// Use local proxy to avoid CORS issues
+const API_BASE_URL = '/api/batik-rvgan';
 
 export default function BatikGeneratorPage() {
   const router = useRouter();
@@ -16,8 +17,8 @@ export default function BatikGeneratorPage() {
 
   const MAX_PATCHES = 2;
   const models = [
-    { value: "batikgansl", label: "Batik GAN SL" },
-    { value: "batikgancl", label: "Batik GAN CL" },
+    { value: "batikgan_sl", label: "Batik GAN SL" },
+    { value: "batikgan_cl", label: "Batik GAN CL" },
     { value: "batikrvgan", label: "Batik RVGAN" },
   ];
 
@@ -28,8 +29,17 @@ export default function BatikGeneratorPage() {
   const fetchPatches = async () => {
     setIsLoading(true);
     try {
-      // Fetch Nitik patches
-      const nitikResponse = await fetch(`${API_BASE_URL}/api/patches/nitik`);
+      // Fetch Nitik patches (18 random patches)
+      const nitikResponse = await fetch(`${API_BASE_URL}/patches/random`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dataset: 'nitik',
+          count: 18
+        })
+      });
       if (nitikResponse.ok) {
         const nitikData = await nitikResponse.json();
         if (nitikData.success) {
@@ -37,8 +47,17 @@ export default function BatikGeneratorPage() {
         }
       }
 
-      // Fetch ITB patches
-      const itbResponse = await fetch(`${API_BASE_URL}/api/patches/itb`);
+      // Fetch ITB patches (18 random patches)
+      const itbResponse = await fetch(`${API_BASE_URL}/patches/random`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dataset: 'itb',
+          count: 18
+        })
+      });
       if (itbResponse.ok) {
         const itbData = await itbResponse.json();
         if (itbData.success) {
@@ -138,6 +157,22 @@ export default function BatikGeneratorPage() {
       {/* Main Content */}
       <section className="py-16">
         <div className="container mx-auto px-4 max-w-7xl">
+          {/* Info Box */}
+          <div className="mb-12 bg-gradient-to-r from-purple-50 to-fuchsia-50 rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
+            <div className="flex items-start gap-4">
+              <span className="text-5xl">ℹ️</span>
+              <div>
+                <h3 className="text-2xl font-bold text-purple-900 mb-3">How It Works</h3>
+                <div className="space-y-2 text-gray-700">
+                  <p><strong>📊 Datasets:</strong> Choose from <strong>Nitik</strong> (120 patches) or <strong>ITB</strong> (138 patches) traditional batik patterns</p>
+                  <p><strong>🤖 AI Models:</strong> Three GAN models - <strong>BatikGAN-SL</strong> (68.86 MB), <strong>BatikGAN-CL</strong> (68.86 MB), and <strong>BatikRVGAN</strong> (147.89 MB)</p>
+                  <p><strong>🎨 Process:</strong> Select 2 patches (Patch A + Patch B), choose models, and generate unique batik patterns</p>
+                  <p><strong>💾 Random Selection:</strong> Each page load shows 18 random patches from the selected dataset for variety</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Model Selection */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-purple-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
@@ -281,7 +316,7 @@ export default function BatikGeneratorPage() {
                       }`}
                     >
                       <img
-                        src={`${API_BASE_URL}/${patch.path}`}
+                        src={`${API_BASE_URL}/patch/image/${activeDataset}/${patch.index}`}
                         alt={`Patch ${patch.index}`}
                         className="w-full h-auto aspect-square object-cover"
                         loading="lazy"

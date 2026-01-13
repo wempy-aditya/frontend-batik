@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_RETRIEVAL_API_URL || 'http://localhost:5003';
+// Use local proxy to avoid CORS issues
+const API_BASE_URL = '/api/batik-retrieval';
 
 export default function RetrievalResultPage() {
   const router = useRouter();
@@ -54,14 +55,14 @@ export default function RetrievalResultPage() {
 
   const generateImage = async (patchA, patchB, modelName) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/generate`, {
+      const response = await fetch(`${API_BASE_URL}/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          patch_a: patchA,
-          patch_b: patchB,
+          patch_a: ''+patchA,
+          patch_b: ''+patchB,
           model_name: modelName,
           return_base64: false,
         }),
@@ -160,7 +161,7 @@ export default function RetrievalResultPage() {
                 {patchA ? (
                   <div className="w-48 h-48 rounded-xl overflow-hidden shadow-lg border-4 border-orange-200">
                     <img
-                      src={`${API_BASE_URL}/${patchA}`}
+                      src={`${API_BASE_URL}${patchA}`}
                       alt="Patch A"
                       className="w-full h-full object-cover"
                     />
@@ -181,7 +182,7 @@ export default function RetrievalResultPage() {
                 {patchB ? (
                   <div className="w-48 h-48 rounded-xl overflow-hidden shadow-lg border-4 border-orange-200">
                     <img
-                      src={`${API_BASE_URL}/${patchB}`}
+                      src={`${API_BASE_URL}${patchB}`}
                       alt="Patch B"
                       className="w-full h-full object-cover"
                     />
