@@ -2,7 +2,7 @@
 import { useAuth } from "../../../components/AuthProvider";
 import { useState, useEffect } from "react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spmb1.wempyaw.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function PublicationsPage() {
   const { getUserInfo } = useAuth();

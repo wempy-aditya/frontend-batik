@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_RETRIEVAL_API_URL || 'https://batik-retrieval.wempyaw.com';
+const BACKEND_URL = process.env.NEXT_PUBLIC_RETRIEVAL_API_URL || 'http://localhost:5003';
 
 export async function GET(request, { params }) {
   try {

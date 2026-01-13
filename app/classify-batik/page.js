@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_CLASSIFY_API_URL || 'https://batik-classification.wempyaw.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_CLASSIFY_API_URL || 'http://localhost:5002';
 
 export default function ClassifyBatikPage() {
   const [models, setModels] = useState([]);

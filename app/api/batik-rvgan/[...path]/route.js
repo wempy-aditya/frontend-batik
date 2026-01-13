@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_RVGAN_API_URL || 'https://batik-rvgan.wempyaw.com';
+const BACKEND_URL = process.env.NEXT_PUBLIC_RVGAN_API_URL || 'http://localhost:5000';
 
 export async function GET(request, { params }) {
   try {
