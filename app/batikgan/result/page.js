@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BATIKGAN_API_URL || 'http://localhost:5001';
 
-export default function BatikGANResultPage() {
+function BatikGANResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [patchA, setPatchA] = useState(null);
@@ -310,5 +310,20 @@ export default function BatikGANResultPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function BatikGANResultPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto"></div>
+          <p className="mt-4 text-teal-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BatikGANResultContent />
+    </Suspense>
   );
 }

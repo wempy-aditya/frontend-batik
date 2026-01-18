@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 // Use local proxy to avoid CORS issues
 const API_BASE_URL = '/api/batik-retrieval';
 
-export default function SimilarPatchesPage() {
+function SimilarPatchesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [queryIndex, setQueryIndex] = useState(null);
@@ -358,5 +358,20 @@ export default function SimilarPatchesPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function SimilarPatchesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600 mx-auto"></div>
+          <p className="mt-4 text-amber-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SimilarPatchesContent />
+    </Suspense>
   );
 }
