@@ -2,6 +2,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+// Helper function to truncate text by character count
+const truncateText = (text, maxLength = 150) => {
+  if (!text) return "No description available";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + "...";
+};
+
 const ProjectsPreview = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,7 +21,7 @@ const ProjectsPreview = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/projects/featured?limit=6');
+        const response = await fetch("/api/projects/featured?limit=6");
         if (response.ok) {
           const data = await response.json();
           // Ensure data is array
@@ -23,12 +30,12 @@ const ProjectsPreview = () => {
           } else if (data && Array.isArray(data.data)) {
             setProjects(data.data);
           } else {
-            console.log('Projects data is not array:', data);
+            console.log("Projects data is not array:", data);
             setProjects([]);
           }
         }
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        console.error("Error fetching projects:", error);
         setProjects([]);
       } finally {
         setLoading(false);
@@ -306,28 +313,32 @@ const ProjectsPreview = () => {
     },
   ];
 
-  // Responsive items per page
-  const [itemsPerPage, setItemsPerPage] = useState(4);
-  
+  // Responsive items per page - match projects page grid
+  const [itemsPerPage, setItemsPerPage] = useState(3);
+
   useEffect(() => {
     const updateItemsPerPage = () => {
-      if (window.innerWidth < 640) {
+      if (window.innerWidth < 768) {
         setItemsPerPage(1); // Mobile
       } else if (window.innerWidth < 1024) {
-        setItemsPerPage(2); // Tablet
-      } else if (window.innerWidth < 1280) {
-        setItemsPerPage(3); // Small Desktop
+        setItemsPerPage(2); // Tablet (md)
       } else {
-        setItemsPerPage(4); // Large Desktop
+        setItemsPerPage(3); // Desktop (lg)
       }
     };
 
     updateItemsPerPage();
-    window.addEventListener('resize', updateItemsPerPage);
-    return () => window.removeEventListener('resize', updateItemsPerPage);
+    window.addEventListener("resize", updateItemsPerPage);
+    return () => window.removeEventListener("resize", updateItemsPerPage);
   }, []);
 
-  const maxIndex = Math.max(0, projects.length - itemsPerPage);
+  const displayProjects = loading
+    ? []
+    : projects.length > 0
+    ? projects
+    : fallbackProjects;
+
+  const maxIndex = Math.max(0, displayProjects.length - itemsPerPage);
 
   const scrollToIndex = (index) => {
     const newIndex = Math.max(0, Math.min(index, maxIndex));
@@ -343,24 +354,14 @@ const ProjectsPreview = () => {
   };
 
   return (
-    <section className="py-32 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-40">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.3'%3E%3Cpath d='M0 0h40v40H0zm40 40h40v40H40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        ></div>
-      </div>
+    <section className="py-12 md:py-16 bg-gradient-to-b from-white via-gray-50 to-white relative">
+      {/* Floating Elements - removed pattern */}
+      <div className="absolute top-20 left-1/4 w-64 h-64 bg-amber-200 rounded-full blur-3xl opacity-20"></div>
+      <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-orange-200 rounded-full blur-3xl opacity-20"></div>
 
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-1/4 w-64 h-64 bg-amber-100 rounded-full blur-3xl opacity-50 animate-pulse"></div>
-      <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-50 animate-pulse"></div>
-
-      <div className="container mx-auto px-6 lg:px-8 relative z-10">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-10 md:mb-12">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 px-4 py-2 rounded-full text-sm font-medium text-amber-700 mb-6">
             <svg
               className="w-4 h-4"
@@ -377,7 +378,7 @@ const ProjectsPreview = () => {
             </svg>
             Featured AI Projects
           </div>
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">
             <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
               Innovative
             </span>
@@ -386,7 +387,7 @@ const ProjectsPreview = () => {
               AI Projects
             </span>
           </h2>
-          <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
             Discover our cutting-edge research and development projects
             showcasing the latest advances in computer vision and machine
             learning technology.
@@ -394,19 +395,22 @@ const ProjectsPreview = () => {
         </div>
 
         {/* Carousel Container */}
-        <div className="relative mb-20">
-          {/* Carousel Navigation Buttons */}
+        {/* Projects Carousel Container */}
+        <div className="relative mb-8 md:mb-10 py-6 px-2">
+          {/* Previous Button - Left Side */}
           <button
             onClick={handlePrev}
-            disabled={currentIndex === 0}
-            className={`hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 lg:-translate-x-6 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white shadow-xl border border-gray-200 items-center justify-center transition-all duration-300 ${
-              currentIndex === 0
-                ? "opacity-50 cursor-not-allowed"
+            disabled={
+              currentIndex === 0 || loading || displayProjects.length === 0
+            }
+            className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
+              currentIndex === 0 || loading || displayProjects.length === 0
+                ? "opacity-0 cursor-not-allowed pointer-events-none"
                 : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:scale-110"
             }`}
           >
             <svg
-              className="w-5 h-5 lg:w-6 lg:h-6"
+              className="w-5 h-5 md:w-6 md:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -420,17 +424,24 @@ const ProjectsPreview = () => {
             </svg>
           </button>
 
+          {/* Next Button - Right Side */}
           <button
             onClick={handleNext}
-            disabled={currentIndex >= maxIndex}
-            className={`hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 lg:translate-x-6 z-20 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white shadow-xl border border-gray-200 items-center justify-center transition-all duration-300 ${
-              currentIndex >= maxIndex
-                ? "opacity-50 cursor-not-allowed"
+            disabled={
+              currentIndex >= maxIndex ||
+              loading ||
+              displayProjects.length === 0
+            }
+            className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
+              currentIndex >= maxIndex ||
+              loading ||
+              displayProjects.length === 0
+                ? "opacity-0 cursor-not-allowed pointer-events-none"
                 : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white hover:scale-110"
             }`}
           >
             <svg
-              className="w-5 h-5 lg:w-6 lg:h-6"
+              className="w-5 h-5 md:w-6 md:h-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -445,148 +456,243 @@ const ProjectsPreview = () => {
           </button>
 
           {/* Projects Carousel */}
-          <div className="overflow-hidden px-4 sm:px-0" ref={carouselRef}>
+          <div className="overflow-hidden px-8 sm:px-12 py-6" ref={carouselRef}>
             <div
-              className="flex transition-transform duration-500 ease-out gap-4 sm:gap-6 lg:gap-8"
+              className="flex transition-transform duration-500 ease-out gap-8"
               style={{
                 transform: `translateX(-${
-                  currentIndex * (100 / itemsPerPage + (itemsPerPage === 1 ? 0 : 2))
+                  currentIndex * (100 / itemsPerPage)
                 }%)`,
               }}
             >
-              {projects.map((project, index) => (
-                <div
-                  key={project.id}
-                  className="group relative flex-shrink-0 w-full sm:w-auto"
-                  style={{ 
-                    width: itemsPerPage === 1 
-                      ? '100%' 
-                      : `calc(${100 / itemsPerPage}% - ${itemsPerPage === 2 ? '1rem' : itemsPerPage === 3 ? '1.5rem' : '1.5rem'})` 
-                  }}
-                  onMouseEnter={() => setHoveredCard(project.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
-                  {/* Main Card */}
-                  <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl lg:rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200/50 hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-2 lg:hover:-translate-y-6 hover:scale-[1.02] lg:hover:scale-105 h-full flex flex-col">
-                    {/* Gradient Background on Hover */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br from-gray-50 to-white rounded-2xl lg:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700`}
-                    ></div>
-
-                    {/* Animated Border Glow */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-r ${project.gradient} rounded-2xl lg:rounded-3xl opacity-0 group-hover:opacity-30 blur-sm transition-all duration-700 scale-105`}
-                    ></div>
-
-                    {/* Content */}
-                    <div className="relative z-10 space-y-4 lg:space-y-6 flex-grow flex flex-col">
-                      {/* Header with Icon and Number */}
-                      <div className="flex items-start justify-between gap-4">
-                        {/* Icon Container */}
-                        <div className="relative flex-shrink-0">
-                          <div
-                            className={`w-14 h-14 lg:w-20 lg:h-20 bg-gradient-to-br ${project.gradient} rounded-xl lg:rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-700`}
-                          >
-                            {project.icon}
-                          </div>
-                          {/* Icon Glow Effect */}
-                          <div
-                            className={`absolute inset-0 w-14 h-14 lg:w-20 lg:h-20 bg-gradient-to-br ${project.gradient} rounded-xl lg:rounded-2xl opacity-0 group-hover:opacity-40 blur-xl transition-opacity duration-700`}
-                          ></div>
-                        </div>
-
-                        {/* Project Number */}
-                        <div className="flex-shrink-0">
-                          <div
-                            className={`w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br ${project.gradient} text-orange-900 text-base lg:text-lg font-bold rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-500`}
-                          >
-                            {String(index + 1).padStart(2, '0')}
-                          </div>
-                        </div>
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: itemsPerPage }).map((_, index) => (
+                  <div
+                    key={`skeleton-${index}`}
+                    className="flex-shrink-0"
+                    style={{
+                      width: `calc(${100 / itemsPerPage}% - ${
+                        ((itemsPerPage - 1) * 32) / itemsPerPage
+                      }px)`,
+                    }}
+                  >
+                    <div className="bg-white rounded-xl lg:rounded-2xl p-5 lg:p-6 shadow-lg border border-gray-100 h-full animate-pulse">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
                       </div>
-
-                      {/* Title */}
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors duration-500 line-clamp-2">
-                        {project.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-sm lg:text-base text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors duration-500 line-clamp-3 flex-grow">
-                        {project.description}
-                      </p>
-
-                      {/* Technologies */}
-                      {project.technologies && project.technologies.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {project.technologies.slice(0, 4).map((tech, techIndex) => (
-                            <span
-                              key={techIndex}
-                              className="px-2.5 py-1 lg:px-3 lg:py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full border border-gray-200 hover:bg-gray-200 transition-all duration-300"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                          {project.technologies.length > 4 && (
-                            <span className="px-2.5 py-1 lg:px-3 lg:py-1.5 text-xs font-semibold text-gray-500 bg-gray-50 rounded-full border border-gray-200">
-                              +{project.technologies.length - 4}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* View Project Button */}
-                      <div className="pt-4 mt-auto">
-                        <button
-                          onClick={() => router.push(`/projects/${project.id}`)}
-                          className={`w-full flex items-center justify-center gap-2 px-4 py-3 lg:px-6 lg:py-3.5 bg-gradient-to-r ${project.gradient} text-orange-900 font-semibold rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] group/btn`}
-                        >
-                          <span className="text-sm lg:text-base">View Project</span>
-                          <svg
-                            className="w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </button>
+                      <div className="h-6 bg-gray-200 rounded mb-3 w-3/4"></div>
+                      <div className="space-y-2 mb-4">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
                       </div>
+                      <div className="h-10 bg-gray-200 rounded-lg mt-auto"></div>
                     </div>
-
-                    {/* Bottom Highlight Line */}
-                    <div
-                      className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 group-hover:w-24 lg:group-hover:w-32 h-1 bg-gradient-to-r ${project.gradient} rounded-full transition-all duration-700`}
-                    ></div>
+                  </div>
+                ))
+              ) : displayProjects.length === 0 ? (
+                <div className="w-full text-center py-12">
+                  <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 max-w-md mx-auto">
+                    <svg
+                      className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                      />
+                    </svg>
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                      No Projects Available
+                    </h3>
+                    <p className="text-gray-400">
+                      Check back later for exciting new projects!
+                    </p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                displayProjects.map((project, index) => (
+                  <div
+                    key={project.id}
+                    className="group relative flex-shrink-0"
+                    style={{
+                      width: `calc(${100 / itemsPerPage}% - ${
+                        ((itemsPerPage - 1) * 32) / itemsPerPage
+                      }px)`,
+                    }}
+                    onMouseEnter={() => setHoveredCard(project.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    {/* Project Card - Adopted from Projects Page */}
+                    <div className="relative bg-white rounded-3xl overflow-hidden shadow-md border border-gray-200/50 hover:shadow-lg transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full flex flex-col">
+                      {/* Gradient Background on Hover */}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${
+                          project.gradient || "from-amber-500 to-orange-500"
+                        } rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                      ></div>
+
+                      {/* Animated Border Glow */}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-r ${
+                          project.gradient || "from-amber-500 to-orange-500"
+                        } rounded-3xl opacity-0 group-hover:opacity-15 blur transition-all duration-500`}
+                      ></div>
+
+                      {/* Thumbnail/Hero Image Section */}
+                      <div className="relative h-48 overflow-hidden">
+                        {project.thumbnail_url ? (
+                          <img
+                            src={project.thumbnail_url}
+                            alt={project.title}
+                            className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                              e.target.nextElementSibling.style.display =
+                                "block";
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`absolute inset-0 bg-gradient-to-br ${
+                            project.gradient || "from-amber-500 to-orange-500"
+                          } transition-all duration-700 group-hover:scale-110`}
+                          style={{
+                            display: project.thumbnail_url ? "none" : "block",
+                          }}
+                        >
+                          {/* Animated Overlay */}
+                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
+                        </div>
+
+                        {/* Floating Particles */}
+                        <div className="absolute inset-0 opacity-30">
+                          <div className="absolute top-4 right-8 w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                          <div className="absolute top-12 right-16 w-1 h-1 bg-white rounded-full animate-bounce"></div>
+                          <div className="absolute top-8 right-4 w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                        </div>
+
+                        {/* Status Badge */}
+                        {project.status && (
+                          <div className="absolute top-4 left-4">
+                            <span className="px-3 py-1 text-xs font-semibold rounded-full border bg-white/90 backdrop-blur-sm text-green-700 border-green-200">
+                              {project.status.charAt(0).toUpperCase() +
+                                project.status.slice(1)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Complexity Badge */}
+                        {project.complexity && (
+                          <div className="absolute top-4 right-4">
+                            <span className="px-3 py-1 text-xs font-medium rounded-full bg-amber-100/90 backdrop-blur-sm text-amber-700">
+                              {project.complexity.charAt(0).toUpperCase() +
+                                project.complexity.slice(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content Section */}
+                      <div className="relative z-10 p-6 space-y-4 flex-1 flex flex-col">
+                        {/* Title & Description */}
+                        <div className="flex-grow">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">
+                            {project.title || "Untitled Project"}
+                          </h3>
+                          <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                            {truncateText(project.description, 100)}
+                          </p>
+                        </div>
+
+                        {/* Technologies */}
+                        {project.technologies &&
+                          project.technologies.length > 0 && (
+                            <div>
+                              <h4 className="text-xs font-semibold text-gray-900 mb-2">
+                                Technologies:
+                              </h4>
+                              <div className="flex flex-wrap gap-1">
+                                {project.technologies
+                                  .slice(0, 3)
+                                  .map((tech, techIndex) => (
+                                    <span
+                                      key={techIndex}
+                                      className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-md border border-amber-200"
+                                    >
+                                      {tech}
+                                    </span>
+                                  ))}
+                                {project.technologies.length > 3 && (
+                                  <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded-md">
+                                    +{project.technologies.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Action Button - Sticky Bottom */}
+                        <div className="mt-auto pt-4">
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/projects/${project.slug || project.id}`
+                              )
+                            }
+                            className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              <span>View Details</span>
+                              <svg
+                                className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 5l7 7-7 7"
+                                />
+                              </svg>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Carousel Indicators */}
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => scrollToIndex(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? "w-8 bg-gradient-to-r from-amber-500 to-orange-500"
-                    : "w-2 bg-gray-300 hover:bg-gray-400"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
+          {/* Indicators Only - Centered */}
+          {!loading && displayProjects.length > 0 && (
+            <div className="flex justify-center gap-1.5 md:gap-2 mt-8">
+              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => scrollToIndex(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentIndex
+                      ? "w-6 md:w-8 bg-gradient-to-r from-amber-500 to-orange-500"
+                      : "w-2 bg-gray-300 hover:bg-gray-400"
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Mobile Navigation Buttons */}
-        <div className="flex sm:hidden justify-center gap-4 mt-8 mb-12">
+        {/* Remove duplicate mobile buttons */}
+        <div className="hidden">
           <button
             onClick={handlePrev}
             disabled={currentIndex === 0}
@@ -610,54 +716,32 @@ const ProjectsPreview = () => {
               />
             </svg>
           </button>
-          
-          <button
-            onClick={handleNext}
-            disabled={currentIndex >= maxIndex}
-            className={`flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-lg border border-gray-200 transition-all duration-300 ${
-              currentIndex >= maxIndex
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-500 hover:text-white active:scale-95"
-            }`}
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center relative z-50 mt-10">
-          <button
-            onClick={() => router.push("/projects")}
-            className="group inline-flex items-center px-12 py-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-          >
-            <span>Explore All Projects</span>
-            <svg
-              className="w-5 h-5 ml-3 transition-transform duration-300 group-hover:translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        {
+          /* CTA Section */
+          <div className="text-center relative z-50 mt-6 md:mt-8">
+            <button
+              onClick={() => router.push("/projects")}
+              className="group inline-flex items-center px-6 md:px-10 py-3 md:py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-base md:text-lg rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </button>
-        </div>
+              <span>Explore All Projects</span>
+              <svg
+                className="w-5 h-5 ml-2 md:ml-3 transition-transform duration-300 group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </button>
+          </div>
+        }
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import CitationExportModal from "@/components/CitationExportModal";
 
 export default function PublicationsPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function PublicationsPage() {
   const [isFeatured, setIsFeatured] = useState(false);
   const [sortBy, setSortBy] = useState("latest");
   const [hoveredPaper, setHoveredPaper] = useState(null);
+  const [citationPaper, setCitationPaper] = useState(null);
 
   const fallbackCategories = [
     { id: "all", name: "All Publications", count: 25 },
@@ -108,8 +110,14 @@ export default function PublicationsPage() {
           params.append("is_featured", "true");
         }
 
-        // Sort
-        params.append("sort_by", sortBy);
+        // Sort - fix reversed logic (latest/oldest terbalik di API)
+        let sortValue = sortBy;
+        if (sortBy === "latest") {
+          sortValue = "oldest";
+        } else if (sortBy === "oldest") {
+          sortValue = "latest";
+        }
+        params.append("sort_by", sortValue);
 
         const url = `/api/publications/public?${params.toString()}`;
 
@@ -904,13 +912,11 @@ export default function PublicationsPage() {
                               View Details
                             </button>
                             <button
-                              onClick={() =>
-                                (window.location.href = `/publications/${paper.id}/cite`)
-                              }
-                              className="py-2 px-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm"
+                              onClick={() => setCitationPaper(paper)}
+                              className="py-2 px-3 text-emerald-700 border border-emerald-300 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors duration-200 text-sm flex items-center justify-center gap-1"
                             >
                               <svg
-                                className="w-4 h-4 inline mr-1"
+                                className="w-4 h-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -919,7 +925,7 @@ export default function PublicationsPage() {
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
                                   strokeWidth={2}
-                                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                                  d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
                                 />
                               </svg>
                               Cite
@@ -1036,6 +1042,13 @@ export default function PublicationsPage() {
           </div>
         </div>
       </section>
+
+      {/* Citation Export Modal */}
+      <CitationExportModal
+        publication={citationPaper}
+        isOpen={!!citationPaper}
+        onClose={() => setCitationPaper(null)}
+      />
     </div>
   );
 }

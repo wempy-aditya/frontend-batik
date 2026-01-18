@@ -872,9 +872,13 @@ export default function DatasetsPage() {
                       {/* Action Buttons */}
                       <div className="space-y-2 pt-2">
                         <button
-                          onClick={() =>
-                            (window.location.href = `/datasets/${dataset.id}/download`)
-                          }
+                          onClick={() => {
+                            if (dataset.file_url) {
+                              window.open(dataset.file_url, "_blank");
+                            } else {
+                              window.location.href = `/datasets/${dataset.id}/download`;
+                            }
+                          }}
                           className={`w-full py-3 px-4 bg-gradient-to-r ${getGradientClass(
                             dataset.gradient
                           )} text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105`}

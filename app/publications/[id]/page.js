@@ -1,6 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  fetchCitation,
+  fetchMultipleCitations,
+  generateFallbackCitation,
+  isValidDOI,
+  formatDOIUrl,
+  CITATION_STYLES,
+  CITATION_LOCALES,
+} from "@/lib/citationUtils";
 
 export default function PublicationDetailPage() {
   const params = useParams();
@@ -9,25 +18,35 @@ export default function PublicationDetailPage() {
   const [publication, setPublication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("abstract");
-  const [selectedCitation, setSelectedCitation] = useState("bibtex");
+  const [selectedCitation, setSelectedCitation] = useState("apa");
+  const [selectedLocale, setSelectedLocale] = useState("en-US");
+  const [citations, setCitations] = useState({});
+  const [citationsLoading, setCitationsLoading] = useState(false);
+  const [citationError, setCitationError] = useState(null);
+  const [useApiCitation, setUseApiCitation] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const availableStyles = ["apa", "mla", "chicago", "ieee", "bibtex"];
 
   // Fetch publication detail from API
   useEffect(() => {
     const fetchPublication = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/publications/public/${publicationId}`);
+        const response = await fetch(
+          `/api/publications/public/${publicationId}`
+        );
         if (response.ok) {
           const data = await response.json();
           setPublication(data);
-          
+
           // Increment view count
           incrementViewCount();
         } else {
           setPublication(null);
         }
       } catch (error) {
-        console.error('Error fetching publication:', error);
+        console.error("Error fetching publication:", error);
         setPublication(null);
       } finally {
         setLoading(false);
@@ -43,10 +62,10 @@ export default function PublicationDetailPage() {
   const incrementViewCount = async () => {
     try {
       await fetch(`/api/publications/public/${publicationId}/view`, {
-        method: 'POST',
+        method: "POST",
       });
     } catch (error) {
-      console.error('Error incrementing view count:', error);
+      console.error("Error incrementing view count:", error);
     }
   };
 
@@ -55,18 +74,18 @@ export default function PublicationDetailPage() {
     try {
       // Increment download counter
       await fetch(`/api/publications/public/${publicationId}/download`, {
-        method: 'POST',
+        method: "POST",
       });
-      
+
       // Open PDF in new tab
       if (displayPublication?.pdf_url) {
-        window.open(displayPublication.pdf_url, '_blank');
+        window.open(displayPublication.pdf_url, "_blank");
       }
     } catch (error) {
-      console.error('Error incrementing download count:', error);
+      console.error("Error incrementing download count:", error);
       // Still open PDF even if counter fails
       if (displayPublication?.pdf_url) {
-        window.open(displayPublication.pdf_url, '_blank');
+        window.open(displayPublication.pdf_url, "_blank");
       }
     }
   };
@@ -99,40 +118,151 @@ export default function PublicationDetailPage() {
   // Display logic: use API data if available, otherwise use fallback
   const displayPublication = publication || defaultPublication;
 
-  // Citation formats for the publication
-  const citationFormats = {
-    bibtex: `@article{${displayPublication?.authors?.[0]?.split(" ")?.pop()?.toLowerCase() || 'author'}${
-      displayPublication?.year || '2024'
-    }${displayPublication?.title?.split(" ")?.[0]?.toLowerCase() || 'title'},
-  title={${displayPublication?.title || 'Title'}},
-  author={${displayPublication?.authors?.join(" and ") || 'Author'}},
-  journal={${displayPublication?.journal_name || displayPublication?.venue || 'Venue'}},
-  year={${displayPublication?.year || '2024'}},
-  doi={${displayPublication?.doi || 'DOI'}}
-}`,
-    apa: `${displayPublication?.authors?.join(", ") || 'Authors'} (${displayPublication?.year || '2024'}). ${
-      displayPublication?.title || 'Title'
-    }. ${displayPublication?.journal_name || displayPublication?.venue || 'Venue'}. https://doi.org/${displayPublication?.doi || 'DOI'}`,
-    mla: `${displayPublication?.authors?.join(", ") || 'Authors'}. "${displayPublication?.title || 'Title'}." ${
-      displayPublication?.journal_name || displayPublication?.venue || 'Venue'
-    }, ${displayPublication?.year || '2024'}. doi:${displayPublication?.doi || 'DOI'}`,
-    chicago: `${displayPublication?.authors?.join(", ") || 'Authors'}. "${displayPublication?.title || 'Title'}." ${
-      displayPublication?.journal_name || displayPublication?.venue || 'Venue'
-    } (${displayPublication?.year || '2024'}). https://doi.org/${displayPublication?.doi || 'DOI'}`,
-    ieee: `${displayPublication?.authors?.map((author, index) => {
-      const parts = author.trim().split(' ');
-      const lastName = parts[parts.length - 1];
-      const initials = parts.slice(0, -1).map(n => n.charAt(0) + '.').join(' ');
-      return `${initials} ${lastName}`;
-    }).join(', ') || 'Authors'}, "${displayPublication?.title || 'Title'}," ${displayPublication?.journal_name || displayPublication?.venue || 'Venue'}, vol. ${displayPublication?.volume || 'X'}, no. ${displayPublication?.issue || 'X'}, pp. ${displayPublication?.pages || 'X-X'}, ${displayPublication?.year || '2024'}, doi: ${displayPublication?.doi || 'DOI'}.`,
+  // Fetch citations from DOI API
+  const fetchAllCitations = useCallback(async () => {
+    if (!displayPublication?.doi || !isValidDOI(displayPublication.doi)) {
+      // Use fallback citations if DOI is invalid
+      setUseApiCitation(false);
+      const fallbackCitations = {};
+      availableStyles.forEach((style) => {
+        fallbackCitations[style] = generateFallbackCitation(
+          displayPublication,
+          style
+        );
+      });
+      setCitations(fallbackCitations);
+      if (displayPublication?.doi && displayPublication.doi !== "N/A") {
+        setCitationError(
+          `Invalid DOI format. Using generated citations based on available metadata.`
+        );
+      }
+      return;
+    }
+
+    setCitationsLoading(true);
+    setCitationError(null);
+
+    try {
+      const { citations: fetchedCitations, errors } =
+        await fetchMultipleCitations(
+          displayPublication.doi,
+          availableStyles,
+          selectedLocale
+        );
+
+      // Check if any citations were successfully fetched
+      const hasValidCitations = Object.values(fetchedCitations).some(
+        (c) => c !== null
+      );
+
+      if (hasValidCitations) {
+        // Fill in any failed styles with fallbacks
+        const mergedCitations = {};
+        const failedStyles = [];
+
+        availableStyles.forEach((style) => {
+          if (fetchedCitations[style]) {
+            mergedCitations[style] = fetchedCitations[style];
+          } else {
+            mergedCitations[style] = generateFallbackCitation(
+              displayPublication,
+              style
+            );
+            failedStyles.push(style.toUpperCase());
+          }
+        });
+
+        setCitations(mergedCitations);
+        setUseApiCitation(true);
+
+        if (failedStyles.length > 0) {
+          setCitationError(
+            `Some citation styles could not be fetched (${failedStyles.join(
+              ", "
+            )}). Using generated citations for those styles.`
+          );
+        }
+      } else {
+        // All API calls failed, use fallbacks
+        setUseApiCitation(false);
+        const fallbackCitations = {};
+        availableStyles.forEach((style) => {
+          fallbackCitations[style] = generateFallbackCitation(
+            displayPublication,
+            style
+          );
+        });
+        setCitations(fallbackCitations);
+        setCitationError(
+          "Could not fetch citations from DOI service. The DOI may not be registered or the service is unavailable. Using generated citations."
+        );
+      }
+    } catch (err) {
+      console.error("Error fetching citations:", err);
+      setUseApiCitation(false);
+      const fallbackCitations = {};
+      availableStyles.forEach((style) => {
+        fallbackCitations[style] = generateFallbackCitation(
+          displayPublication,
+          style
+        );
+      });
+      setCitations(fallbackCitations);
+      setCitationError(
+        `Network error while fetching citations. Using generated citations based on available metadata.`
+      );
+    } finally {
+      setCitationsLoading(false);
+    }
+  }, [displayPublication, selectedLocale, availableStyles]);
+
+  // Fetch citations when publication is loaded or locale changes
+  useEffect(() => {
+    if (displayPublication && displayPublication.id !== "default") {
+      fetchAllCitations();
+    }
+  }, [displayPublication?.id, selectedLocale]);
+
+  // Handle copy citation to clipboard
+  const handleCopyCitation = async () => {
+    const citation = citations[selectedCitation];
+    if (citation) {
+      try {
+        await navigator.clipboard.writeText(citation);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error("Failed to copy:", err);
+        alert("Citation copied to clipboard!");
+      }
+    }
+  };
+
+  // Handle download citation
+  const handleDownloadCitation = () => {
+    const citation = citations[selectedCitation];
+    if (citation) {
+      const blob = new Blob([citation], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `citation-${selectedCitation}.${
+        selectedCitation === "bibtex" ? "bib" : "txt"
+      }`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
   // Helper function for impact color
   const getImpactColor = (impact) => {
     const impactValue = parseFloat(impact);
-    if (impactValue >= 5.0) return 'bg-red-100 text-red-800 border-red-300';
-    if (impactValue >= 3.0) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    return 'bg-green-100 text-green-800 border-green-300';
+    if (impactValue >= 5.0) return "bg-red-100 text-red-800 border-red-300";
+    if (impactValue >= 3.0)
+      return "bg-yellow-100 text-yellow-800 border-yellow-300";
+    return "bg-green-100 text-green-800 border-green-300";
   };
 
   // Loading state
@@ -165,10 +295,14 @@ export default function PublicationDetailPage() {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <h2 className="text-3xl font-bold text-gray-700 mb-4">Publication Not Found</h2>
-          <p className="text-gray-500 mb-8">The publication you're looking for doesn't exist.</p>
+          <h2 className="text-3xl font-bold text-gray-700 mb-4">
+            Publication Not Found
+          </h2>
+          <p className="text-gray-500 mb-8">
+            The publication you're looking for doesn't exist.
+          </p>
           <button
-            onClick={() => router.push('/publications')}
+            onClick={() => router.push("/publications")}
             className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors duration-300"
           >
             Back to Publications
@@ -279,7 +413,11 @@ export default function PublicationDetailPage() {
               {/* Publication Info */}
               <div className="lg:w-3/4">
                 <div className="flex flex-wrap gap-3 mb-6">
-                  <span className={`px-4 py-2 text-sm font-semibold rounded-full border ${getImpactColor(displayPublication?.impact || "0")}`}>
+                  <span
+                    className={`px-4 py-2 text-sm font-semibold rounded-full border ${getImpactColor(
+                      displayPublication?.impact || "0"
+                    )}`}
+                  >
                     Impact: {displayPublication?.impact || "N/A"}
                   </span>
                   <span className="px-4 py-2 text-sm font-medium rounded-full bg-white/10 text-white border border-white/20">
@@ -335,14 +473,16 @@ export default function PublicationDetailPage() {
                 {/* Authors */}
                 <div className="mb-6">
                   <div className="flex flex-wrap gap-2">
-                    {(displayPublication?.authors || []).map((author, index) => (
-                      <span
-                        key={index}
-                        className="text-sm text-amber-100 bg-white/10 px-4 py-2 rounded-full border border-white/20"
-                      >
-                        {author}
-                      </span>
-                    ))}
+                    {(displayPublication?.authors || []).map(
+                      (author, index) => (
+                        <span
+                          key={index}
+                          className="text-sm text-amber-100 bg-white/10 px-4 py-2 rounded-full border border-white/20"
+                        >
+                          {author}
+                        </span>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -353,7 +493,8 @@ export default function PublicationDetailPage() {
                       Published In
                     </div>
                     <div className="text-sm font-semibold text-white">
-                      {displayPublication?.journal_name || displayPublication?.venue}
+                      {displayPublication?.journal_name ||
+                        displayPublication?.venue}
                     </div>
                   </div>
                   <div>
@@ -474,8 +615,8 @@ export default function PublicationDetailPage() {
                           alt="Graphical Abstract"
                           className="w-full h-auto object-contain max-h-[600px]"
                           onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextElementSibling.style.display = 'flex';
+                            e.target.style.display = "none";
+                            e.target.nextElementSibling.style.display = "flex";
                           }}
                         />
                         <div className="hidden w-full h-64 flex-col items-center justify-center bg-gray-100 text-gray-400">
@@ -504,14 +645,16 @@ export default function PublicationDetailPage() {
                       Keywords
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {(displayPublication?.keywords || []).map((keyword, index) => (
-                        <span
-                          key={index}
-                          className="text-sm text-amber-700 bg-amber-100 px-4 py-2 rounded-full border border-amber-200"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
+                      {(displayPublication?.keywords || []).map(
+                        (keyword, index) => (
+                          <span
+                            key={index}
+                            className="text-sm text-amber-700 bg-amber-100 px-4 py-2 rounded-full border border-amber-200"
+                          >
+                            {keyword}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -526,38 +669,41 @@ export default function PublicationDetailPage() {
                     </h2>
                   </div>
 
-                  {displayPublication?.methodology && displayPublication.methodology !== "N/A" && (
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                        Methodology
-                      </h3>
-                      <p className="text-lg text-gray-700 leading-relaxed">
-                        {displayPublication.methodology}
-                      </p>
-                    </div>
-                  )}
+                  {displayPublication?.methodology &&
+                    displayPublication.methodology !== "N/A" && (
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                          Methodology
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          {displayPublication.methodology}
+                        </p>
+                      </div>
+                    )}
 
-                  {displayPublication?.results && displayPublication.results !== "N/A" && (
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                        Results
-                      </h3>
-                      <p className="text-lg text-gray-700 leading-relaxed">
-                        {displayPublication.results}
-                      </p>
-                    </div>
-                  )}
+                  {displayPublication?.results &&
+                    displayPublication.results !== "N/A" && (
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                          Results
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          {displayPublication.results}
+                        </p>
+                      </div>
+                    )}
 
-                  {displayPublication?.conclusions && displayPublication.conclusions !== "N/A" && (
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                        Conclusions
-                      </h3>
-                      <p className="text-lg text-gray-700 leading-relaxed">
-                        {displayPublication.conclusions}
-                      </p>
-                    </div>
-                  )}
+                  {displayPublication?.conclusions &&
+                    displayPublication.conclusions !== "N/A" && (
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                          Conclusions
+                        </h3>
+                        <p className="text-lg text-gray-700 leading-relaxed">
+                          {displayPublication.conclusions}
+                        </p>
+                      </div>
+                    )}
                 </div>
               )}
 
@@ -577,16 +723,18 @@ export default function PublicationDetailPage() {
                         {displayPublication?.doi}
                       </div>
                     </div>
-                    {displayPublication?.volume && displayPublication.volume !== "N/A" && (
-                      <div>
-                        <div className="text-sm font-semibold text-gray-700 mb-1">
-                          Volume/Issue
+                    {displayPublication?.volume &&
+                      displayPublication.volume !== "N/A" && (
+                        <div>
+                          <div className="text-sm font-semibold text-gray-700 mb-1">
+                            Volume/Issue
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Vol. {displayPublication.volume}, Issue{" "}
+                            {displayPublication.issue}
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600">
-                          Vol. {displayPublication.volume}, Issue {displayPublication.issue}
-                        </div>
-                      </div>
-                    )}
+                      )}
                     <div>
                       <div className="text-sm font-semibold text-gray-700 mb-1">
                         Publisher
@@ -625,43 +773,255 @@ export default function PublicationDetailPage() {
               {/* Citation Tab */}
               {activeTab === "citation" && (
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
                     Cite This Publication
                   </h2>
 
+                  {/* DOI Status Badge */}
+                  {displayPublication?.doi &&
+                    displayPublication.doi !== "N/A" && (
+                      <div className="mb-6 flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <svg
+                          className="w-5 h-5 text-blue-600 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                          />
+                        </svg>
+                        <span className="text-sm text-blue-700">
+                          DOI:{" "}
+                          <a
+                            href={formatDOIUrl(displayPublication.doi)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono hover:underline"
+                          >
+                            {displayPublication.doi}
+                          </a>
+                        </span>
+                        {useApiCitation && !citationsLoading && (
+                          <span className="ml-auto text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Official Citation from DOI
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                  {/* Error/Info Message */}
+                  {citationError && (
+                    <div className="mb-6 flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <svg
+                        className="w-5 h-5 text-amber-600 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      <span className="text-sm text-amber-700">
+                        {citationError}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="space-y-6">
                     {/* Citation Format Selector */}
-                    <div className="flex flex-wrap gap-3">
-                      {["bibtex", "apa", "mla", "chicago", "ieee"].map((format) => (
-                        <button
-                          key={format}
-                          onClick={() => setSelectedCitation(format)}
-                          className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${
-                            selectedCitation === format
-                              ? "bg-amber-500 text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
-                        >
-                          {format.toUpperCase()}
-                        </button>
-                      ))}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Citation Style
+                      </label>
+                      <div className="flex flex-wrap gap-3">
+                        {availableStyles.map((format) => (
+                          <button
+                            key={format}
+                            onClick={() => setSelectedCitation(format)}
+                            className={`px-6 py-2 rounded-full font-semibold transition-all duration-300 ${
+                              selectedCitation === format
+                                ? "bg-amber-500 text-white shadow-md"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            }`}
+                          >
+                            {format.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Language/Locale Selector */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Language / Locale
+                      </label>
+                      <select
+                        value={selectedLocale}
+                        onChange={(e) => setSelectedLocale(e.target.value)}
+                        className="w-full max-w-xs px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all duration-200"
+                      >
+                        {Object.entries(CITATION_LOCALES).map(
+                          ([code, name]) => (
+                            <option key={code} value={code}>
+                              {name}
+                            </option>
+                          )
+                        )}
+                      </select>
                     </div>
 
                     {/* Citation Text */}
-                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                      <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono">
-                        {citationFormats[selectedCitation]}
-                      </pre>
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="text-sm font-semibold text-gray-700">
+                          Citation Preview
+                        </label>
+                        {citationsLoading && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <svg
+                              className="w-4 h-4 animate-spin"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            Fetching from DOI...
+                          </span>
+                        )}
+                      </div>
+                      <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 min-h-[120px]">
+                        {citationsLoading ? (
+                          <div className="flex items-center justify-center h-20">
+                            <div className="animate-pulse text-gray-400">
+                              Loading citation...
+                            </div>
+                          </div>
+                        ) : (
+                          <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono leading-relaxed">
+                            {citations[selectedCitation] ||
+                              "No citation available"}
+                          </pre>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Style Description */}
+                    <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+                      <strong className="text-gray-700">
+                        {CITATION_STYLES[selectedCitation]?.name ||
+                          selectedCitation.toUpperCase()}
+                        :
+                      </strong>{" "}
+                      {CITATION_STYLES[selectedCitation]?.description ||
+                        "Citation format"}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-3">
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(
-                            citationFormats[selectedCitation]
-                          );
-                          alert("Citation copied to clipboard!");
-                        }}
-                        className="mt-4 px-6 py-2 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors duration-300"
+                        onClick={handleCopyCitation}
+                        disabled={
+                          citationsLoading || !citations[selectedCitation]
+                        }
+                        className={`flex-1 sm:flex-none px-6 py-3 font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+                          copied
+                            ? "bg-green-500 text-white"
+                            : "bg-amber-500 text-white hover:bg-amber-600"
+                        } ${
+                          citationsLoading || !citations[selectedCitation]
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                       >
-                        Copy to Clipboard
+                        {copied ? (
+                          <>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                              />
+                            </svg>
+                            Copy to Clipboard
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleDownloadCitation}
+                        disabled={
+                          citationsLoading || !citations[selectedCitation]
+                        }
+                        className={`flex-1 sm:flex-none px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
+                          citationsLoading || !citations[selectedCitation]
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                        Download{" "}
+                        {selectedCitation === "bibtex" ? ".bib" : ".txt"}
                       </button>
                     </div>
                   </div>

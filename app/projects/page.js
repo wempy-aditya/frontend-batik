@@ -522,7 +522,7 @@ export default function ProjectsPage() {
                   onMouseLeave={() => setHoveredProject(null)}
                 >
                   {/* Project Card */}
-                  <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full">
+                  <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full flex flex-col">
                     {/* Gradient Background on Hover */}
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
@@ -591,9 +591,9 @@ export default function ProjectsPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="relative z-10 p-6 space-y-4">
+                    <div className="relative z-10 p-6 space-y-4 flex-1 flex flex-col">
                       {/* Title & Description */}
-                      <div>
+                      <div className="flex-grow">
                         <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">
                           {project.title}
                         </h3>
@@ -645,31 +645,33 @@ export default function ProjectsPage() {
                         </div>
                       )}
 
-                      {/* Action Button */}
-                      <div
-                        onClick={() => {
-                          console.log(
-                            `Navigating to project ${project.id} details`
-                          );
-                          window.location.href = `/projects/${project.id}`;
-                        }}
-                        className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 mt-4 cursor-pointer"
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <span>View Details</span>
-                          <svg
-                            className="w-4 h-4 transition-transform duration-300"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
+                      {/* Action Button - Sticky Bottom */}
+                      <div className="mt-auto pt-4">
+                        <div
+                          onClick={() => {
+                            console.log(
+                              `Navigating to project ${project.id} details`
+                            );
+                            window.location.href = `/projects/${project.id}`;
+                          }}
+                          className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span>View Details</span>
+                            <svg
+                              className="w-4 h-4 transition-transform duration-300"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>

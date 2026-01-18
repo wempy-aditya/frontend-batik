@@ -2,6 +2,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+// Helper function to truncate text by character count
+const truncateText = (text, maxLength = 100) => {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + "...";
+};
+
 const GalleryCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -14,7 +21,7 @@ const GalleryCarousel = () => {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const response = await fetch('/api/gallery/featured?limit=8');
+        const response = await fetch("/api/gallery/featured?limit=8");
         if (response.ok) {
           const data = await response.json();
           // Ensure data is array
@@ -23,12 +30,12 @@ const GalleryCarousel = () => {
           } else if (data && Array.isArray(data.data)) {
             setGalleryImages(data.data);
           } else {
-            console.log('Gallery data is not array:', data);
+            console.log("Gallery data is not array:", data);
             setGalleryImages([]);
           }
         }
       } catch (error) {
-        console.error('Error fetching gallery:', error);
+        console.error("Error fetching gallery:", error);
         setGalleryImages([]);
       } finally {
         setLoading(false);
@@ -96,7 +103,11 @@ const GalleryCarousel = () => {
     },
   ];
 
-  const displayGalleryImages = loading ? [] : (galleryImages.length > 0 ? galleryImages : fallbackGalleryImages);
+  const displayGalleryImages = loading
+    ? []
+    : galleryImages.length > 0
+    ? galleryImages
+    : fallbackGalleryImages;
 
   // Auto-play functionality
   useEffect(() => {
@@ -115,7 +126,8 @@ const GalleryCarousel = () => {
 
   const prevImage = () => {
     setCurrentIndex(
-      (prev) => (prev - 1 + displayGalleryImages.length) % displayGalleryImages.length
+      (prev) =>
+        (prev - 1 + displayGalleryImages.length) % displayGalleryImages.length
     );
   };
 
@@ -124,17 +136,17 @@ const GalleryCarousel = () => {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 relative overflow-hidden">
+    <section className="py-12 md:py-16 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 relative">
       {/* Background Elements */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-3/4 left-1/3 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 left-1/3 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto px-6 lg:px-8 relative z-10">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-8 md:mb-10">
           <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
             <svg
               className="w-4 h-4 text-amber-400 mr-2"
@@ -167,30 +179,59 @@ const GalleryCarousel = () => {
         <div className="relative mb-12">
           {/* Main Display */}
           <div
-            className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl"
+            className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10"
             onMouseEnter={() => setIsAutoPlaying(false)}
             onMouseLeave={() => setIsAutoPlaying(true)}
           >
             {loading ? (
-              <div className="flex items-center justify-center h-full bg-gray-800/50">
-                <div className="text-center text-white">Loading gallery...</div>
+              <div className="flex items-center justify-center h-full bg-gray-800/50 animate-pulse">
+                <div className="text-center">
+                  <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <div className="text-white/60">Loading gallery...</div>
+                </div>
               </div>
             ) : displayGalleryImages.length === 0 ? (
               <div className="flex items-center justify-center h-full bg-gray-800/50">
-                <div className="text-center text-white">No gallery images available</div>
+                <div className="text-center">
+                  <svg
+                    className="w-16 h-16 text-white/30 mx-auto mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <h3 className="text-white/80 text-lg font-semibold mb-2">
+                    No Gallery Images
+                  </h3>
+                  <p className="text-white/50">
+                    Check back later for exciting AI-generated artwork!
+                  </p>
+                </div>
               </div>
             ) : (
               <>
                 {/* Display actual image if available from API */}
                 {displayGalleryImages[currentIndex].image_url ? (
-                  <img 
-                    src={displayGalleryImages[currentIndex].image_url} 
-                    alt={displayGalleryImages[currentIndex].title || displayGalleryImages[currentIndex].prompt}
+                  <img
+                    src={displayGalleryImages[currentIndex].image_url}
+                    alt={
+                      displayGalleryImages[currentIndex].title ||
+                      displayGalleryImages[currentIndex].prompt
+                    }
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${displayGalleryImages[currentIndex].gradient || 'from-amber-500 to-orange-500'} transition-all duration-1000`}
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      displayGalleryImages[currentIndex].gradient ||
+                      "from-amber-500 to-orange-500"
+                    } transition-all duration-1000`}
                   >
                     {/* Overlay Pattern */}
                     <div className="absolute inset-0 opacity-20">
@@ -210,22 +251,30 @@ const GalleryCarousel = () => {
                   <div className="max-w-4xl">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="px-3 py-1 text-xs font-semibold bg-white/20 backdrop-blur-sm text-white rounded-full">
-                        {displayGalleryImages[currentIndex].style || 'AI Generated'}
+                        {displayGalleryImages[currentIndex].style ||
+                          "AI Generated"}
                       </span>
-                      {(displayGalleryImages[currentIndex].model || displayGalleryImages[currentIndex].ai_model) && (
+                      {(displayGalleryImages[currentIndex].model ||
+                        displayGalleryImages[currentIndex].ai_model) && (
                         <span className="px-3 py-1 text-xs font-medium bg-amber-500/30 backdrop-blur-sm text-amber-200 rounded-full">
-                          {displayGalleryImages[currentIndex].model || displayGalleryImages[currentIndex].ai_model?.name}
+                          {displayGalleryImages[currentIndex].model ||
+                            displayGalleryImages[currentIndex].ai_model?.name}
                         </span>
                       )}
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                      {displayGalleryImages[currentIndex].title || displayGalleryImages[currentIndex].prompt}
+                      {displayGalleryImages[currentIndex].title ||
+                        displayGalleryImages[currentIndex].prompt ||
+                        "AI Generated Image"}
                     </h3>
-                    {displayGalleryImages[currentIndex].description && (
-                      <p className="text-gray-300 text-sm mb-2 line-clamp-2">
-                        {displayGalleryImages[currentIndex].description}
+                    {displayGalleryImages[currentIndex].description ? (
+                      <p className="text-gray-300 text-sm mb-2">
+                        {truncateText(
+                          displayGalleryImages[currentIndex].description,
+                          120
+                        )}
                       </p>
-                    )}
+                    ) : null}
                     <div className="flex items-center text-gray-300 text-sm">
                       <svg
                         className="w-4 h-4 mr-2"
@@ -240,7 +289,10 @@ const GalleryCarousel = () => {
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Generated with {displayGalleryImages[currentIndex].model || displayGalleryImages[currentIndex].ai_model?.name || 'AI'}
+                      Generated with{" "}
+                      {displayGalleryImages[currentIndex].model ||
+                        displayGalleryImages[currentIndex].ai_model?.name ||
+                        "AI"}
                     </div>
                   </div>
                 </div>
@@ -302,14 +354,16 @@ const GalleryCarousel = () => {
                     }`}
                   >
                     {image.thumbnail_url || image.image_url ? (
-                      <img 
-                        src={image.thumbnail_url || image.image_url} 
+                      <img
+                        src={image.thumbnail_url || image.image_url}
                         alt={image.title || `Gallery ${index + 1}`}
                         className="w-full h-full object-cover rounded-xl"
                       />
                     ) : (
                       <div
-                        className={`w-full h-full bg-gradient-to-br ${image.gradient || 'from-amber-500 to-orange-500'} rounded-xl`}
+                        className={`w-full h-full bg-gradient-to-br ${
+                          image.gradient || "from-amber-500 to-orange-500"
+                        } rounded-xl`}
                       ></div>
                     )}
                   </button>
@@ -383,25 +437,12 @@ const GalleryCarousel = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center">
+        <div className="text-center mt-6 md:mt-8">
           <button
             onClick={() => router.push("/gallery")}
-            className="group inline-flex items-center px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+            className="group inline-flex items-center px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
           >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>See the Gallery</span>
+            <span>View Full Gallery</span>
             <svg
               className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1"
               fill="none"

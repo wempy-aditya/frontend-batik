@@ -10,7 +10,8 @@ body {
 }
 
 body {
-  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.01em;
@@ -34,9 +35,21 @@ svg {
 }
 
 /* Specific icon size controls */
-.w-4 svg, .h-4 svg { width: 1rem !important; height: 1rem !important; }
-.w-5 svg, .h-5 svg { width: 1.25rem !important; height: 1.25rem !important; }
-.w-6 svg, .h-6 svg { width: 1.5rem !important; height: 1.5rem !important; }
+.w-4 svg,
+.h-4 svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+.w-5 svg,
+.h-5 svg {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+.w-6 svg,
+.h-6 svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
 
 /* Ensure links inherit color from parent */
 a {
@@ -60,4 +73,20 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Fade-in animation for expandable sections */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
 }
