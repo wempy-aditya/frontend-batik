@@ -198,7 +198,7 @@ const PublicationModal = ({ paper, isOpen, onClose }) => {
           {/* Actions - Sticky Bottom */}
           <div className="flex flex-wrap gap-3 p-6 pt-4 border-t border-gray-200 bg-white rounded-b-2xl">
             <a
-              href={`/publications/${paper.slug || paper.id}`}
+              href={`/publications/${paper.uuid || paper.id}`}
               className="flex-1 py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg text-center transition-all duration-300 hover:shadow-lg"
             >
               Read Full Paper

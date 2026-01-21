@@ -71,52 +71,6 @@ const HeroSection = () => {
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300 -z-10"></div>
               </button>
-
-              <button
-                onClick={() => router.push("/test-api")}
-                onMouseEnter={() => setHoverButton("demo")}
-                onMouseLeave={() => setHoverButton(null)}
-                className="group px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:bg-white/20 hover:shadow-xl"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span>Try Demo</span>
-                </div>
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  50K+
-                </div>
-                <div className="text-sm text-gray-400">Images Processed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  99.2%
-                </div>
-                <div className="text-sm text-gray-400">Accuracy Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  15+
-                </div>
-                <div className="text-sm text-gray-400">AI Models</div>
-              </div>
             </div>
           </div>
 
@@ -144,10 +98,10 @@ const HeroSection = () => {
                         i === 1
                           ? "from-purple-400 to-pink-400"
                           : i === 2
-                          ? "from-blue-400 to-cyan-400"
-                          : i === 3
-                          ? "from-green-400 to-emerald-400"
-                          : "from-orange-400 to-red-400"
+                            ? "from-blue-400 to-cyan-400"
+                            : i === 3
+                              ? "from-green-400 to-emerald-400"
+                              : "from-orange-400 to-red-400"
                       } rounded-xl opacity-80 animate-pulse`}
                       style={{ animationDelay: `${i * 200}ms` }}
                     />

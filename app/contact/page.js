@@ -1,6 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+
+// Dynamic import for Map component to avoid SSR issues
+const MapComponent = dynamic(() => import("./MapComponent"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-96 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/20 to-red-500/20 flex items-center justify-center">
+      <div className="text-white">Loading map...</div>
+    </div>
+  ),
+});
 
 export default function ContactPage() {
   const router = useRouter();
@@ -46,53 +57,26 @@ export default function ContactPage() {
     {
       icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
       title: "Email",
-      content: "contact@aivision.com",
-      link: "mailto:contact@aivision.com",
+      content: "aguseko@umm.ac.id",
+      link: "mailto:aguseko@umm.ac.id",
     },
     {
       icon: "M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z",
       title: "Phone",
-      content: "+1 (555) 123-4567",
-      link: "tel:+15551234567",
+      content: "(0341) 464318, ext 252",
+      link: "tel:(0341)464318",
     },
     {
       icon: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z",
       title: "Office",
-      content: "123 AI Street, Tech Valley, CA 94000",
+      content: "Jl. Raya Tlogomas No.246, Jawa Timur 65144, Indonesia",
       link: "#",
     },
     {
       icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
       title: "Business Hours",
-      content: "Mon - Fri: 9:00 AM - 6:00 PM PST",
+      content: "Mon - Fri: 8:00 AM - 16:00 PM WIB",
       link: "#",
-    },
-  ];
-
-  const socialLinks = [
-    {
-      name: "LinkedIn",
-      icon: "M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z",
-      link: "#",
-      color: "hover:bg-blue-600",
-    },
-    {
-      name: "Twitter",
-      icon: "M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z",
-      link: "#",
-      color: "hover:bg-sky-500",
-    },
-    {
-      name: "GitHub",
-      icon: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z",
-      link: "#",
-      color: "hover:bg-gray-700",
-    },
-    {
-      name: "Discord",
-      icon: "M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z",
-      link: "#",
-      color: "hover:bg-indigo-600",
     },
   ];
 
@@ -221,95 +205,12 @@ export default function ContactPage() {
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-2xl mx-auto">
             <div className="space-y-8">
-              {/* FAQ Section */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8 hidden">
+              {/* Map Section */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
                 <h3 className="text-2xl font-bold text-white mb-6">
-                  Frequently Asked Questions
+                  Visit Our Office
                 </h3>
-                <div className="space-y-6">
-                  {faqs.map((faq, index) => (
-                    <div
-                      key={index}
-                      className="border-b border-white/10 pb-6 last:border-0 last:pb-0"
-                    >
-                      <h4 className="text-lg font-semibold text-white mb-2">
-                        {faq.question}
-                      </h4>
-                      <p className="text-gray-300">{faq.answer}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Social Media & Office - Horizontal Layout */}
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Social Media */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
-                  <h3 className="text-2xl font-bold text-white mb-6">
-                    Connect With Us
-                  </h3>
-                  <p className="text-gray-300 mb-6">
-                    Follow us on social media for the latest updates, research
-                    insights, and community discussions.
-                  </p>
-                  <div className="flex flex-wrap gap-4">
-                    {socialLinks.map((social, index) => (
-                      <a
-                        key={index}
-                        href={social.link}
-                        className={`flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl transition-all duration-300 transform hover:scale-110 ${social.color}`}
-                        title={social.name}
-                      >
-                        <svg
-                          className="w-6 h-6 text-white"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d={social.icon} />
-                        </svg>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Map Placeholder */}
-                <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8">
-                  <h3 className="text-2xl font-bold text-white mb-6">
-                    Visit Our Office
-                  </h3>
-                  <div className="aspect-video bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-20">
-                      <div
-                        className="w-full h-full"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                          backgroundSize: "60px 60px",
-                        }}
-                      ></div>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg
-                        className="w-16 h-16 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                <MapComponent />
               </div>
             </div>
           </div>

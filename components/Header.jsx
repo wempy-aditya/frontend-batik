@@ -114,7 +114,7 @@ const Header = () => {
                       : "text-white"
                   }`}
                 >
-                  AI Vision
+                  RISPRO
                 </div>
                 <div
                   className={`text-xs transition-colors duration-300 ${

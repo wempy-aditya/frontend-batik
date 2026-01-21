@@ -58,52 +58,56 @@ export default function AboutPage() {
       icon: "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z",
       title: "Innovation",
       description:
-        "Pushing the boundaries of what's possible with AI and computer vision technology",
+        "Pushing the boundaries of batik research by leveraging AI and machine learning to discover new creative patterns and insights",
+    },
+    {
+      icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
+      title: "Excellence in Research",
+      description:
+        "Providing robust datasets and tools — from batik pattern generators to classification models — to support academic and practical research",
     },
     {
       icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
       title: "Collaboration",
       description:
-        "Building partnerships with researchers and institutions worldwide",
+        "Valuing open collaboration across disciplines, institutions, and cultures to broaden the impact and appreciation of batik art worldwide",
     },
     {
-      icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
-      title: "Quality",
+      icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+      title: "Cultural Preservation",
       description:
-        "Maintaining highest standards in research, development, and deployment",
-    },
-    {
-      icon: "M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-      title: "Open Science",
-      description:
-        "Contributing to the global AI community through open-source projects",
+        "Honoring Indonesia's batik heritage by combining traditional art with modern computational techniques, ensuring cultural wisdom lives on",
     },
   ];
 
   const milestones = [
     {
-      year: "2020",
-      event: "Founded with a vision to democratize AI image processing",
+      year: "Start",
+      event:
+        "Batik UMM began as a visionary project to blend cultural heritage with futuristic technology",
     },
     {
-      year: "2021",
-      event: "Released first open-source dataset with 50K+ annotated images",
+      year: "Gen",
+      event:
+        "Developed AI-based generation of new batik motifs using deep learning models",
     },
     {
-      year: "2022",
-      event: "Reached 100K+ active users and 500+ research citations",
+      year: "Class",
+      event:
+        "Built advanced classification models for batik pattern recognition",
     },
     {
-      year: "2023",
-      event: "Launched advanced generative models and processing pipeline",
+      year: "Retrieval",
+      event: "Created pattern retrieval systems for researchers and designers",
     },
     {
-      year: "2024",
-      event: "Partnered with 50+ universities and research institutions",
+      year: "Data",
+      event: "Curated extensive batik datasets for academic and creative use",
     },
     {
-      year: "2025",
-      event: "Expanded to 1M+ users with enterprise-grade solutions",
+      year: "Now",
+      event:
+        "Supporting the batik community with state-of-the-art digital resources, making research accessible and future-ready",
     },
   ];
 
@@ -164,12 +168,11 @@ export default function AboutPage() {
             </div>
 
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              About AI Vision
+              About Batik UMM
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              We're building the future of AI-powered image processing and
-              computer vision, making advanced technology accessible to
-              researchers and developers worldwide.
+              Empowering research and innovation in batik culture through
+              cutting-edge technologies and collaboration.
             </p>
           </div>
         </div>
@@ -184,17 +187,18 @@ export default function AboutPage() {
                 Our Mission
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                We believe that advanced AI technology should be accessible to
-                everyone. Our mission is to democratize computer vision and
-                image processing by providing cutting-edge tools, comprehensive
-                datasets, and educational resources to researchers, developers,
-                and organizations worldwide.
+                At Batik UMM, our mission is to empower research and innovation
+                in batik culture through cutting-edge technologies and
+                collaboration. We aim to provide comprehensive tools, datasets,
+                and intelligent systems — including AI-driven generative models,
+                classification, and retrieval frameworks — to support
+                researchers, designers, and cultural enthusiasts in exploring
+                and creating batik patterns.
               </p>
               <p className="text-gray-300 text-lg leading-relaxed">
-                Through continuous innovation and collaboration with the global
-                AI community, we're pushing the boundaries of what's possible
-                with artificial intelligence, making it easier for everyone to
-                build intelligent visual systems.
+                Through this mission, we seek to preserve and extend the rich
+                batik tradition by integrating deep learning and community
+                engagement into batik research and digital applications.
               </p>
             </div>
             <div className="relative">
@@ -269,17 +273,14 @@ export default function AboutPage() {
             {milestones.map((milestone, index) => (
               <div key={index} className="flex gap-6 mb-8 group">
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    {milestone.year.slice(2)}
+                  <div className="w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    {milestone.year}
                   </div>
                   {index !== milestones.length - 1 && (
                     <div className="w-0.5 h-full bg-gradient-to-b from-amber-500/50 to-transparent mt-2"></div>
                   )}
                 </div>
                 <div className="flex-1 pb-8">
-                  <div className="text-amber-400 font-bold text-lg mb-2">
-                    {milestone.year}
-                  </div>
                   <div className="text-gray-300 text-lg">{milestone.event}</div>
                 </div>
               </div>
@@ -386,9 +387,9 @@ export default function AboutPage() {
               Join Our Mission
             </h2>
             <p className="text-xl text-white/90 max-w-2xl mx-auto mb-8">
-              Be part of the AI revolution. Whether you're a researcher,
-              developer, or enthusiast, there's a place for you in our
-              community.
+              Be part of the batik research community. Whether you're a
+              researcher, designer, or cultural enthusiast, there's a place for
+              you in our community.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <button
