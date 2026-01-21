@@ -35,6 +35,7 @@ export default function DatasetDetailPage() {
   const [selectedSample, setSelectedSample] = useState(null);
   const [dataset, setDataset] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [shareTooltip, setShareTooltip] = useState(false);
 
   // Fetch dataset detail from API
   useEffect(() => {
@@ -93,6 +94,38 @@ export default function DatasetDetailPage() {
       // Scroll to download section if no direct URL
       setActiveTab('overview');
       // You can add logic to show download modal or instructions
+    }
+  };
+
+  // Handle share dataset
+  const handleShareDataset = async () => {
+    const shareUrl = window.location.href;
+    const shareTitle = displayDataset?.name || 'Dataset';
+    const shareText = displayDataset?.tagline || 'Check out this dataset';
+
+    // Try native Web Share API first (mobile-friendly)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      // Fallback: Copy link to clipboard
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareTooltip(true);
+        setTimeout(() => setShareTooltip(false), 2000);
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        alert('Link: ' + shareUrl);
+      }
     }
   };
 
@@ -201,6 +234,16 @@ export default function DatasetDetailPage() {
 
   // Use API data if available, otherwise use fallback
   const currentDataset = dataset || datasets[datasetId] || datasets["019ae4b2-d4c7-7a18-890d-80db7143746a"];
+
+  // Debug: Log dataset to check available fields
+  useEffect(() => {
+    if (dataset) {
+      console.log('Dataset received from API:', dataset);
+      console.log('Documentation URL:', dataset.documentation_url);
+      console.log('External URL:', dataset.external_url);
+      console.log('File URL:', dataset.file_url);
+    }
+  }, [dataset]);
 
   // Loading state
   if (loading) {
@@ -457,12 +500,77 @@ export default function DatasetDetailPage() {
                     </svg>
                     Download Dataset
                   </button>
-                  <button className="w-full px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30">
-                    View Documentation
-                  </button>
-                  <button className="w-full px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30">
-                    Share Dataset
-                  </button>
+                  
+                  {displayDataset?.documentation_url || displayDataset?.external_url || displayDataset?.file_url ? (
+                    <a
+                      href={displayDataset?.documentation_url || displayDataset?.external_url || displayDataset?.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
+                      View Documentation
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="w-full px-6 py-3 bg-white/10 text-white/50 font-semibold rounded-xl border border-white/20 cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
+                      </svg>
+                      No Documentation
+                    </button>
+                  )}
+
+                  <div className="relative">
+                    <button
+                      onClick={handleShareDataset}
+                      className="w-full px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                        />
+                      </svg>
+                      Share Dataset
+                    </button>
+                    {shareTooltip && (
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap">
+                        Link copied!
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-white/20">

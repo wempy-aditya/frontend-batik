@@ -527,7 +527,7 @@ const ResearchSection = () => {
                             <button
                               onClick={() =>
                                 router.push(
-                                  `/publications/${paper.slug || paper.id}`
+                                  `/publications/${paper.uuid || paper.id}`
                                 )
                               }
                               className="col-span-5 py-3 px-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm rounded-lg transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-1.5"

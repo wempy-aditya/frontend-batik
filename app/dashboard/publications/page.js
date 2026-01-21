@@ -2,7 +2,7 @@
 import { useAuth } from "../../../components/AuthProvider";
 import { useState, useEffect } from "react";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function PublicationsPage() {
   const { getUserInfo } = useAuth();
@@ -15,7 +15,8 @@ export default function PublicationsPage() {
   const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
   const [availableFiles, setAvailableFiles] = useState([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const [filePickerTarget, setFilePickerTarget] = useState('graphical_abstract'); // 'graphical_abstract' or 'pdf'
+  const [filePickerTarget, setFilePickerTarget] =
+    useState("graphical_abstract"); // 'graphical_abstract' or 'pdf'
   const [modalMode, setModalMode] = useState("create"); // 'create', 'edit', 'view'
   const [selectedPublication, setSelectedPublication] = useState(null);
   const [publicationToDelete, setPublicationToDelete] = useState(null);
@@ -202,8 +203,12 @@ export default function PublicationsPage() {
       if (formData.pdf_url && formData.pdf_url.trim()) {
         submitData.pdf_url = formData.pdf_url.trim();
       }
-      if (formData.graphical_abstract_url && formData.graphical_abstract_url.trim()) {
-        submitData.graphical_abstract_url = formData.graphical_abstract_url.trim();
+      if (
+        formData.graphical_abstract_url &&
+        formData.graphical_abstract_url.trim()
+      ) {
+        submitData.graphical_abstract_url =
+          formData.graphical_abstract_url.trim();
       }
       if (formData.methodology && formData.methodology.trim()) {
         submitData.methodology = formData.methodology.trim();
@@ -240,7 +245,7 @@ export default function PublicationsPage() {
         const errorData = await response.json();
         console.error("Submit error:", errorData);
         throw new Error(
-          errorData.error || errorData.message || "Failed to save publication"
+          errorData.error || errorData.message || "Failed to save publication",
         );
       }
     } catch (error) {
@@ -270,7 +275,7 @@ export default function PublicationsPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -333,7 +338,7 @@ export default function PublicationsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ category_ids: selectedCategories }),
-        }
+        },
       );
 
       if (response.ok) {
@@ -484,7 +489,7 @@ export default function PublicationsPage() {
     setFormData({
       ...formData,
       keywords: formData.keywords.filter(
-        (keyword) => keyword !== keywordToRemove
+        (keyword) => keyword !== keywordToRemove,
       ),
     });
   };
@@ -502,15 +507,12 @@ export default function PublicationsPage() {
     setIsLoadingFiles(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        "/api/files?limit=100&file_type=image",
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        }
-      );
+      const response = await fetch("/api/files?limit=100&file_type=image", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
 
       if (response.ok) {
         const result = await response.json();
@@ -523,7 +525,7 @@ export default function PublicationsPage() {
     }
   };
 
-  const openFilePicker = (targetField = 'graphical_abstract') => {
+  const openFilePicker = (targetField = "graphical_abstract") => {
     setFilePickerTarget(targetField);
     setIsFilePickerOpen(true);
     fetchFilesForPicker();
@@ -531,11 +533,11 @@ export default function PublicationsPage() {
 
   const selectFile = (fileUrl) => {
     // Convert relative path to full URL if needed
-    const fullUrl = fileUrl.startsWith('http') 
-      ? fileUrl 
+    const fullUrl = fileUrl.startsWith("http")
+      ? fileUrl
       : `${API_BASE_URL}${fileUrl}`;
-    
-    if (filePickerTarget === 'pdf') {
+
+    if (filePickerTarget === "pdf") {
       setFormData({ ...formData, pdf_url: fullUrl });
     } else {
       setFormData({ ...formData, graphical_abstract_url: fullUrl });
@@ -668,7 +670,7 @@ export default function PublicationsPage() {
                   <div className="ml-4">
                     <span
                       className={`px-2.5 py-1 text-xs font-semibold rounded-xl ${getStatusBadge(
-                        publication.status
+                        publication.status,
                       )}`}
                     >
                       {publication.status}
@@ -725,7 +727,7 @@ export default function PublicationsPage() {
                   <span>
                     Published:{" "}
                     {new Date(
-                      publication.publication_date
+                      publication.publication_date,
                     ).toLocaleDateString()}
                   </span>
                   <span className="bg-slate-100/80 backdrop-blur-sm px-2.5 py-1 rounded-lg font-medium">
@@ -982,7 +984,7 @@ export default function PublicationsPage() {
                           </label>
                           <p
                             className={`inline-block px-4 py-2 rounded-xl font-semibold ${getStatusBadge(
-                              selectedPublication?.status
+                              selectedPublication?.status,
                             )}`}
                           >
                             {selectedPublication?.status}
@@ -1224,7 +1226,7 @@ export default function PublicationsPage() {
                                     ? category
                                     : category.name}
                                 </span>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
@@ -1412,7 +1414,7 @@ export default function PublicationsPage() {
                           <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">
                             {selectedPublication?.created_at
                               ? new Date(
-                                  selectedPublication.created_at
+                                  selectedPublication.created_at,
                                 ).toLocaleString()
                               : "N/A"}
                           </p>
@@ -1424,7 +1426,7 @@ export default function PublicationsPage() {
                           <p className="p-3 bg-white rounded-xl text-gray-900 shadow-sm">
                             {selectedPublication?.updated_at
                               ? new Date(
-                                  selectedPublication.updated_at
+                                  selectedPublication.updated_at,
                                 ).toLocaleString()
                               : "N/A"}
                           </p>
@@ -1531,7 +1533,9 @@ export default function PublicationsPage() {
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            year: parseInt(e.target.value) || new Date().getFullYear(),
+                            year:
+                              parseInt(e.target.value) ||
+                              new Date().getFullYear(),
                           })
                         }
                         className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
@@ -1617,8 +1621,12 @@ export default function PublicationsPage() {
                         type="number"
                         value={formData.citations}
                         onChange={(e) =>
-                          setFormData({ ...formData, citations: parseInt(e.target.value) || 0 })
+                          setFormData({
+                            ...formData,
+                            citations: parseInt(e.target.value) || 0,
+                          })
                         }
+                        onWheel={(e) => e.target.blur()}
                         className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                         placeholder="0"
                         min="0"
@@ -1666,14 +1674,17 @@ export default function PublicationsPage() {
                           type="url"
                           value={formData.pdf_url}
                           onChange={(e) =>
-                            setFormData({ ...formData, pdf_url: e.target.value })
+                            setFormData({
+                              ...formData,
+                              pdf_url: e.target.value,
+                            })
                           }
                           className="flex-1 p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                           placeholder="https://example.com/paper.pdf"
                         />
                         <button
                           type="button"
-                          onClick={() => openFilePicker('pdf')}
+                          onClick={() => openFilePicker("pdf")}
                           className="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2"
                         >
                           <svg
@@ -1703,14 +1714,17 @@ export default function PublicationsPage() {
                           type="url"
                           value={formData.graphical_abstract_url}
                           onChange={(e) =>
-                            setFormData({ ...formData, graphical_abstract_url: e.target.value })
+                            setFormData({
+                              ...formData,
+                              graphical_abstract_url: e.target.value,
+                            })
                           }
                           className="flex-1 p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                           placeholder="https://example.com/graphical_abstract.png"
                         />
                         <button
                           type="button"
-                          onClick={() => openFilePicker('graphical_abstract')}
+                          onClick={() => openFilePicker("graphical_abstract")}
                           className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 font-medium hover:scale-105 flex items-center gap-2"
                         >
                           <svg
@@ -1755,7 +1769,10 @@ export default function PublicationsPage() {
                     <textarea
                       value={formData.methodology}
                       onChange={(e) =>
-                        setFormData({ ...formData, methodology: e.target.value })
+                        setFormData({
+                          ...formData,
+                          methodology: e.target.value,
+                        })
                       }
                       className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 resize-none"
                       placeholder="Describe the research methodology..."
@@ -1785,7 +1802,10 @@ export default function PublicationsPage() {
                     <textarea
                       value={formData.conclusions}
                       onChange={(e) =>
-                        setFormData({ ...formData, conclusions: e.target.value })
+                        setFormData({
+                          ...formData,
+                          conclusions: e.target.value,
+                        })
                       }
                       className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 resize-none"
                       placeholder="State the main conclusions..."
@@ -2040,8 +2060,8 @@ export default function PublicationsPage() {
                         } else {
                           setSelectedCategories(
                             selectedCategories.filter(
-                              (id) => id !== category.id
-                            )
+                              (id) => id !== category.id,
+                            ),
                           );
                         }
                       }}
@@ -2249,7 +2269,9 @@ export default function PublicationsPage() {
                         />
                       </svg>
                     </div>
-                    <p className="text-slate-600 font-medium">Loading images...</p>
+                    <p className="text-slate-600 font-medium">
+                      Loading images...
+                    </p>
                   </div>
                 </div>
               ) : availableFiles.length === 0 ? (
@@ -2276,7 +2298,7 @@ export default function PublicationsPage() {
                     Upload images in File Manager first
                   </p>
                   <button
-                    onClick={() => window.open('/dashboard/files', '_blank')}
+                    onClick={() => window.open("/dashboard/files", "_blank")}
                     className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-2xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
                     <svg
@@ -2298,32 +2320,64 @@ export default function PublicationsPage() {
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {availableFiles.map((file) => {
-                    const fullImageUrl = file.file_url.startsWith('http') 
-                      ? file.file_url 
+                    const fullImageUrl = file.file_url.startsWith("http")
+                      ? file.file_url
                       : `${API_BASE_URL}${file.file_url}`;
-                    
+
                     return (
-                    <div
-                      key={file.id}
-                      onClick={() => selectFile(file.file_url)}
-                      className="group relative bg-white rounded-2xl border-2 border-slate-200 hover:border-blue-400 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
-                    >
-                      {/* Image Preview */}
-                      <div className="relative aspect-square bg-slate-100">
-                        <img
-                          src={fullImageUrl}
-                          alt={file.original_filename}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                          }}
-                        />
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/20 transition-all duration-200 flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <div className="bg-white rounded-full p-3 shadow-lg">
+                      <div
+                        key={file.id}
+                        onClick={() => selectFile(file.file_url)}
+                        className="group relative bg-white rounded-2xl border-2 border-slate-200 hover:border-blue-400 overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                      >
+                        {/* Image Preview */}
+                        <div className="relative aspect-square bg-slate-100">
+                          <img
+                            src={fullImageUrl}
+                            alt={file.original_filename}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
+                          />
+                          {/* Hover Overlay */}
+                          <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/20 transition-all duration-200 flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <div className="bg-white rounded-full p-3 shadow-lg">
+                                <svg
+                                  className="w-6 h-6 text-blue-600"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* File Info */}
+                        <div className="p-3">
+                          <p className="text-sm font-medium text-slate-900 truncate mb-1">
+                            {file.original_filename}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {(file.file_size / 1024).toFixed(2)} KB
+                          </p>
+                        </div>
+
+                        {/* Selected Indicator */}
+                        {formData.graphical_abstract_url === fullImageUrl && (
+                          <div className="absolute top-2 right-2">
+                            <div className="bg-green-500 rounded-full p-1.5 shadow-lg">
                               <svg
-                                className="w-6 h-6 text-blue-600"
+                                className="w-4 h-4 text-white"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -2331,46 +2385,14 @@ export default function PublicationsPage() {
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                                  strokeWidth={2}
+                                  strokeWidth={3}
                                   d="M5 13l4 4L19 7"
                                 />
                               </svg>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
-
-                      {/* File Info */}
-                      <div className="p-3">
-                        <p className="text-sm font-medium text-slate-900 truncate mb-1">
-                          {file.original_filename}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {(file.file_size / 1024).toFixed(2)} KB
-                        </p>
-                      </div>
-
-                      {/* Selected Indicator */}
-                      {formData.graphical_abstract_url === fullImageUrl && (
-                        <div className="absolute top-2 right-2">
-                          <div className="bg-green-500 rounded-full p-1.5 shadow-lg">
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                     );
                   })}
                 </div>
