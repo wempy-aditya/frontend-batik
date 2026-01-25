@@ -19,7 +19,8 @@ export default function PublicationsPage() {
   const [sortBy, setSortBy] = useState("latest");
   const [hoveredPaper, setHoveredPaper] = useState(null);
   const [citationPaper, setCitationPaper] = useState(null);
-  const [availableYears, setAvailableYears] = useState([]);
+  // Static years options (2021-2026)
+  const availableYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
 
   const fallbackCategories = [
     { id: "all", name: "All Publications", count: 25 },
@@ -65,49 +66,6 @@ export default function PublicationsPage() {
     fetchCategories();
   }, []);
 
-  // Fetch available years from API
-  useEffect(() => {
-    const fetchYears = async () => {
-      try {
-        const response = await fetch("/api/publications/public?limit=1000");
-        if (response.ok) {
-          const data = await response.json();
-          const publicationsData = data.data || data;
-          if (Array.isArray(publicationsData) && publicationsData.length > 0) {
-            // Extract unique years and sort descending
-            const yearsSet = new Set();
-            let hasOlderYears = false;
-            const currentYear = new Date().getFullYear();
-            const fiveYearsAgo = currentYear - 5;
-
-            publicationsData.forEach((pub) => {
-              if (pub.year) {
-                const year = parseInt(pub.year);
-                if (year >= fiveYearsAgo) {
-                  yearsSet.add(year.toString());
-                } else {
-                  hasOlderYears = true;
-                }
-              }
-            });
-
-            const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
-
-            // Add "older" option if there are publications older than 5 years
-            if (hasOlderYears) {
-              sortedYears.push("older");
-            }
-
-            setAvailableYears(sortedYears);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching years:", error);
-      }
-    };
-    fetchYears();
-  }, []);
-
   // Fetch publications from API
   useEffect(() => {
     const fetchPublications = async () => {
@@ -118,7 +76,7 @@ export default function PublicationsPage() {
 
         // Pagination - convert page to offset/limit
         const limit = 12;
-        const offset = (currentPage - 1) * limit;
+        const offset = (currentPage - 1) * 12;
         params.append("offset", offset.toString());
         params.append("limit", limit.toString());
 
@@ -129,14 +87,7 @@ export default function PublicationsPage() {
 
         // Year filter
         if (selectedYear !== "all") {
-          if (selectedYear === "older") {
-            // For older publications, we need to filter client-side or use a special param
-            const currentYear = new Date().getFullYear();
-            const fiveYearsAgo = currentYear - 5;
-            params.append("year_before", fiveYearsAgo.toString());
-          } else {
-            params.append("year", selectedYear);
-          }
+          params.append("year", selectedYear);
         }
 
         // Category filter
@@ -172,7 +123,7 @@ export default function PublicationsPage() {
           if (data && Array.isArray(data.data)) {
             setPublications(data.data);
             setTotalItems(data.total || 0);
-            setTotalPages(Math.ceil((data.total || 0) / limit));
+            setTotalPages(Math.ceil((data.total || 0) / 12));
           } else if (Array.isArray(data)) {
             setPublications(data);
             setTotalItems(data.length);
@@ -610,9 +561,7 @@ export default function PublicationsPage() {
                 {selectedYear !== "all" && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-lg text-sm font-medium">
                     <span className="font-semibold">Year:</span>
-                    {selectedYear === "older"
-                      ? "Lebih dari 5 tahun"
-                      : selectedYear}
+                    {selectedYear}
                     <button
                       onClick={() => {
                         setSelectedYear("all");
