@@ -153,8 +153,8 @@ const ResearchSection = () => {
   const displayPublications = loading
     ? []
     : publications.length > 0
-    ? publications
-    : fallbackPublications;
+      ? publications
+      : fallbackPublications;
 
   // Responsive items per page
   const [itemsPerPage, setItemsPerPage] = useState(3);
@@ -190,9 +190,9 @@ const ResearchSection = () => {
   };
 
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-br from-slate-50 to-gray-100 relative">
+    <section className="py-12 md:py-16 bg-white relative">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-40 overflow-hidden">
+      <div className="absolute inset-0 opacity-20 overflow-hidden">
         <div
           className="absolute inset-0"
           style={{
@@ -527,7 +527,7 @@ const ResearchSection = () => {
                             <button
                               onClick={() =>
                                 router.push(
-                                  `/publications/${paper.uuid || paper.id}`
+                                  `/publications/${paper.uuid || paper.id}`,
                                 )
                               }
                               className="col-span-5 py-3 px-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm rounded-lg transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-1.5"
@@ -610,7 +610,7 @@ const ResearchSection = () => {
                                 onClick={() =>
                                   window.open(
                                     `https://doi.org/${paper.doi}`,
-                                    "_blank"
+                                    "_blank",
                                   )
                                 }
                                 className="col-span-2 py-3 px-2 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg flex items-center justify-center"

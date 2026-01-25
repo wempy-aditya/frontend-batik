@@ -39,6 +39,12 @@ export async function GET(request) {
       params.append("year", year);
     }
 
+    // Year before filter (for "older" publications)
+    const year_before = searchParams.get("year_before");
+    if (year_before) {
+      params.append("year_before", year_before);
+    }
+
     // Category filter
     const category_id = searchParams.get("category_id");
     if (category_id) {
@@ -68,13 +74,19 @@ export async function GET(request) {
     const response = await fetch(url);
 
     if (!response.ok) {
-      return NextResponse.json({ data: [], total: 0, page: 1, size: 0, pages: 0 }, { status: 200 });
+      return NextResponse.json(
+        { data: [], total: 0, page: 1, size: 0, pages: 0 },
+        { status: 200 },
+      );
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching public publications:", error);
-    return NextResponse.json({ data: [], total: 0, page: 1, size: 0, pages: 0 }, { status: 200 });
+    return NextResponse.json(
+      { data: [], total: 0, page: 1, size: 0, pages: 0 },
+      { status: 200 },
+    );
   }
 }

@@ -173,8 +173,8 @@ export default function DatasetsPage() {
   const displayDatasets = loading
     ? []
     : datasets.length > 0
-    ? datasets
-    : fallbackDatasets;
+      ? datasets
+      : fallbackDatasets;
 
   // Local filter for access type (since API doesn't support this filter yet)
   const filteredDatasets = displayDatasets.filter((dataset) => {
@@ -298,39 +298,11 @@ export default function DatasetsPage() {
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
+            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
               Explore our comprehensive collection of curated datasets for
               machine learning research. From computer vision to NLP, find the
               perfect data for your next breakthrough.
             </p>
-
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-6 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  18+
-                </div>
-                <div className="text-sm text-gray-400">Datasets</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  50M+
-                </div>
-                <div className="text-sm text-gray-400">Samples</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  1TB+
-                </div>
-                <div className="text-sm text-gray-400">Total Size</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  500K+
-                </div>
-                <div className="text-sm text-gray-400">Downloads</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -555,7 +527,7 @@ export default function DatasetsPage() {
                       categories.find(
                         (c) =>
                           c.id === selectedCategory ||
-                          c.slug === selectedCategory
+                          c.slug === selectedCategory,
                       )?.name
                     }
                     <button
@@ -745,7 +717,7 @@ export default function DatasetsPage() {
                     <div className="relative h-40 overflow-hidden">
                       <div
                         className={`absolute inset-0 bg-gradient-to-br ${getGradientClass(
-                          dataset.gradient
+                          dataset.gradient,
                         )} transition-transform duration-700 ${
                           hoveredDataset === dataset.id ? "scale-110" : ""
                         }`}
@@ -768,7 +740,7 @@ export default function DatasetsPage() {
                       <div className="absolute top-4 right-4">
                         <span
                           className={`px-3 py-1 text-xs font-semibold rounded-full border ${getAccessColor(
-                            dataset.access_level
+                            dataset.access_level,
                           )}`}
                         >
                           {dataset.access_level || "Public"}
@@ -859,7 +831,7 @@ export default function DatasetsPage() {
                           <span>Updated:</span>
                           <span className="font-medium">
                             {new Date(
-                              dataset.updated_at || dataset.created_at
+                              dataset.updated_at || dataset.created_at,
                             ).toLocaleDateString("en-US", {
                               year: "numeric",
                               month: "short",
@@ -880,7 +852,7 @@ export default function DatasetsPage() {
                             }
                           }}
                           className={`w-full py-3 px-4 bg-gradient-to-r ${getGradientClass(
-                            dataset.gradient
+                            dataset.gradient,
                           )} text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105`}
                         >
                           <div className="flex items-center justify-center gap-2">
@@ -970,7 +942,7 @@ export default function DatasetsPage() {
           {/* CTA Section */}
           <div className="text-center mt-20">
             <div className="max-w-3xl mx-auto">
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-8 mb-8">
+              <div className="bg-white rounded-2xl p-8 md:p-12 shadow-lg border-2 border-gray-100">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                   Need a Custom Dataset?
                 </h2>
@@ -981,13 +953,13 @@ export default function DatasetsPage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     onClick={() => (window.location.href = "/contact")}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                    className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                   >
                     Contact Our Team
                   </button>
                   <button
                     onClick={() => (window.location.href = "/projects")}
-                    className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300"
+                    className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300"
                   >
                     View Services
                   </button>

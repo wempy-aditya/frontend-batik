@@ -644,9 +644,9 @@ export default function PublicationsPage() {
           {publications.map((publication) => (
             <div
               key={publication.id}
-              className="group bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+              className="group bg-white/90 backdrop-blur-sm rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-slate-300/60 transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col h-full"
             >
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-1">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-amber-700 transition-colors">
@@ -722,6 +722,9 @@ export default function PublicationsPage() {
                   </div>
                 </div>
 
+                {/* Spacer to push content below to bottom */}
+                <div className="flex-1"></div>
+
                 {/* Meta Info */}
                 <div className="flex justify-between items-center text-xs text-slate-500 pb-4 mb-4 border-b border-slate-100">
                   <span>
@@ -736,13 +739,13 @@ export default function PublicationsPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 sm:flex gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <button
                     onClick={() => openModal("view", publication)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 font-medium text-xs"
                   >
                     <svg
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -760,14 +763,13 @@ export default function PublicationsPage() {
                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                       />
                     </svg>
-                    <span className="hidden xs:inline">View</span>
                   </button>
                   <button
                     onClick={() => openModal("edit", publication)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium text-xs"
                   >
                     <svg
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -779,14 +781,13 @@ export default function PublicationsPage() {
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                       />
                     </svg>
-                    <span className="hidden xs:inline">Edit</span>
                   </button>
                   <button
                     onClick={() => openCategoryModal(publication)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 font-medium text-xs"
                   >
                     <svg
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -798,14 +799,13 @@ export default function PublicationsPage() {
                         d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                       />
                     </svg>
-                    <span className="hidden xs:inline">Tags</span>
                   </button>
                   <button
                     onClick={() => handleDelete(publication)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-xs sm:text-sm"
+                    className="flex items-center justify-center gap-1.5 px-2 py-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all duration-200 font-medium text-xs"
                   >
                     <svg
-                      className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -817,7 +817,6 @@ export default function PublicationsPage() {
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                       />
                     </svg>
-                    <span className="hidden xs:inline">Delete</span>
                   </button>
                 </div>
               </div>
