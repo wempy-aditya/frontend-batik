@@ -19,19 +19,13 @@ export default function PublicationsPage() {
   const [sortBy, setSortBy] = useState("latest");
   const [hoveredPaper, setHoveredPaper] = useState(null);
   const [citationPaper, setCitationPaper] = useState(null);
+  const [availableYears, setAvailableYears] = useState([]);
 
   const fallbackCategories = [
     { id: "all", name: "All Publications", count: 25 },
     { id: "conference", name: "Conference Papers", count: 15 },
     { id: "journal", name: "Journal Articles", count: 8 },
     { id: "survey", name: "Survey Papers", count: 2 },
-  ];
-
-  const years = [
-    { id: "all", name: "All Years", count: 25 },
-    { id: "2024", name: "2024", count: 8 },
-    { id: "2023", name: "2023", count: 12 },
-    { id: "2022", name: "2022", count: 5 },
   ];
 
   const sortOptions = [
@@ -71,6 +65,49 @@ export default function PublicationsPage() {
     fetchCategories();
   }, []);
 
+  // Fetch available years from API
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await fetch("/api/publications/public?limit=1000");
+        if (response.ok) {
+          const data = await response.json();
+          const publicationsData = data.data || data;
+          if (Array.isArray(publicationsData) && publicationsData.length > 0) {
+            // Extract unique years and sort descending
+            const yearsSet = new Set();
+            let hasOlderYears = false;
+            const currentYear = new Date().getFullYear();
+            const fiveYearsAgo = currentYear - 5;
+
+            publicationsData.forEach((pub) => {
+              if (pub.year) {
+                const year = parseInt(pub.year);
+                if (year >= fiveYearsAgo) {
+                  yearsSet.add(year.toString());
+                } else {
+                  hasOlderYears = true;
+                }
+              }
+            });
+
+            const sortedYears = Array.from(yearsSet).sort((a, b) => b - a);
+
+            // Add "older" option if there are publications older than 5 years
+            if (hasOlderYears) {
+              sortedYears.push("older");
+            }
+
+            setAvailableYears(sortedYears);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching years:", error);
+      }
+    };
+    fetchYears();
+  }, []);
+
   // Fetch publications from API
   useEffect(() => {
     const fetchPublications = async () => {
@@ -92,7 +129,14 @@ export default function PublicationsPage() {
 
         // Year filter
         if (selectedYear !== "all") {
-          params.append("year", selectedYear);
+          if (selectedYear === "older") {
+            // For older publications, we need to filter client-side or use a special param
+            const currentYear = new Date().getFullYear();
+            const fiveYearsAgo = currentYear - 5;
+            params.append("year_before", fiveYearsAgo.toString());
+          } else {
+            params.append("year", selectedYear);
+          }
         }
 
         // Category filter
@@ -170,8 +214,8 @@ export default function PublicationsPage() {
   const displayPublications = loading
     ? []
     : publications.length > 0
-    ? publications
-    : fallbackPublications;
+      ? publications
+      : fallbackPublications;
 
   // HAPUS local filtering - sekarang filtering dilakukan di API
   const filteredPublications = displayPublications;
@@ -351,39 +395,11 @@ export default function PublicationsPage() {
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
+            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
               Explore our comprehensive collection of research publications
               advancing the frontiers of artificial intelligence, computer
               vision, and machine learning.
             </p>
-
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-6 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  25+
-                </div>
-                <div className="text-sm text-gray-400">Publications</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  1.2K
-                </div>
-                <div className="text-sm text-gray-400">Citations</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  15
-                </div>
-                <div className="text-sm text-gray-400">Conferences</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  8
-                </div>
-                <div className="text-sm text-gray-400">Journals</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -459,12 +475,12 @@ export default function PublicationsPage() {
                     setSelectedYear(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full lg:w-32 px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
+                  className="w-full lg:w-40 px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
                 >
                   <option value="all">All Years</option>
-                  {years.map((year) => (
-                    <option key={year.id} value={year.id}>
-                      {year.name}
+                  {availableYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year === "older" ? "Lebih dari 5 tahun" : year}
                     </option>
                   ))}
                 </select>
@@ -594,7 +610,9 @@ export default function PublicationsPage() {
                 {selectedYear !== "all" && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-lg text-sm font-medium">
                     <span className="font-semibold">Year:</span>
-                    {selectedYear}
+                    {selectedYear === "older"
+                      ? "Lebih dari 5 tahun"
+                      : selectedYear}
                     <button
                       onClick={() => {
                         setSelectedYear("all");
@@ -761,18 +779,18 @@ export default function PublicationsPage() {
                         <div className="flex gap-2">
                           <span
                             className={`px-3 py-1 text-xs font-semibold rounded-full border ${getCategoryColor(
-                              paper.category
+                              paper.category,
                             )}`}
                           >
                             {paper.category === "conference"
                               ? "Conference Paper"
                               : paper.category === "journal"
-                              ? "Journal Article"
-                              : "Survey Paper"}
+                                ? "Journal Article"
+                                : "Survey Paper"}
                           </span>
                           <span
                             className={`px-3 py-1 text-xs font-medium rounded-full ${getImpactColor(
-                              paper.impact
+                              paper.impact,
                             )}`}
                           >
                             {paper.impact} Impact
@@ -1013,7 +1031,7 @@ export default function PublicationsPage() {
           {/* CTA Section */}
           <div className="text-center mt-20">
             <div className="max-w-3xl mx-auto">
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-8 mb-8">
+              <div className="bg-white rounded-2xl p-8 md:p-12 shadow-lg border-2 border-gray-100">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                   Want to Collaborate?
                 </h2>
@@ -1021,18 +1039,10 @@ export default function PublicationsPage() {
                   Join our research team and contribute to cutting-edge advances
                   in AI and computer vision.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button
-                    onClick={() =>
-                      (window.location.href = "/research/collaborate")
-                    }
-                    className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl shadow-lg shadow-amber-500/30"
-                  >
-                    Research Collaboration
-                  </button>
+                <div className="flex justify-center">
                   <button
                     onClick={() => (window.location.href = "/contact")}
-                    className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300"
+                    className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                   >
                     Contact Us
                   </button>

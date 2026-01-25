@@ -106,8 +106,8 @@ const GalleryCarousel = () => {
   const displayGalleryImages = loading
     ? []
     : galleryImages.length > 0
-    ? galleryImages
-    : fallbackGalleryImages;
+      ? galleryImages
+      : fallbackGalleryImages;
 
   // Auto-play functionality
   useEffect(() => {
@@ -127,7 +127,7 @@ const GalleryCarousel = () => {
   const prevImage = () => {
     setCurrentIndex(
       (prev) =>
-        (prev - 1 + displayGalleryImages.length) % displayGalleryImages.length
+        (prev - 1 + displayGalleryImages.length) % displayGalleryImages.length,
     );
   };
 
@@ -271,7 +271,7 @@ const GalleryCarousel = () => {
                       <p className="text-gray-300 text-sm mb-2">
                         {truncateText(
                           displayGalleryImages[currentIndex].description,
-                          120
+                          120,
                         )}
                       </p>
                     ) : null}
@@ -371,69 +371,6 @@ const GalleryCarousel = () => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Gallery Stats */}
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
-          <div className="text-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">10K+ Images</h3>
-            <p className="text-gray-300">Generated and curated</p>
-          </div>
-
-          <div className="text-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">50+ Models</h3>
-            <p className="text-gray-300">Different AI architectures</p>
-          </div>
-
-          <div className="text-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">100+ Styles</h3>
-            <p className="text-gray-300">Artistic variations</p>
-          </div>
         </div>
 
         {/* CTA Section */}

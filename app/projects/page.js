@@ -117,8 +117,8 @@ export default function ProjectsPage() {
   const displayProjects = loading
     ? []
     : projects.length > 0
-    ? projects
-    : fallbackProjects;
+      ? projects
+      : fallbackProjects;
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -224,39 +224,11 @@ export default function ProjectsPage() {
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
+            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
               Explore our comprehensive collection of AI and computer vision
               projects. From research prototypes to production-ready solutions,
               discover innovation at every level.
             </p>
-
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-6 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  12+
-                </div>
-                <div className="text-sm text-gray-400">Projects</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  5
-                </div>
-                <div className="text-sm text-gray-400">Categories</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  50+
-                </div>
-                <div className="text-sm text-gray-400">Team Members</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-white">
-                  2M+
-                </div>
-                <div className="text-sm text-gray-400">Images Processed</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -391,7 +363,7 @@ export default function ProjectsPage() {
                       categories.find(
                         (c) =>
                           c.id === selectedCategory ||
-                          c.slug === selectedCategory
+                          c.slug === selectedCategory,
                       )?.name
                     }
                     <button
@@ -567,7 +539,7 @@ export default function ProjectsPage() {
                       <div className="absolute top-4 left-4 flex gap-2">
                         <span
                           className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(
-                            project.status
+                            project.status,
                           )}`}
                         >
                           {project.status
@@ -579,7 +551,7 @@ export default function ProjectsPage() {
                       <div className="absolute top-4 right-4">
                         <span
                           className={`px-3 py-1 text-xs font-medium rounded-full ${getComplexityColor(
-                            project.complexity
+                            project.complexity,
                           )}`}
                         >
                           {project.complexity
@@ -650,7 +622,7 @@ export default function ProjectsPage() {
                         <div
                           onClick={() => {
                             console.log(
-                              `Navigating to project ${project.id} details`
+                              `Navigating to project ${project.id} details`,
                             );
                             window.location.href = `/projects/${project.id}`;
                           }}
@@ -730,7 +702,7 @@ export default function ProjectsPage() {
 
           {/* CTA Section */}
           <div className="text-center mt-20">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-3xl mx-auto bg-white rounded-2xl p-8 md:p-12 shadow-lg border-2 border-gray-100">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
                 Want to Collaborate?
               </h2>
