@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ParangBatikPage() {
   const [prompt, setPrompt] = useState("");
@@ -11,20 +11,29 @@ export default function ParangBatikPage() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [error, setError] = useState("");
   const [responseData, setResponseData] = useState(null);
+  const [parangBatikPrompts, setParangBatikPrompts] = useState([]);
+  const [isLoadingPrompts, setIsLoadingPrompts] = useState(true);
 
-  // Advanced batik prompts focused on Parang motif
-  const parangBatikPrompts = [
-    "create a classic batik featuring the iconic Parang Rusak motif, with bold diagonal patterns resembling breaking waves. The design uses deep indigo blue against cream background, symbolizing power and authority worn by Javanese royalty.",
-    "design an elegant batik pattern called Parang Barong, featuring larger and more prominent diagonal blade-like patterns. This sacred motif was traditionally reserved for sultans, rendered in rich brown and golden yellow tones.",
-    "craft a sophisticated batik with Parang Klitik motif, displaying smaller, more delicate diagonal patterns that create subtle visual movement. The design uses navy blue and white color palette with intricate detailing.",
-    "generate a refined batik pattern featuring Parang Kusumo, combining the classic diagonal parang structure with floral kusuma elements. The motif uses gradients from deep blue to soft cream, representing the harmony of strength and beauty.",
-    "create an intricate batik design inspired by Parang Sobrah, with dense diagonal patterns that symbolize courage and determination. The composition uses traditional brown, indigo, and cream colors with bold geometric precision.",
-    "design a contemporary batik featuring modernized Parang Curigo motif, with diagonal dagger-like patterns that represent warrior spirit and protection. Use bold colors of black, gold, and deep red for dramatic effect.",
-    "craft a luxurious batik pattern called Parang Seling, featuring alternating diagonal parang rows with contrasting colors. The design symbolizes balance and duality, using navy blue, golden brown, and ivory white.",
-    "generate a sophisticated batik featuring Parang Menang motif, with victorious wave-like diagonal patterns that slope towards victory. The pattern uses powerful colors of deep indigo, burnt sienna, and cream.",
-    "create an artistic batik design inspired by Parang Tuding, featuring diagonal patterns pointing in specific directions symbolizing guidance and leadership. The motif uses elegant shades of brown, blue, and gold.",
-    "design an elegant batik pattern featuring Parang Gondosuli, combining the classic parang diagonal structure with intricate mythical creature elements. The design represents spiritual protection, using rich colors of burgundy, gold, and deep blue.",
-  ];
+  // Load batik prompts from JSON file
+  useEffect(() => {
+    const loadPrompts = async () => {
+      try {
+        const response = await fetch('/data/batik-parang-prompts.json');
+        const data = await response.json();
+        const prompts = data.motifs.map(motif => motif.prompt);
+        setParangBatikPrompts(prompts);
+        setIsLoadingPrompts(false);
+      } catch (err) {
+        console.error('Failed to load batik prompts:', err);
+        // Fallback to default prompts if loading fails
+        setParangBatikPrompts([
+          "Create a traditional Parang batik motif with diagonal patterns on dark background.",
+        ]);
+        setIsLoadingPrompts(false);
+      }
+    };
+    loadPrompts();
+  }, []);
 
   // Scenario options for Parang motif
   const scenarioOptions = [
@@ -41,8 +50,10 @@ export default function ParangBatikPage() {
   ];
 
   const randomizePrompt = () => {
-    const randomIndex = Math.floor(Math.random() * parangBatikPrompts.length);
-    setPrompt(parangBatikPrompts[randomIndex]);
+    if (parangBatikPrompts.length > 0) {
+      const randomIndex = Math.floor(Math.random() * parangBatikPrompts.length);
+      setPrompt(parangBatikPrompts[randomIndex]);
+    }
   };
 
   const resetToDefaults = () => {
@@ -243,7 +254,7 @@ export default function ParangBatikPage() {
                     </label>
                     <button
                       onClick={randomizePrompt}
-                      disabled={isGenerating}
+                      disabled={isGenerating || isLoadingPrompts || parangBatikPrompts.length === 0}
                       className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       <svg
@@ -259,7 +270,7 @@ export default function ParangBatikPage() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      Parang Examples
+                      {isLoadingPrompts ? 'Loading...' : 'Parang Examples'}
                     </button>
                   </div>
                   <textarea

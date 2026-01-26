@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function TestApiPage() {
   const [prompt, setPrompt] = useState("");
@@ -7,24 +7,35 @@ export default function TestApiPage() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [error, setError] = useState("");
   const [responseData, setResponseData] = useState(null);
+  const [batikPrompts, setBatikPrompts] = useState([]);
+  const [isLoadingPrompts, setIsLoadingPrompts] = useState(true);
 
-  // Predefined batik prompts for randomization
-  const batikPrompts = [
-    "batik motif named Sekar Tanjung, featuring a central floral design with a star-like pattern, surrounded by intricate geometric patterns and symmetrical shapes on a dark blue background with light beige accents. This motif symbolizes the beauty and fragility of nature, emphasizing the importance of good deeds for family and society.",
-    "The batik motif Sekar Pudak features a central cross surrounded by intricate floral patterns and dots, set against a dark background, representing the Pandanus tectorius plant and symbolizing hope and respect for social status.",
-    "make a batik named Sekar Ketongkeng, featuring a central diamond shape surrounded by intricate patterns resembling orchids, with the flowers depicted as scorpions. This design holds cultural significance, representing the Javanese concept of ketongkeng, a type of orchid.",
-    "create a batik featuring irregularly placed geometric shapes that create a visually striking pattern. This design emphasizes the importance of considering small details carefully, as it highlights the potential impact of seemingly trivial matters.",
-    "generate a traditional batik motif called Parang Rusak, featuring diagonal patterns with curved elements resembling waves, symbolizing strength and perseverance in facing life's challenges.",
-    "design a batik pattern named Kawung, featuring circular motifs arranged in geometric formation, representing the four cardinal directions and symbolizing justice, wisdom, and protection.",
-    "create a batik motif Mega Mendung featuring cloud-like patterns with swirling designs in blue and white colors, symbolizing patience and serenity in dealing with life's problems.",
-    "make a batik design called Sido Mukti, featuring intricate floral patterns with golden accents, representing prosperity, happiness, and success in life.",
-    "generate a batik pattern Truntum with small star-like flowers scattered across the fabric, symbolizing pure love and faithfulness between couples.",
-    "design a batik motif Lereng featuring diagonal striped patterns with floral elements, representing the slopes of mountains and symbolizing hope and spiritual elevation.",
-  ];
+  // Load batik prompts from JSON file
+  useEffect(() => {
+    const loadPrompts = async () => {
+      try {
+        const response = await fetch('/data/batik-nitik-prompts.json');
+        const data = await response.json();
+        const prompts = data.motifs.map(motif => motif.prompt);
+        setBatikPrompts(prompts);
+        setIsLoadingPrompts(false);
+      } catch (err) {
+        console.error('Failed to load batik prompts:', err);
+        // Fallback to default prompts if loading fails
+        setBatikPrompts([
+          "Create a traditional batik motif with intricate patterns on dark blue background with light beige accents.",
+        ]);
+        setIsLoadingPrompts(false);
+      }
+    };
+    loadPrompts();
+  }, []);
 
   const randomizePrompt = () => {
-    const randomIndex = Math.floor(Math.random() * batikPrompts.length);
-    setPrompt(batikPrompts[randomIndex]);
+    if (batikPrompts.length > 0) {
+      const randomIndex = Math.floor(Math.random() * batikPrompts.length);
+      setPrompt(batikPrompts[randomIndex]);
+    }
   };
 
   const generateImage = async () => {
@@ -241,7 +252,7 @@ export default function TestApiPage() {
                     </label>
                     <button
                       onClick={randomizePrompt}
-                      disabled={isGenerating}
+                      disabled={isGenerating || isLoadingPrompts || batikPrompts.length === 0}
                       className="px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       <svg
@@ -257,7 +268,7 @@ export default function TestApiPage() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      Inspire Me
+                      {isLoadingPrompts ? 'Loading...' : 'Inspire Me'}
                     </button>
                   </div>
                   <textarea

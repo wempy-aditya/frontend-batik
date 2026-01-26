@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AdvancedBatikPage() {
   const [prompt, setPrompt] = useState("");
@@ -11,20 +11,29 @@ export default function AdvancedBatikPage() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [error, setError] = useState("");
   const [responseData, setResponseData] = useState(null);
+  const [advancedBatikPrompts, setAdvancedBatikPrompts] = useState([]);
+  const [isLoadingPrompts, setIsLoadingPrompts] = useState(true);
 
-  // Advanced batik prompts with more sophisticated descriptions
-  const advancedBatikPrompts = [
-    "create a batik features a motif inspired by the duku flower, reflecting the region's cultural heritage and natural beauty. The design showcases a series of interconnected dots forming a floral-like structure, reminiscent of the duku flower's intricate patterns when viewed from above.",
-    "design an elegant batik pattern featuring the Cengkeh (clove) motif, with delicate branching patterns that represent the spice trade heritage of Indonesia. The design incorporates small clustered flowers in warm brown and golden tones against a deep indigo background.",
-    "craft a sophisticated batik featuring the Buketan motif, displaying a bouquet arrangement of traditional Indonesian flowers including melati, mawar, and kenanga. The composition uses soft curves and flowing lines to create harmony and balance.",
-    "generate a refined batik pattern called Nitik, featuring small dots and geometric patterns that create a subtle texture reminiscent of traditional Javanese court batik. The design uses earth tones with hints of gold threading.",
-    "create an intricate batik design inspired by Garuda wings, with flowing feather patterns that symbolize freedom and spiritual elevation. The motif uses gradients from deep blue to golden yellow, representing the sky and divine light.",
-    "design a contemporary batik featuring modernized Parang Klithik motif, with smaller, more delicate diagonal patterns that maintain traditional symbolism while adapting to modern aesthetics. Use navy blue and cream color palette.",
-    "craft a luxurious batik pattern inspired by Sido Asih, featuring heart-shaped motifs surrounded by intricate floral borders. The design symbolizes love and affection, using romantic colors of soft pink, cream, and gold accents.",
-    "generate a sophisticated batik featuring the Grompol motif, with clustered geometric shapes that create visual rhythm and movement. The pattern uses traditional brown, indigo, and cream colors with subtle gradations.",
-    "create an artistic batik design inspired by Udan Liris, featuring diagonal rain-like patterns that symbolize fertility and abundance. The motif uses flowing lines in various shades of blue and white to represent rainfall.",
-    "design an elegant batik pattern featuring Lung-lungan motif, with stylized dragon-like creatures intertwined with floral elements. The design represents protection and power, using bold colors of red, gold, and black.",
-  ];
+  // Load batik prompts from JSON file
+  useEffect(() => {
+    const loadPrompts = async () => {
+      try {
+        const response = await fetch('/data/batik-tiled-prompts.json');
+        const data = await response.json();
+        const prompts = data.motifs.map(motif => motif.prompt);
+        setAdvancedBatikPrompts(prompts);
+        setIsLoadingPrompts(false);
+      } catch (err) {
+        console.error('Failed to load batik prompts:', err);
+        // Fallback to default prompts if loading fails
+        setAdvancedBatikPrompts([
+          "Create a traditional batik motif with intricate patterns on dark blue background with light beige accents.",
+        ]);
+        setIsLoadingPrompts(false);
+      }
+    };
+    loadPrompts();
+  }, []);
 
   // Scenario options with descriptions
   const scenarioOptions = [
@@ -61,8 +70,10 @@ export default function AdvancedBatikPage() {
   ];
 
   const randomizePrompt = () => {
-    const randomIndex = Math.floor(Math.random() * advancedBatikPrompts.length);
-    setPrompt(advancedBatikPrompts[randomIndex]);
+    if (advancedBatikPrompts.length > 0) {
+      const randomIndex = Math.floor(Math.random() * advancedBatikPrompts.length);
+      setPrompt(advancedBatikPrompts[randomIndex]);
+    }
   };
 
   const resetToDefaults = () => {
@@ -266,7 +277,7 @@ export default function AdvancedBatikPage() {
                     </label>
                     <button
                       onClick={randomizePrompt}
-                      disabled={isGenerating}
+                      disabled={isGenerating || isLoadingPrompts || advancedBatikPrompts.length === 0}
                       className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       <svg
@@ -282,7 +293,7 @@ export default function AdvancedBatikPage() {
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      Advanced Examples
+                      {isLoadingPrompts ? 'Loading...' : 'Advanced Examples'}
                     </button>
                   </div>
                   <textarea

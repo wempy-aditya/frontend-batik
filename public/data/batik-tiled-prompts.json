@@ -1,0 +1,124 @@
+{
+  "motifs": [
+    {
+      "name": "Sekar Kemuning",
+      "prompt": "Create a batik motif named Sekar Kemuning featuring a central sunflower-like flower with circular center and radiating petals, surrounded by intricate patterns of small white flower-like shapes against dark blue background. The motif symbolizes balance between thought, ability, and facility in creating societal development, representing concentration and the importance of natural elements in daily life."
+    },
+    {
+      "name": "Sekar Ketongkeng",
+      "prompt": "Create a traditional batik cloth featuring Sekar Ketongkeng motif inspired by orchid Scorpions flowers. The central diamond-shaped pattern is surrounded by curved lines and dots creating symmetrical design. Dark blue background with light beige geometric shapes, floral patterns, and gold accents reflecting the beauty and complexity of traditional batik art."
+    },
+    {
+      "name": "Brendhi",
+      "prompt": "Create a batik cloth with dark blue background featuring intricate Brendi motif. Central floral arrangement with cross-like center, surrounded by smaller flowers and geometric shapes. Gold-outlined motifs filled with light beige colors. The design is symmetrical and repetitive, associated with vitality and stamina from Dutch East Indies era."
+    },
+    {
+      "name": "Cakar Ayam",
+      "prompt": "Create a traditional batik featuring Cakar Ayam motif with triangular and dot patterns arranged symmetrically. Dark blue background with light beige motifs symbolizing the spirit of facing tomorrow to seek fortune, like a chicken searching for food. Used in wedding rituals and during childbirth ceremonies."
+    },
+    {
+      "name": "Sekar Menur",
+      "prompt": "Create a batik cloth with Sekar Menur motif featuring stylized flowers with overlapping petals in symmetrical pattern. Light beige flowers on dark blue background with geometric shapes including squares, rectangles, and floral designs in grid-like arrangement. Symbolizes purity and doing good things without expecting anything in return."
+    },
+    {
+      "name": "Sekar Tebu",
+      "prompt": "Create a batik fabric with Sekar Tebu motif inspired by sugarcane flowers (gleges). Symmetrical geometric pattern with light beige shapes on dark blue background including squares, rectangles, and circles with small circular dots. The motif advises caution and careful consideration to avoid unintended consequences."
+    },
+    {
+      "name": "Sekar Manggis",
+      "prompt": "Create a batik cloth featuring Sekar Manggis motif inspired by mangosteen flower. Stylized flower representation with interconnected geometric shapes and dots forming lattice-like pattern. Dark blue background with light beige shapes. The motif represents hope that the wearer will become the best human being physically and mentally."
+    },
+    {
+      "name": "Sekar Randhu",
+      "prompt": "Create a batik cloth featuring Sekar Randu motif with central star-like design with radiating lines, surrounded by smaller floral elements in light beige on dark blue background with scattered white dots. Inspired by Ceiba pentandra plant, emphasizing giving enjoyment to others and maintaining honor."
+    },
+    {
+      "name": "Worawari Rumpuk",
+      "prompt": "Create a batik cloth featuring Wora-wari Rumpuk with detailed pattern of stacked double or multiple hibiscus flowers. Light beige flowers with orange centers against dark blue background, surrounded by small circular patterns. The motif conveys symmetry and layered beauty, symbolizing love, passion, and spirit."
+    },
+    {
+      "name": "Sekar Dhuku",
+      "prompt": "Create a batik cloth named Sekar Duku featuring large stylized duku flower seen from above at center, surrounded by smaller geometric shapes and dots in light beige and brown on dark blue background. Network-like pattern formed by interconnected dots with decorative floral designs reflecting cultural significance of duku flower."
+    },
+    {
+      "name": "Sekar Jagung",
+      "prompt": "Create a batik cloth featuring Sekar Jagung motif with central diamond shape surrounded by intricate lines and dots, white and orange elements including crosses and circles. Dark blue background creating depth and complexity. Represents corn flowers (sinuwun) symbolizing respect for elders in Javanese culture."
+    },
+    {
+      "name": "Sekar Liring (Ceplok Liring)",
+      "prompt": "Create a traditional batik featuring Ceplok Liring motif with star-like shapes arranged in grid formation on dark navy blue background with lighter beige patterns. The irregular placement emphasizes mindfulness of small details and respecting others' perspectives, conveying not to take things for granted."
+    },
+    {
+      "name": "Jayakirana",
+      "prompt": "Create a batik cloth featuring Jaya Kirana (Wijanarka) motif with geometric shapes and lines in symmetrical pattern. Light beige or cream patterns on dark blue background including circles, squares, rectangles with linear elements. Conveys heroic spirit, selflessness, and willingness to sacrifice for homeland."
+    },
+    {
+      "name": "Mawur",
+      "prompt": "Create a batik cloth featuring Mawur motif with scattered orange leaves with white dotted edges surrounded by small white dots in circular patterns. Dark blue background with key-like shapes and ornate details. The design has scattered appearance (mawur) with intricate geometric shapes and floral elements."
+    },
+    {
+      "name": "Sekar Tanjung",
+      "prompt": "Create a traditional Javanese batik featuring Sekar Tanjung motif with central circular design with star-like pattern, surrounded by interconnected geometric shapes including elongated rectangles and diamonds. Light beige on dark blue background. Inspired by Tanjung (Mimusops elengi) plant symbolizing hope for good deeds benefiting family and society."
+    },
+    {
+      "name": "Sekar Keben",
+      "prompt": "Create a batik cloth featuring Sekar Keben motif with central diamond shape surrounded by floral patterns and elongated teardrop shapes connected by curved lines. Light beige patterns with gold outlines on dark blue background. Represents Yogyakarta Palace's regol keben gate, symbolizing peace, beauty, and harmony."
+    },
+    {
+      "name": "Sekar Srengenge",
+      "prompt": "Create a batik fabric featuring Sekar Srengenge (sunflower) motif with small light-colored dots arranged in sunflower shapes and patterns. Light beige on dark blue background. The motif symbolizes consistency and resilience in facing life's challenges head-on with determination and cultural values of strength."
+    },
+    {
+      "name": "Sekar Soka",
+      "prompt": "Create a batik cloth featuring Sekar Soka motif with geometric shapes including circles, dots, and abstract forms in symmetrical pattern. Beige, white, and brown on dark blue background. Inspired by Ixora coccinea plant, representing cyclical nature of life and various emotions leading to enlightenment and eternal reality."
+    },
+    {
+      "name": "Sekar Nangka",
+      "prompt": "Create a traditional Indonesian batik featuring Sekar Nangka (jackfruit flower) motif with central star-like shape surrounded by intricate geometric patterns including small squares and cross-like symbols. Light beige with orange-brown accents on dark blue background. Symbolizes hopefulness and caution in judging others."
+    },
+    {
+      "name": "Kawung Nitik",
+      "prompt": "Create a traditional Indonesian batik featuring Kawung motif with four overlapping circles each containing small white floral patterns. Circles outlined in golden brown creating striking contrast against dark blue background. Symmetrical and balanced design symbolizing controlling desires to unite with God, representing a flower in full bloom for evolving future."
+    },
+    {
+      "name": "Sekar Pudak",
+      "prompt": "Create a batik motif named Sekar Pudak featuring central cross surrounded by intricate floral patterns and dots on dark background. Represents Pandanus tectorius plant symbolizing hope and respect for social status in Javanese culture with elegant geometric arrangements."
+    },
+    {
+      "name": "Parang Rusak",
+      "prompt": "Create a traditional batik motif called Parang Rusak featuring diagonal patterns with curved elements resembling waves. The design symbolizes strength and perseverance in facing life's challenges with flowing geometric patterns creating dynamic movement."
+    },
+    {
+      "name": "Mega Mendung",
+      "prompt": "Create a batik motif named Mega Mendung featuring cloud-like patterns with swirling designs in blue and white colors. The motif symbolizes patience and serenity in dealing with life's problems and challenges with flowing organic shapes."
+    },
+    {
+      "name": "Sido Mukti",
+      "prompt": "Create a batik design called Sido Mukti featuring intricate floral patterns with golden accents on dark background. The motif represents prosperity, happiness, and success in life with elaborate decorative elements and rich cultural symbolism."
+    },
+    {
+      "name": "Truntum",
+      "prompt": "Create a batik pattern named Truntum with small star-like flowers scattered across the fabric in light colors on dark background. The motif symbolizes pure love and faithfulness between couples in Javanese wedding traditions with delicate repeating patterns."
+    },
+    {
+      "name": "Lereng",
+      "prompt": "Create a batik motif named Lereng featuring diagonal striped patterns with floral elements. The design represents the slopes of mountains and symbolizes hope and spiritual elevation towards enlightenment with ascending geometric lines."
+    },
+    {
+      "name": "Buketan",
+      "prompt": "Craft a sophisticated batik featuring Buketan motif, displaying a bouquet arrangement of traditional Indonesian flowers including melati, mawar, and kenanga. The composition uses soft curves and flowing lines to create harmony and balance with elegant floral clusters."
+    },
+    {
+      "name": "Sido Asih",
+      "prompt": "Craft a luxurious batik pattern inspired by Sido Asih, featuring heart-shaped motifs surrounded by intricate floral borders. The design symbolizes love and affection, using romantic colors of soft pink, cream, and gold accents with delicate decorative elements."
+    },
+    {
+      "name": "Grompol",
+      "prompt": "Generate a sophisticated batik featuring Grompol motif, with clustered geometric shapes that create visual rhythm and movement. The pattern uses traditional brown, indigo, and cream colors with subtle gradations and repetitive clustering patterns."
+    },
+    {
+      "name": "Udan Liris",
+      "prompt": "Create an artistic batik design inspired by Udan Liris, featuring diagonal rain-like patterns that symbolize fertility and abundance. The motif uses flowing lines in various shades of blue and white to represent rainfall and natural blessings."
+    }
+  ]
+}
