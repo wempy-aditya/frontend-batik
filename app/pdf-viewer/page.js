@@ -33,9 +33,13 @@ function PDFViewerContent({ pdfLoaded }) {
   const pageCache = useRef(new Map());
   const backgroundLoadRef = useRef(null);
 
-  // Get proxy URL
+  // Get proxy URL - Using local Next.js API route (faster!)
   const getProxyUrl = (id) => {
-    return `https://bitter-darkness-fab2.wahyukusuma.workers.dev/pdf?id=${encodeURIComponent(id)}`;
+    // Option 1: Local Next.js proxy (recommended - same server, lebih cepat)
+    return `/api/proxy-pdf?id=${encodeURIComponent(id)}`;
+    
+    // Option 2: Cloudflare Workers (backup jika local proxy gagal)
+    // return `https://bitter-darkness-fab2.wahyukusuma.workers.dev/pdf?id=${encodeURIComponent(id)}`;
   };
 
   // Get Google Drive embed URL (fallback)
