@@ -26,8 +26,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
   // Get proxy URL
   const getProxyUrl = (id) => {
-    if (typeof window === 'undefined') return '';
-    return `${window.location.origin}/api/proxy-pdf?id=${encodeURIComponent(id)}`;
+    return `https://bitter-darkness-fab2.wahyukusuma.workers.dev/pdf?id=${encodeURIComponent(id)}`;
   };
 
   // Load initial params from URL dan auto-load PDF
