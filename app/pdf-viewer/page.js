@@ -64,6 +64,31 @@ function PDFViewerContent() {
 
     try {
       const url = getProxyUrl(id);
+      console.log('🔍 PDF Viewer Debug:', {
+        fileId: id,
+        proxyUrl: url,
+        initialPage,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+      });
+
+      // Test proxy API terlebih dahulu
+      setStatus("Checking proxy API...");
+      const testResponse = await fetch(url, { method: 'HEAD' }).catch(e => {
+        console.error('❌ Proxy API test failed:', e);
+        return null;
+      });
+
+      if (testResponse) {
+        console.log('✅ Proxy API response:', {
+          status: testResponse.status,
+          statusText: testResponse.statusText,
+          contentType: testResponse.headers.get('content-type'),
+          contentLength: testResponse.headers.get('content-length')
+        });
+      }
+
+      setStatus("Loading PDF document...");
       const loadingTask = window.pdfjsLib.getDocument({
         url,
         withCredentials: false,
@@ -71,7 +96,25 @@ function PDFViewerContent() {
         disableStream: false,
       });
 
+      // Progress tracking
+      loadingTask.onProgress = (progress) => {
+        const percent = progress.total > 0 
+          ? Math.round((progress.loaded / progress.total) * 100) 
+          : 0;
+        setStatus(`Loading PDF... ${percent}%`);
+        console.log('📥 Download progress:', {
+          loaded: progress.loaded,
+          total: progress.total,
+          percent: percent + '%'
+        });
+      };
+
       const pdf = await loadingTask.promise;
+      console.log('✅ PDF loaded successfully:', {
+        numPages: pdf.numPages,
+        fingerprint: pdf.fingerprint
+      });
+
       setPdfDoc(pdf);
       setTotalPages(pdf.numPages);
       setStatus(`Loaded. Total pages: ${pdf.numPages}`);
@@ -79,7 +122,28 @@ function PDFViewerContent() {
       const startPage = Math.min(Math.max(1, initialPage), pdf.numPages);
       await renderPage(pdf, startPage);
     } catch (err) {
-      console.error("PDF Load Error:", err);
+      console.error("❌ PDF Load Error:", {
+        message: err?.message,
+        name: err?.name,
+        stack: err?.stack,
+        fileId: id,
+        proxyUrl: getProxyUrl(id)
+      });
+
+      // Coba fetch manual untuk debug lebih detail
+      try {
+        const debugResponse = await fetch(getProxyUrl(id));
+        const debugText = await debugResponse.text();
+        console.error('🔍 Debug Response:', {
+          status: debugResponse.status,
+          statusText: debugResponse.statusText,
+          headers: Object.fromEntries(debugResponse.headers.entries()),
+          bodyPreview: debugText.substring(0, 500)
+        });
+      } catch (debugErr) {
+        console.error('🔍 Debug fetch also failed:', debugErr);
+      }
+
       setPdfDoc(null);
       setTotalPages(0);
       setStatus("");
@@ -88,8 +152,11 @@ function PDFViewerContent() {
         `Cek:\n` +
         `1) File ID valid dari Google Drive\n` +
         `2) File bisa diakses publik (Anyone with link)\n` +
-        `3) Proxy API berfungsi\n\n` +
-        `Detail: ${err?.message || String(err)}`
+        `3) Proxy API berfungsi\n` +
+        `4) Browser console untuk detail error\n\n` +
+        `Error Type: ${err?.name || 'Unknown'}\n` +
+        `Detail: ${err?.message || String(err)}\n\n` +
+        `Proxy URL: ${getProxyUrl(id)}`
       );
     } finally {
       setIsLoading(false);
