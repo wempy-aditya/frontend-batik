@@ -9,7 +9,7 @@ function PDFViewerContent({ pdfLoaded }) {
   const canvasRef = useRef(null);
 
   // Default PDF configuration
-  const DEFAULT_PDF_ID = "1nAU-FZKtgaSj6xKKkEr2X9njkWwWwqhK"; // Ganti dengan File ID Google Drive Anda
+  const DEFAULT_PDF_ID = "1nAU-FZKtgaSj6xKKkEr2X9njkWwWwqhK";
   const DEFAULT_PAGE = 10;
 
   const [fileId, setFileId] = useState("");
@@ -22,11 +22,50 @@ function PDFViewerContent({ pdfLoaded }) {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasAutoLoaded, setHasAutoLoaded] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+  const [useHybridMode, setUseHybridMode] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
+  const [fullPdfReady, setFullPdfReady] = useState(false);
   const renderTaskRef = useRef(null);
+  const loadTimeoutRef = useRef(null);
+  const iframeRef = useRef(null);
+  const pageCache = useRef(new Map());
+  const backgroundLoadRef = useRef(null);
 
   // Get proxy URL
   const getProxyUrl = (id) => {
     return `https://bitter-darkness-fab2.wahyukusuma.workers.dev/pdf?id=${encodeURIComponent(id)}`;
+  };
+
+  // Get Google Drive embed URL (fallback)
+  const getEmbedUrl = (id, page = 1) => {
+    // Force fresh load dengan timestamp
+    const timestamp = Date.now();
+    // Coba format: /preview dengan multiple parameters
+    return `https://drive.google.com/file/d/${id}/preview?embedded=true&rm=minimal&page=${page}&t=${timestamp}`;
+  };
+
+  // Force iframe reload dengan page baru - AGGRESSIVE UNMOUNT/REMOUNT
+  const forceIframePageChange = (targetPage) => {
+    if (useFallback) {
+      console.log('🔄 Force reloading iframe to page:', targetPage);
+      
+      // Update state dulu
+      setPageNum(targetPage);
+      setGotoPage(targetPage);
+      updateURL(fileId, targetPage);
+      
+      // FORCE UNMOUNT: Set key baru untuk paksa React unmount dan remount iframe
+      setIframeKey(prev => prev + 1);
+      
+      // Fallback: Kalau ada ref, coba ubah src juga
+      setTimeout(() => {
+        if (iframeRef.current) {
+          iframeRef.current.src = getEmbedUrl(fileId, targetPage);
+        }
+      }, 100);
+    }
   };
 
   // Load initial params from URL dan auto-load PDF
@@ -63,106 +102,192 @@ function PDFViewerContent({ pdfLoaded }) {
 
     setError("");
     setIsLoading(true);
-    setStatus("Loading PDF...");
+    setStatus("Loading page...");
+    setUseFallback(false);
+    setUseHybridMode(true);  // LANGSUNG pakai Hybrid Mode untuk speed
+    setFullPdfReady(false);
+    setIsBackgroundLoading(false);
 
+    // Clear any previous background loading
+    if (backgroundLoadRef.current) {
+      clearTimeout(backgroundLoadRef.current);
+      backgroundLoadRef.current = null;
+    }
+
+    // STRATEGY: Load hybrid mode first (single page, super fast!)
+    try {
+      console.log('⚡ FAST LOAD: Loading single page', initialPage, 'first');
+      await loadPDFHybrid(id, initialPage);
+      setIsLoading(false);
+      
+      // BACKGROUND: Setelah page pertama sukses, load full PDF di background
+      console.log('🔄 Starting background full PDF load...');
+      setIsBackgroundLoading(true);
+      backgroundLoadRef.current = setTimeout(() => {
+        loadFullPDFInBackground(id, initialPage);
+      }, 1000);  // Delay 1 detik biar page pertama smooth dulu
+      
+    } catch (err) {
+      console.error("❌ Fast Load Error:", err);
+      setUseFallback(true);
+      setUseHybridMode(false);
+      setIsLoading(false);
+      setStatus("Using fallback preview mode");
+    }
+  };
+
+  // Load Full PDF in Background (after first page is shown)
+  const loadFullPDFInBackground = async (id, currentPage) => {
     try {
       const url = getProxyUrl(id);
-      console.log('🔍 PDF Viewer Debug:', {
-        fileId: id,
-        proxyUrl: url,
-        initialPage,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV
-      });
+      console.log('🔄 Background loading full PDF...');
 
-      // Test proxy API terlebih dahulu
-      setStatus("Checking proxy API...");
-      const testResponse = await fetch(url, { method: 'HEAD' }).catch(e => {
-        console.error('❌ Proxy API test failed:', e);
-        return null;
-      });
-
-      if (testResponse) {
-        console.log('✅ Proxy API response:', {
-          status: testResponse.status,
-          statusText: testResponse.statusText,
-          contentType: testResponse.headers.get('content-type'),
-          contentLength: testResponse.headers.get('content-length')
-        });
-      }
-
-      setStatus("Loading PDF document...");
       const loadingTask = window.pdfjsLib.getDocument({
         url,
         withCredentials: false,
         disableRange: false,
         disableStream: false,
+        disableAutoFetch: false,  // Load everything!
       });
 
-      // Progress tracking
+      // Silent progress tracking
       loadingTask.onProgress = (progress) => {
-        const percent = progress.total > 0 
-          ? Math.round((progress.loaded / progress.total) * 100) 
-          : 0;
-        setStatus(`Loading PDF... ${percent}%`);
-        console.log('📥 Download progress:', {
-          loaded: progress.loaded,
-          total: progress.total,
-          percent: percent + '%'
-        });
+        if (progress.total > 0) {
+          const percent = Math.round((progress.loaded / progress.total) * 100);
+          setStatus(`Page ${pageNum} / ${totalPages} (background: ${percent}%)`);
+        }
       };
 
       const pdf = await loadingTask.promise;
-      console.log('✅ PDF loaded successfully:', {
+      
+      console.log('✅ Full PDF loaded in background:', {
         numPages: pdf.numPages,
         fingerprint: pdf.fingerprint
       });
 
+      // Replace hybrid PDF dengan full PDF
       setPdfDoc(pdf);
       setTotalPages(pdf.numPages);
-      setStatus(`Loaded. Total pages: ${pdf.numPages}`);
+      setFullPdfReady(true);
+      setIsBackgroundLoading(false);
+      setUseHybridMode(false);  // Switch ke full mode
+      setStatus(`Full PDF Ready - Page ${pageNum} / ${pdf.numPages}`);
 
-      const startPage = Math.min(Math.max(1, initialPage), pdf.numPages);
-      await renderPage(pdf, startPage);
+      // Re-render current page dengan full PDF
+      await renderPage(pdf, currentPage);
+      
     } catch (err) {
-      console.error("❌ PDF Load Error:", {
-        message: err?.message,
-        name: err?.name,
-        stack: err?.stack,
-        fileId: id,
-        proxyUrl: getProxyUrl(id)
-      });
+      console.error('⚠️ Background load failed (staying in hybrid mode):', err);
+      setIsBackgroundLoading(false);
+      // Tetap pakai hybrid mode kalau background load gagal
+    }
+  };
 
-      // Coba fetch manual untuk debug lebih detail
-      try {
-        const debugResponse = await fetch(getProxyUrl(id));
-        const debugText = await debugResponse.text();
-        console.error('🔍 Debug Response:', {
-          status: debugResponse.status,
-          statusText: debugResponse.statusText,
-          headers: Object.fromEntries(debugResponse.headers.entries()),
-          bodyPreview: debugText.substring(0, 500)
-        });
-      } catch (debugErr) {
-        console.error('🔍 Debug fetch also failed:', debugErr);
+  // Load PDF in Hybrid Mode - metadata + on-demand page rendering
+  const loadPDFHybrid = async (id, initialPage = 1) => {
+    const url = getProxyUrl(id);
+    console.log('⚡ Loading PDF in HYBRID mode (single page first):', url);
+
+    // Load dengan range request - hanya metadata + halaman yang dibutuhkan
+    const loadingTask = window.pdfjsLib.getDocument({
+      url,
+      withCredentials: false,
+      disableRange: false,  // Enable range request
+      disableStream: false,
+      disableAutoFetch: true,  // PENTING: Jangan auto-fetch semua pages
+      rangeChunkSize: 65536,   // 64KB chunks
+    });
+
+    const pdf = await loadingTask.promise;
+    
+    console.log('✅ PDF metadata + first page loaded:', {
+      numPages: pdf.numPages,
+      fingerprint: pdf.fingerprint,
+      initialPage
+    });
+
+    setPdfDoc(pdf);
+    setTotalPages(pdf.numPages);
+    setStatus(`Fast Preview - Page ${initialPage} of ${pdf.numPages}`);
+
+    const startPage = Math.min(Math.max(1, initialPage), pdf.numPages);
+    await renderPageHybrid(pdf, startPage);
+  };
+
+  // Render page in Hybrid Mode - with caching
+  const renderPageHybrid = async (pdf, pageNumber) => {
+    if (!pdf || !canvasRef.current) return;
+
+    // Cancel previous render
+    if (renderTaskRef.current) {
+      renderTaskRef.current.cancel();
+      renderTaskRef.current = null;
+    }
+
+    setStatus(`Loading page ${pageNumber}...`);
+
+    // Check cache first
+    const cacheKey = `${pdf.fingerprint}-${pageNumber}-${scale}`;
+    if (pageCache.current.has(cacheKey)) {
+      console.log('📦 Using cached page:', pageNumber);
+      const cachedData = pageCache.current.get(cacheKey);
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.width = cachedData.width;
+      canvas.height = cachedData.height;
+      context.putImageData(cachedData.imageData, 0, 0);
+      setPageNum(pageNumber);
+      setGotoPage(pageNumber);
+      setStatus(`Page ${pageNumber} / ${totalPages} (cached)`);
+      updateURL(fileId, pageNumber);
+      return;
+    }
+
+    // Load page on-demand (hanya page ini, bukan semua PDF)
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale, rotation: 0 });
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+
+    const renderTask = page.render({
+      canvasContext: context,
+      viewport: viewport,
+    });
+
+    renderTaskRef.current = renderTask;
+
+    try {
+      await renderTask.promise;
+      
+      // Cache rendered page
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      pageCache.current.set(cacheKey, {
+        imageData,
+        width: canvas.width,
+        height: canvas.height
+      });
+      
+      // Limit cache size (max 10 pages)
+      if (pageCache.current.size > 10) {
+        const firstKey = pageCache.current.keys().next().value;
+        pageCache.current.delete(firstKey);
       }
 
-      setPdfDoc(null);
-      setTotalPages(0);
-      setStatus("");
-      setError(
-        `Gagal memuat PDF.\n\n` +
-        `Cek:\n` +
-        `1) File ID valid dari Google Drive\n` +
-        `2) File bisa diakses publik (Anyone with link)\n` +
-        `3) Proxy API berfungsi\n` +
-        `4) Browser console untuk detail error\n\n` +
-        `Error Type: ${err?.name || 'Unknown'}\n` +
-        `Detail: ${err?.message || String(err)}\n\n` +
-        `Proxy URL: ${getProxyUrl(id)}`
-      );
+      setPageNum(pageNumber);
+      setGotoPage(pageNumber);
+      setStatus(`Page ${pageNumber} / ${totalPages} (hybrid)`);
+      updateURL(fileId, pageNumber);
+    } catch (err) {
+      if (err.name === 'RenderingCancelledException') {
+        console.log('Rendering cancelled');
+      } else {
+        throw err;
+      }
     } finally {
-      setIsLoading(false);
+      renderTaskRef.current = null;
     }
   };
 
@@ -177,8 +302,6 @@ function PDFViewerContent({ pdfLoaded }) {
     }
 
     const page = await pdf.getPage(pageNumber);
-    
-    // Apply rotation correction - jika PDF ter-rotate, kembalikan ke normal
     const viewport = page.getViewport({ scale, rotation: 0 });
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -214,37 +337,108 @@ function PDFViewerContent({ pdfLoaded }) {
 
   // Navigation handlers
   const handlePrev = () => {
-    if (!pdfDoc || pageNum <= 1) return;
-    renderPage(pdfDoc, pageNum - 1);
+    if (useFallback) {
+      const newPage = Math.max(1, pageNum - 1);
+      forceIframePageChange(newPage);
+    } else if (fullPdfReady && pdfDoc) {
+      // Kalau full PDF ready, pakai render biasa (cepat!)
+      if (pageNum <= 1) return;
+      renderPage(pdfDoc, pageNum - 1);
+    } else if (useHybridMode && pdfDoc) {
+      // Kalau masih hybrid, load on-demand
+      if (pageNum <= 1) return;
+      renderPageHybrid(pdfDoc, pageNum - 1);
+    } else {
+      if (!pdfDoc || pageNum <= 1) return;
+      renderPage(pdfDoc, pageNum - 1);
+    }
   };
 
   const handleNext = () => {
-    if (!pdfDoc || pageNum >= totalPages) return;
-    renderPage(pdfDoc, pageNum + 1);
+    if (useFallback) {
+      const newPage = pageNum + 1;
+      forceIframePageChange(newPage);
+    } else if (fullPdfReady && pdfDoc) {
+      // Kalau full PDF ready, pakai render biasa (cepat!)
+      if (pageNum >= totalPages) return;
+      renderPage(pdfDoc, pageNum + 1);
+    } else if (useHybridMode && pdfDoc) {
+      // Kalau masih hybrid, load on-demand
+      if (pageNum >= totalPages) return;
+      renderPageHybrid(pdfDoc, pageNum + 1);
+    } else {
+      if (!pdfDoc || pageNum >= totalPages) return;
+      renderPage(pdfDoc, pageNum + 1);
+    }
   };
 
   const handleGoto = () => {
-    if (!pdfDoc) return;
-    const target = Math.min(Math.max(1, gotoPage), totalPages);
-    renderPage(pdfDoc, target);
+    if (useFallback) {
+      const target = Math.max(1, gotoPage);
+      forceIframePageChange(target);
+    } else if (fullPdfReady && pdfDoc) {
+      // Kalau full PDF ready, pakai render biasa (cepat!)
+      const target = Math.min(Math.max(1, gotoPage), totalPages);
+      renderPage(pdfDoc, target);
+    } else if (useHybridMode && pdfDoc) {
+      // Kalau masih hybrid, load on-demand
+      const target = Math.min(Math.max(1, gotoPage), totalPages);
+      renderPageHybrid(pdfDoc, target);
+    } else {
+      if (!pdfDoc) return;
+      const target = Math.min(Math.max(1, gotoPage), totalPages);
+      renderPage(pdfDoc, target);
+    }
   };
 
   const handleZoomIn = () => {
     if (!pdfDoc) return;
     const newScale = Math.min(scale + 0.1, 3.0);
     setScale(newScale);
-    setTimeout(() => renderPage(pdfDoc, pageNum), 0);
+    if (fullPdfReady) {
+      setTimeout(() => renderPage(pdfDoc, pageNum), 0);
+    } else if (useHybridMode) {
+      setTimeout(() => renderPageHybrid(pdfDoc, pageNum), 0);
+    } else {
+      setTimeout(() => renderPage(pdfDoc, pageNum), 0);
+    }
   };
 
   const handleZoomOut = () => {
     if (!pdfDoc) return;
     const newScale = Math.max(scale - 0.1, 0.4);
     setScale(newScale);
-    setTimeout(() => renderPage(pdfDoc, pageNum), 0);
+    if (fullPdfReady) {
+      setTimeout(() => renderPage(pdfDoc, pageNum), 0);
+    } else if (useHybridMode) {
+      setTimeout(() => renderPageHybrid(pdfDoc, pageNum), 0);
+    } else {
+      setTimeout(() => renderPage(pdfDoc, pageNum), 0);
+    }
   };
 
   const handleLoad = () => {
+    setFullPdfReady(false);  // Reset full PDF state
+    pageCache.current.clear();  // Clear cache
     loadPDF(fileId, pageNum);
+  };
+
+  const switchToCanvas = () => {
+    setUseFallback(false);
+    setUseHybridMode(false);
+    setFullPdfReady(false);
+    pageCache.current.clear();
+    loadPDF(fileId, pageNum);
+  };
+
+  // Manual trigger untuk load full PDF immediately
+  const loadFullPDFNow = () => {
+    if (backgroundLoadRef.current) {
+      clearTimeout(backgroundLoadRef.current);
+      backgroundLoadRef.current = null;
+    }
+    setIsBackgroundLoading(true);
+    loadFullPDFInBackground(fileId, pageNum);
   };
 
   return (
@@ -266,132 +460,205 @@ function PDFViewerContent({ pdfLoaded }) {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
         {/* Toolbar */}
-        <div className="bg-white rounded-xl shadow p-3 sm:p-4 mb-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-              <label className="text-sm">
-                <div className="text-gray-600 mb-1">Google Drive File ID</div>
-                <input
-                  type="text"
-                  value={fileId}
-                  onChange={(e) => setFileId(e.target.value)}
-                  placeholder="contoh: 1AbCDef..."
-                  className="w-full sm:w-[360px] border rounded-lg px-3 py-2"
-                />
+        <div className="bg-white rounded-xl shadow p-4 sm:p-6 mb-4">
+          {/* Input Section */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-4 pb-4 border-b">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Google Drive File ID
               </label>
+              <input
+                type="text"
+                value={fileId}
+                onChange={(e) => setFileId(e.target.value)}
+                placeholder="Masukkan File ID dari Google Drive..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
-              <label className="text-sm">
-                <div className="text-gray-600 mb-1">Halaman awal</div>
-                <input
-                  type="number"
-                  min="1"
-                  value={pageNum}
-                  onChange={(e) => setPageNum(parseInt(e.target.value) || 1)}
-                  className="w-full sm:w-28 border rounded-lg px-3 py-2"
-                />
+            <div className="sm:w-32">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Halaman
               </label>
+              <input
+                type="number"
+                min="1"
+                value={pageNum}
+                onChange={(e) => setPageNum(parseInt(e.target.value) || 1)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
+            <div className="sm:w-auto sm:self-end">
               <button
                 onClick={handleLoad}
                 disabled={isLoading || !fileId}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? "Loading..." : "Load PDF"}
               </button>
             </div>
+          </div>
 
-            <div className="flex flex-wrap gap-2 items-center">
+          {/* Navigation Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Page Navigation */}
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handlePrev}
-                disabled={!pdfDoc || pageNum <= 1}
-                className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={(!pdfDoc && !useFallback) || pageNum <= 1}
+                className="border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
-                ◀ Prev
+                ← Prev
               </button>
-              <button
-                onClick={handleNext}
-                disabled={!pdfDoc || pageNum >= totalPages}
-                className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next ▶
-              </button>
-
-              <div className="flex items-center gap-2">
+              
+              <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
                 <span className="text-sm text-gray-600">Page</span>
                 <input
                   type="number"
                   min="1"
-                  max={totalPages || 1}
+                  max={totalPages || 999}
                   value={gotoPage}
                   onChange={(e) => setGotoPage(parseInt(e.target.value) || 1)}
                   onKeyDown={(e) => e.key === "Enter" && handleGoto()}
-                  className="w-20 border rounded-lg px-2 py-2 text-sm"
+                  className="w-16 text-center border-0 focus:ring-0 p-0 text-sm"
                 />
-                <span className="text-sm text-gray-600">/ {totalPages || "-"}</span>
+                <span className="text-sm text-gray-600">/ {totalPages || (useFallback ? "—" : "—")}</span>
                 <button
                   onClick={handleGoto}
-                  disabled={!pdfDoc}
-                  className="border rounded-lg px-3 py-2 hover:bg-gray-50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!pdfDoc && !useFallback}
+                  className="ml-2 text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Go
                 </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleZoomOut}
-                  disabled={!pdfDoc}
-                  className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  −
-                </button>
-                <span className="text-sm text-gray-600 w-14 text-center">
-                  {Math.round(scale * 100)}%
-                </span>
-                <button
-                  onClick={handleZoomIn}
-                  disabled={!pdfDoc}
-                  className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
-              </div>
+              <button
+                onClick={handleNext}
+                disabled={(!pdfDoc && !useFallback) || (!useFallback && pageNum >= totalPages)}
+                className="border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+              >
+                Next →
+              </button>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 mr-1">Zoom:</span>
+              <button
+                onClick={handleZoomOut}
+                disabled={!pdfDoc}
+                className="border border-gray-300 rounded-lg w-9 h-9 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                −
+              </button>
+              <span className="text-sm font-medium text-gray-700 w-12 text-center">
+                {Math.round(scale * 100)}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                disabled={!pdfDoc}
+                className="border border-gray-300 rounded-lg w-9 h-9 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                +
+              </button>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="text-xs text-gray-500">
-              Source: <span className="break-all">{fileId ? getProxyUrl(fileId) : "-"}</span>
-            </div>
-            {status && (
-              <div className="text-sm text-gray-700">{status}</div>
-            )}
-          </div>
-
-          {error && (
-            <div className="mt-3 text-sm bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 whitespace-pre-wrap">
-              {error}
+          {/* Status Bar */}
+          {(status || error) && (
+            <div className="mt-4 pt-4 border-t">
+              {status && (
+                <div className="text-sm text-gray-600 mb-2">
+                  {status}
+                </div>
+              )}
+              {error && (
+                <div className="text-sm bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 whitespace-pre-wrap">
+                  {error}
+                </div>
+              )}
             </div>
           )}
-
-          <details className="mt-3 text-xs text-gray-500">
-            <summary className="cursor-pointer">Catatan</summary>
-            <div className="mt-2">
-              Halaman diatur oleh PDF.js. URL akan di-update otomatis saat pindah halaman.
-            </div>
-          </details>
         </div>
 
-        {/* Canvas */}
+        {/* Canvas / Embed Viewer */}
         <div className="bg-white rounded-xl shadow p-3 sm:p-4">
-          <div className="overflow-auto">
-            <canvas
-              ref={canvasRef}
-              className="mx-auto"
-              style={{ imageRendering: "auto" }}
-            />
-          </div>
+          {useFallback ? (
+            <div className="space-y-3">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 text-sm flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-gray-700 font-medium">Preview Mode</span>
+                </div>
+                <button 
+                  onClick={switchToCanvas}
+                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors"
+                >
+                  Switch to Full Mode
+                </button>
+              </div>
+              <div className="relative" style={{ paddingBottom: '75%' }}>
+                <iframe
+                  ref={iframeRef}
+                  key={`iframe-${iframeKey}-${fileId}-page${pageNum}`}
+                  src={getEmbedUrl(fileId, pageNum)}
+                  className="absolute top-0 left-0 w-full h-full rounded-lg border"
+                  allow="autoplay"
+                  title="PDF Preview"
+                  onLoad={() => {
+                    console.log('✅ Iframe loaded for page:', pageNum, 'at', new Date().toISOString());
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-auto">
+              <canvas
+                ref={canvasRef}
+                className="mx-auto"
+                style={{ imageRendering: "auto" }}
+              />
+            </div>
+          )}
         </div>
+
+        {/* Status Notification - Professional Style */}
+        {(fullPdfReady || (useHybridMode && !fullPdfReady)) && (
+          <div className="mt-3 bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  {fullPdfReady ? (
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  ) : (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {fullPdfReady ? 'Full PDF Ready' : 'Fast Preview Mode'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {fullPdfReady 
+                      ? 'All pages loaded. Navigation and zoom operations are now instant.' 
+                      : isBackgroundLoading 
+                        ? 'Loading complete document in background. You can continue navigating.' 
+                        : 'Pages are loaded on-demand for faster initial load time.'}
+                  </p>
+                </div>
+              </div>
+              {useHybridMode && !fullPdfReady && !isBackgroundLoading && (
+                <button 
+                  onClick={loadFullPDFNow}
+                  className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+                >
+                  Load Complete PDF
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
