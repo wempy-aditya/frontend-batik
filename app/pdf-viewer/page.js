@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Script from "next/script";
 
-function PDFViewerContent() {
+function PDFViewerContent({ pdfLoaded }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const canvasRef = useRef(null);
@@ -21,7 +21,8 @@ function PDFViewerContent() {
   const [pdfDoc, setPdfDoc] = useState(null);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [pdfLoaded, setPdfLoaded] = useState(false);
+  const [hasAutoLoaded, setHasAutoLoaded] = useState(false);
+  const renderTaskRef = useRef(null);
 
   // Get proxy URL
   const getProxyUrl = (id) => {
@@ -29,7 +30,7 @@ function PDFViewerContent() {
     return `${window.location.origin}/api/proxy-pdf?id=${encodeURIComponent(id)}`;
   };
 
-  // Load initial params from URL
+  // Load initial params from URL dan auto-load PDF
   useEffect(() => {
     const id = searchParams.get("id") || DEFAULT_PDF_ID;
     const page = parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10);
@@ -38,7 +39,10 @@ function PDFViewerContent() {
     setPageNum(page);
     setGotoPage(page);
 
-    if (id && pdfLoaded) {
+    // Auto-load PDF saat pertama kali dan PDF.js sudah ready
+    if (pdfLoaded && id && !hasAutoLoaded) {
+      console.log('🚀 Auto-loading PDF on mount:', id);
+      setHasAutoLoaded(true);
       loadPDF(id, page);
     }
   }, [searchParams, pdfLoaded]);
@@ -167,8 +171,16 @@ function PDFViewerContent() {
   const renderPage = async (pdf, pageNumber) => {
     if (!pdf || !canvasRef.current) return;
 
+    // Cancel previous render jika masih berjalan
+    if (renderTaskRef.current) {
+      renderTaskRef.current.cancel();
+      renderTaskRef.current = null;
+    }
+
     const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale });
+    
+    // Apply rotation correction - jika PDF ter-rotate, kembalikan ke normal
+    const viewport = page.getViewport({ scale, rotation: 0 });
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
@@ -177,15 +189,28 @@ function PDFViewerContent() {
 
     setStatus(`Rendering page ${pageNumber}...`);
 
-    await page.render({
+    const renderTask = page.render({
       canvasContext: context,
       viewport: viewport,
-    }).promise;
+    });
 
-    setPageNum(pageNumber);
-    setGotoPage(pageNumber);
-    setStatus(`Page ${pageNumber} / ${totalPages}`);
-    updateURL(fileId, pageNumber);
+    renderTaskRef.current = renderTask;
+
+    try {
+      await renderTask.promise;
+      setPageNum(pageNumber);
+      setGotoPage(pageNumber);
+      setStatus(`Page ${pageNumber} / ${totalPages}`);
+      updateURL(fileId, pageNumber);
+    } catch (err) {
+      if (err.name === 'RenderingCancelledException') {
+        console.log('Rendering cancelled');
+      } else {
+        throw err;
+      }
+    } finally {
+      renderTaskRef.current = null;
+    }
   };
 
   // Navigation handlers
@@ -209,14 +234,14 @@ function PDFViewerContent() {
     if (!pdfDoc) return;
     const newScale = Math.min(scale + 0.1, 3.0);
     setScale(newScale);
-    renderPage(pdfDoc, pageNum);
+    setTimeout(() => renderPage(pdfDoc, pageNum), 0);
   };
 
   const handleZoomOut = () => {
     if (!pdfDoc) return;
     const newScale = Math.max(scale - 0.1, 0.4);
     setScale(newScale);
-    renderPage(pdfDoc, pageNum);
+    setTimeout(() => renderPage(pdfDoc, pageNum), 0);
   };
 
   const handleLoad = () => {
@@ -224,243 +249,149 @@ function PDFViewerContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0 bg-repeat"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm-30 0c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10z'/%3E%3C/g%3E%3C/svg%3E")`,
-            }}
-          ></div>
-        </div>
-
-        {/* Floating Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        </div>
-
-        <div className="container mx-auto px-6 lg:px-8 relative z-10">
-          {/* Breadcrumb */}
-          <div className="flex items-center text-sm text-amber-200 mb-8">
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="hover:text-white transition-colors"
-            >
-              Home
-            </button>
-            <svg
-              className="w-4 h-4 mx-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-            <span className="text-white">PDF Viewer</span>
-          </div>
-
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
-              <svg
-                className="w-4 h-4 text-amber-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <span className="text-sm font-semibold text-gray-200">
-                Document Viewer
-              </span>
-            </div>
-
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
-              <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
-                PDF Viewer
-              </span>
+      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-24 sm:py-32">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-6">
+              📄 PDF Viewer
             </h1>
-
-            <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
-              View and navigate PDF documents from Google Drive with ease. Powered by PDF.js technology.
+            <p className="text-blue-100 text-sm sm:text-base">
+              View and navigate PDF documents from Google Drive with ease
             </p>
           </div>
         </div>
       </section>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 lg:px-8 py-12">
+      <div className="max-w-5xl mx-auto p-4 sm:p-6">
         {/* Toolbar */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 mb-8 border border-amber-100">
-          <div className="flex flex-col gap-6">
-            {/* File ID & Load */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Google Drive File ID
-                </label>
+        <div className="bg-white rounded-xl shadow p-3 sm:p-4 mb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <label className="text-sm">
+                <div className="text-gray-600 mb-1">Google Drive File ID</div>
                 <input
                   type="text"
                   value={fileId}
                   onChange={(e) => setFileId(e.target.value)}
-                  placeholder="contoh: 1xx40VL8dIvWbdMMO5SCDpOcBOzMacveV"
-                  className="w-full border-2 border-amber-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-all"
+                  placeholder="contoh: 1AbCDef..."
+                  className="w-full sm:w-[360px] border rounded-lg px-3 py-2"
                 />
-              </div>
-              <div className="sm:w-32">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Halaman
-                </label>
+              </label>
+
+              <label className="text-sm">
+                <div className="text-gray-600 mb-1">Halaman awal</div>
                 <input
                   type="number"
                   min="1"
                   value={pageNum}
                   onChange={(e) => setPageNum(parseInt(e.target.value) || 1)}
-                  className="w-full border-2 border-amber-200 rounded-xl px-4 py-3 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-all"
+                  className="w-full sm:w-28 border rounded-lg px-3 py-2"
                 />
-              </div>
-              <div className="flex items-end">
+              </label>
+
+              <button
+                onClick={handleLoad}
+                disabled={isLoading || !fileId}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Loading..." : "Load PDF"}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center">
+              <button
+                onClick={handlePrev}
+                disabled={!pdfDoc || pageNum <= 1}
+                className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ◀ Prev
+              </button>
+              <button
+                onClick={handleNext}
+                disabled={!pdfDoc || pageNum >= totalPages}
+                className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next ▶
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Page</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={totalPages || 1}
+                  value={gotoPage}
+                  onChange={(e) => setGotoPage(parseInt(e.target.value) || 1)}
+                  onKeyDown={(e) => e.key === "Enter" && handleGoto()}
+                  className="w-20 border rounded-lg px-2 py-2 text-sm"
+                />
+                <span className="text-sm text-gray-600">/ {totalPages || "-"}</span>
                 <button
-                  onClick={handleLoad}
-                  disabled={isLoading || !fileId}
-                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  onClick={handleGoto}
+                  disabled={!pdfDoc}
+                  className="border rounded-lg px-3 py-2 hover:bg-gray-50 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Loading...
-                    </span>
-                  ) : "Load PDF"}
+                  Go
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleZoomOut}
+                  disabled={!pdfDoc}
+                  className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  −
+                </button>
+                <span className="text-sm text-gray-600 w-14 text-center">
+                  {Math.round(scale * 100)}%
+                </span>
+                <button
+                  onClick={handleZoomIn}
+                  disabled={!pdfDoc}
+                  className="border rounded-lg px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  +
                 </button>
               </div>
             </div>
+          </div>
 
-            {/* Navigation & Controls */}
-            {pdfDoc && (
-              <div className="flex flex-wrap gap-4 items-center justify-between border-t-2 border-amber-100 pt-6">
-                <div className="flex gap-3">
-                  <button
-                    onClick={handlePrev}
-                    disabled={pageNum <= 1}
-                    className="px-5 py-2.5 border-2 border-amber-300 rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-amber-900 transition-all hover:shadow-md"
-                  >
-                    ◀ Prev
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    disabled={pageNum >= totalPages}
-                    className="px-5 py-2.5 border-2 border-amber-300 rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-amber-900 transition-all hover:shadow-md"
-                  >
-                    Next ▶
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-600">Page</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max={totalPages}
-                    value={gotoPage}
-                    onChange={(e) => setGotoPage(parseInt(e.target.value) || 1)}
-                    onKeyDown={(e) => e.key === "Enter" && handleGoto()}
-                    className="w-20 border-2 border-amber-200 rounded-lg px-3 py-1.5 text-sm focus:border-amber-500 focus:ring-2 focus:ring-amber-200 focus:outline-none transition-all"
-                  />
-                  <span className="text-sm font-medium text-gray-600">/ {totalPages}</span>
-                  <button
-                    onClick={handleGoto}
-                    className="px-4 py-1.5 bg-amber-100 border-2 border-amber-300 rounded-lg hover:bg-amber-200 text-sm font-semibold text-amber-900 transition-all"
-                  >
-                    Go
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={handleZoomOut}
-                    className="w-10 h-10 flex items-center justify-center border-2 border-amber-300 rounded-lg hover:bg-amber-50 font-bold text-xl text-amber-900 transition-all hover:shadow-md"
-                  >
-                    −
-                  </button>
-                  <span className="text-sm text-gray-700 w-16 text-center font-semibold bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
-                    {Math.round(scale * 100)}%
-                  </span>
-                  <button
-                    onClick={handleZoomIn}
-                    className="w-10 h-10 flex items-center justify-center border-2 border-amber-300 rounded-lg hover:bg-amber-50 font-bold text-xl text-amber-900 transition-all hover:shadow-md"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Status */}
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="text-xs text-gray-500">
+              Source: <span className="break-all">{fileId ? getProxyUrl(fileId) : "-"}</span>
+            </div>
             {status && (
-              <div className="text-sm text-amber-900 bg-amber-50 rounded-xl px-5 py-3 border border-amber-200 flex items-center gap-2">
-                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                {status}
-              </div>
-            )}
-
-            {/* Error */}
-            {error && (
-              <div className="text-sm bg-red-50 border-2 border-red-300 text-red-800 rounded-xl p-5 whitespace-pre-wrap">
-                <div className="flex items-start gap-3">
-                  <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>{error}</div>
-                </div>
-              </div>
+              <div className="text-sm text-gray-700">{status}</div>
             )}
           </div>
+
+          {error && (
+            <div className="mt-3 text-sm bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 whitespace-pre-wrap">
+              {error}
+            </div>
+          )}
+
+          <details className="mt-3 text-xs text-gray-500">
+            <summary className="cursor-pointer">Catatan</summary>
+            <div className="mt-2">
+              Halaman diatur oleh PDF.js. URL akan di-update otomatis saat pindah halaman.
+            </div>
+          </details>
         </div>
 
         {/* Canvas */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-amber-100">
+        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
           <div className="overflow-auto">
             <canvas
               ref={canvasRef}
-              className="mx-auto border border-gray-200 rounded-lg"
+              className="mx-auto"
               style={{ imageRendering: "auto" }}
             />
           </div>
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-8 text-center text-sm text-gray-600">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="font-medium">Powered by PDF.js • Next.js API Proxy</p>
-          </div>
-          {fileId && (
-            <p className="text-xs">
-              Source: <code className="bg-amber-50 border border-amber-200 px-3 py-1 rounded-lg break-all">
-                {getProxyUrl(fileId)}
-              </code>
-            </p>
-          )}
         </div>
       </div>
     </div>
@@ -478,12 +409,13 @@ function PDFViewerWrapper() {
           if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc =
               "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+            console.log('✅ PDF.js loaded and ready');
             setScriptLoaded(true);
           }
         }}
         strategy="afterInteractive"
       />
-      {scriptLoaded ? <PDFViewerContent /> : (
+      {scriptLoaded ? <PDFViewerContent pdfLoaded={scriptLoaded} /> : (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
