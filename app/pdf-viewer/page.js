@@ -22,14 +22,10 @@ function PDFViewerContent({ pdfLoaded }) {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasAutoLoaded, setHasAutoLoaded] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
   const [useHybridMode, setUseHybridMode] = useState(false);
-  const [iframeKey, setIframeKey] = useState(0);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [fullPdfReady, setFullPdfReady] = useState(false);
   const renderTaskRef = useRef(null);
-  const loadTimeoutRef = useRef(null);
-  const iframeRef = useRef(null);
   const pageCache = useRef(new Map());
   const backgroundLoadRef = useRef(null);
 
@@ -40,36 +36,6 @@ function PDFViewerContent({ pdfLoaded }) {
     
     // Option 2: Cloudflare Workers (backup jika local proxy gagal)
     // return `https://bitter-darkness-fab2.wahyukusuma.workers.dev/pdf?id=${encodeURIComponent(id)}`;
-  };
-
-  // Get Google Drive embed URL (fallback)
-  const getEmbedUrl = (id, page = 1) => {
-    // Force fresh load dengan timestamp
-    const timestamp = Date.now();
-    // Coba format: /preview dengan multiple parameters
-    return `https://drive.google.com/file/d/${id}/preview?embedded=true&rm=minimal&page=${page}&t=${timestamp}`;
-  };
-
-  // Force iframe reload dengan page baru - AGGRESSIVE UNMOUNT/REMOUNT
-  const forceIframePageChange = (targetPage) => {
-    if (useFallback) {
-      console.log('🔄 Force reloading iframe to page:', targetPage);
-      
-      // Update state dulu
-      setPageNum(targetPage);
-      setGotoPage(targetPage);
-      updateURL(fileId, targetPage);
-      
-      // FORCE UNMOUNT: Set key baru untuk paksa React unmount dan remount iframe
-      setIframeKey(prev => prev + 1);
-      
-      // Fallback: Kalau ada ref, coba ubah src juga
-      setTimeout(() => {
-        if (iframeRef.current) {
-          iframeRef.current.src = getEmbedUrl(fileId, targetPage);
-        }
-      }, 100);
-    }
   };
 
   // Load initial params from URL dan auto-load PDF
@@ -107,7 +73,6 @@ function PDFViewerContent({ pdfLoaded }) {
     setError("");
     setIsLoading(true);
     setStatus("Loading page...");
-    setUseFallback(false);
     setUseHybridMode(true);  // LANGSUNG pakai Hybrid Mode untuk speed
     setFullPdfReady(false);
     setIsBackgroundLoading(false);
@@ -133,10 +98,9 @@ function PDFViewerContent({ pdfLoaded }) {
       
     } catch (err) {
       console.error("❌ Fast Load Error:", err);
-      setUseFallback(true);
+      setError(`Failed to load PDF: ${err.message}`);
       setUseHybridMode(false);
       setIsLoading(false);
-      setStatus("Using fallback preview mode");
     }
   };
 
@@ -341,10 +305,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
   // Navigation handlers
   const handlePrev = () => {
-    if (useFallback) {
-      const newPage = Math.max(1, pageNum - 1);
-      forceIframePageChange(newPage);
-    } else if (fullPdfReady && pdfDoc) {
+    if (fullPdfReady && pdfDoc) {
       // Kalau full PDF ready, pakai render biasa (cepat!)
       if (pageNum <= 1) return;
       renderPage(pdfDoc, pageNum - 1);
@@ -359,10 +320,7 @@ function PDFViewerContent({ pdfLoaded }) {
   };
 
   const handleNext = () => {
-    if (useFallback) {
-      const newPage = pageNum + 1;
-      forceIframePageChange(newPage);
-    } else if (fullPdfReady && pdfDoc) {
+    if (fullPdfReady && pdfDoc) {
       // Kalau full PDF ready, pakai render biasa (cepat!)
       if (pageNum >= totalPages) return;
       renderPage(pdfDoc, pageNum + 1);
@@ -377,10 +335,7 @@ function PDFViewerContent({ pdfLoaded }) {
   };
 
   const handleGoto = () => {
-    if (useFallback) {
-      const target = Math.max(1, gotoPage);
-      forceIframePageChange(target);
-    } else if (fullPdfReady && pdfDoc) {
+    if (fullPdfReady && pdfDoc) {
       // Kalau full PDF ready, pakai render biasa (cepat!)
       const target = Math.min(Math.max(1, gotoPage), totalPages);
       renderPage(pdfDoc, target);
@@ -422,14 +377,6 @@ function PDFViewerContent({ pdfLoaded }) {
   };
 
   const handleLoad = () => {
-    setFullPdfReady(false);  // Reset full PDF state
-    pageCache.current.clear();  // Clear cache
-    loadPDF(fileId, pageNum);
-  };
-
-  const switchToCanvas = () => {
-    setUseFallback(false);
-    setUseHybridMode(false);
     setFullPdfReady(false);
     pageCache.current.clear();
     loadPDF(fileId, pageNum);
@@ -510,7 +457,7 @@ function PDFViewerContent({ pdfLoaded }) {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handlePrev}
-                disabled={(!pdfDoc && !useFallback) || pageNum <= 1}
+                disabled={!pdfDoc || pageNum <= 1}
                 className="border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 ← Prev
@@ -527,10 +474,10 @@ function PDFViewerContent({ pdfLoaded }) {
                   onKeyDown={(e) => e.key === "Enter" && handleGoto()}
                   className="w-16 text-center border-0 focus:ring-0 p-0 text-sm"
                 />
-                <span className="text-sm text-gray-600">/ {totalPages || (useFallback ? "—" : "—")}</span>
+                <span className="text-sm text-gray-600">/ {totalPages || "—"}</span>
                 <button
                   onClick={handleGoto}
-                  disabled={!pdfDoc && !useFallback}
+                  disabled={!pdfDoc}
                   className="ml-2 text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Go
@@ -539,7 +486,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
               <button
                 onClick={handleNext}
-                disabled={(!pdfDoc && !useFallback) || (!useFallback && pageNum >= totalPages)}
+                disabled={!pdfDoc || pageNum >= totalPages}
                 className="border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
               >
                 Next →
@@ -586,45 +533,15 @@ function PDFViewerContent({ pdfLoaded }) {
           )}
         </div>
 
-        {/* Canvas / Embed Viewer */}
+        {/* Canvas Viewer */}
         <div className="bg-white rounded-xl shadow p-3 sm:p-4">
-          {useFallback ? (
-            <div className="space-y-3">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 text-sm flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-gray-700 font-medium">Preview Mode</span>
-                </div>
-                <button 
-                  onClick={switchToCanvas}
-                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors"
-                >
-                  Switch to Full Mode
-                </button>
-              </div>
-              <div className="relative" style={{ paddingBottom: '75%' }}>
-                <iframe
-                  ref={iframeRef}
-                  key={`iframe-${iframeKey}-${fileId}-page${pageNum}`}
-                  src={getEmbedUrl(fileId, pageNum)}
-                  className="absolute top-0 left-0 w-full h-full rounded-lg border"
-                  allow="autoplay"
-                  title="PDF Preview"
-                  onLoad={() => {
-                    console.log('✅ Iframe loaded for page:', pageNum, 'at', new Date().toISOString());
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-auto">
-              <canvas
-                ref={canvasRef}
-                className="mx-auto"
-                style={{ imageRendering: "auto" }}
-              />
-            </div>
-          )}
+          <div className="overflow-auto">
+            <canvas
+              ref={canvasRef}
+              className="mx-auto"
+              style={{ imageRendering: "auto" }}
+            />
+          </div>
         </div>
 
         {/* Status Notification - Professional Style */}
