@@ -1,18 +1,95 @@
+// Utility function to fetch with timeout
+async function fetchWithTimeout(url, options, timeout = 30000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - API took too long to respond');
+    }
+    throw error;
+  }
+}
+
+// Utility function for retry logic
+async function fetchWithRetry(url, options, maxRetries = 3, timeout = 30000) {
+  let lastError;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      console.log(`Attempt ${i + 1}/${maxRetries} - Fetching:`, url);
+      const response = await fetchWithTimeout(url, options, timeout);
+      
+      // If we get a response, return it (even if it's an error status)
+      // Don't retry on 4xx errors (client errors)
+      if (response.status < 500) {
+        return response;
+      }
+      
+      // For 5xx errors, log and retry
+      console.warn(`Attempt ${i + 1} failed with status ${response.status}`);
+      lastError = new Error(`Server error: ${response.status}`);
+      
+      // Don't wait after the last attempt
+      if (i < maxRetries - 1) {
+        const waitTime = Math.min(1000 * Math.pow(2, i), 5000); // Exponential backoff, max 5s
+        console.log(`Waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    } catch (error) {
+      console.error(`Attempt ${i + 1} error:`, error.message);
+      lastError = error;
+      
+      // Don't retry on client-side errors
+      if (error.message.includes('JSON') || error.message.includes('parse')) {
+        throw error;
+      }
+      
+      // Wait before retry (except on last attempt)
+      if (i < maxRetries - 1) {
+        const waitTime = Math.min(1000 * Math.pow(2, i), 5000);
+        console.log(`Waiting ${waitTime}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+  }
+  
+  throw lastError || new Error('All retry attempts failed');
+}
+
 export async function POST(request) {
+  const startTime = Date.now();
+  
   try {
     const body = await request.json();
     console.log('Received request body:', body);
+    console.log('Timestamp:', new Date().toISOString());
     
-    // const response = await fetch('https://batik.umm.ac.id/batik_product/devt2i/generate/v2/', {
-    const response = await fetch('https://service-t2i.wempyaw.com/batik_product/devt2i/generate/v2/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    // Use retry logic with timeout
+    const response = await fetchWithRetry(
+      'https://service-t2i.wempyaw.com/batik_product/devt2i/generate/v2/',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body)
       },
-      body: JSON.stringify(body)
-    });
+      3, // 3 retries
+      30000 // 30 second timeout
+    );
 
+    const elapsed = Date.now() - startTime;
     console.log('Response status:', response.status);
+    console.log('Response time:', elapsed + 'ms');
     console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
@@ -73,12 +150,33 @@ export async function POST(request) {
     }
     
   } catch (error) {
+    const elapsed = Date.now() - startTime;
     console.error('Error in proxy:', error);
+    console.error('Total elapsed time:', elapsed + 'ms');
+    console.error('Error stack:', error.stack);
+    
+    // Determine error type for better user feedback
+    let errorMessage = 'Failed to generate image';
+    let errorType = 'unknown';
+    
+    if (error.message.includes('timeout')) {
+      errorMessage = 'Request timeout - The AI service is taking too long to respond. Please try again.';
+      errorType = 'timeout';
+    } else if (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED')) {
+      errorMessage = 'Cannot connect to AI service. The service may be down.';
+      errorType = 'connection';
+    } else if (error.message.includes('500') || error.message.includes('Server error')) {
+      errorMessage = 'AI service is experiencing issues. Please try again in a moment.';
+      errorType = 'server_error';
+    }
+    
     return Response.json(
       { 
-        error: 'Failed to generate image', 
+        error: errorMessage,
+        errorType: errorType,
         details: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        elapsedTime: elapsed + 'ms'
       }, 
       { 
         status: 500,
