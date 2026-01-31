@@ -3,7 +3,8 @@ export async function POST(request) {
     const body = await request.json();
     console.log('Received request body:', body);
     
-    const response = await fetch('https://batik.umm.ac.id/batik_product/devt2i/generate/v2/', {
+    // const response = await fetch('https://batik.umm.ac.id/batik_product/devt2i/generate/v2/', {
+    const response = await fetch('https://service-t2i.wempyaw.com/batik_product/devt2i/generate/v2/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
