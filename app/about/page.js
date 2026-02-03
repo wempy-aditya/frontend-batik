@@ -181,9 +181,9 @@ export default function AboutPage() {
       {/* Mission Section */}
       <section className="py-20 relative">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold text-white mb-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-12">
+              <h2 className="text-4xl font-bold text-white mb-6 text-center">
                 Our Mission
               </h2>
               <p className="text-gray-300 text-lg leading-relaxed mb-6">
@@ -200,19 +200,6 @@ export default function AboutPage() {
                 batik tradition by integrating deep learning and community
                 engagement into batik research and digital applications.
               </p>
-            </div>
-            <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-3xl">
-                <div className="absolute inset-0 opacity-20">
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='m30 60l30-30h-60l30 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                      backgroundSize: "60px 60px",
-                    }}
-                  ></div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

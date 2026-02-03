@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -63,6 +64,7 @@ const Header = () => {
 
   const moreItems = [
     { name: "News", path: "/news" },
+    { name: "PDF Viewer", path: "/pdf-viewer" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
@@ -73,13 +75,12 @@ const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isMobileMenuOpen
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isMobileMenuOpen
             ? "bg-white shadow-lg"
             : isScrolled
-            ? "bg-white/95 backdrop-blur-lg shadow-lg"
-            : "bg-transparent"
-        }`}
+              ? "bg-white/95 backdrop-blur-lg shadow-lg"
+              : "bg-transparent"
+          }`}
       >
         <nav className="container mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -89,39 +90,28 @@ const Header = () => {
               className="flex items-center gap-3 cursor-pointer group z-50"
             >
               <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                  <svg
-                    className="w-7 h-7 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+                <div className="w-12 h-12 rounded-xl overflow-hidden transform group-hover:scale-110 transition-transform duration-300 shadow-lg bg-white">
+                  <img
+                    src="\ChatGPT Image Feb 2, 2026, 04_03_15 PM.png"
+                    alt="RISPRO Logo"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
               <div className="hidden sm:block">
                 <div
-                  className={`text-xl font-bold transition-colors duration-300 ${
-                    isMobileMenuOpen || isScrolled
+                  className={`text-xl font-bold transition-colors duration-300 ${isMobileMenuOpen || isScrolled
                       ? "text-gray-900"
                       : "text-white"
-                  }`}
+                    }`}
                 >
                   RISPRO
                 </div>
                 <div
-                  className={`text-xs transition-colors duration-300 ${
-                    isMobileMenuOpen || isScrolled
+                  className={`text-xs transition-colors duration-300 ${isMobileMenuOpen || isScrolled
                       ? "text-gray-600"
                       : "text-gray-300"
-                  }`}
+                    }`}
                 >
                   Image Processing Platform
                 </div>
@@ -134,15 +124,14 @@ const Header = () => {
                 <div
                   key={item.path}
                   onClick={() => router.push(item.path)}
-                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
-                    isActive(item.path)
+                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 ${isActive(item.path)
                       ? isScrolled
                         ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                         : "bg-white/20 backdrop-blur-sm text-white"
                       : isScrolled
-                      ? "text-gray-700 hover:bg-gray-100"
-                      : "text-white hover:bg-white/10"
-                  }`}
+                        ? "text-gray-700 hover:bg-gray-100"
+                        : "text-white hover:bg-white/10"
+                    }`}
                 >
                   {item.name}
                 </div>
@@ -152,21 +141,19 @@ const Header = () => {
               <div className="relative dropdown-container">
                 <div
                   onClick={() => setIsMoreDropdownOpen(!isMoreDropdownOpen)}
-                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 flex items-center gap-1 ${
-                    isMoreActive()
+                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 flex items-center gap-1 ${isMoreActive()
                       ? isScrolled
                         ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                         : "bg-white/20 backdrop-blur-sm text-white"
                       : isScrolled
-                      ? "text-gray-700 hover:bg-gray-100"
-                      : "text-white hover:bg-white/10"
-                  }`}
+                        ? "text-gray-700 hover:bg-gray-100"
+                        : "text-white hover:bg-white/10"
+                    }`}
                 >
                   More
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isMoreDropdownOpen ? "rotate-180" : ""
-                    }`}
+                    className={`w-4 h-4 transition-transform duration-200 ${isMoreDropdownOpen ? "rotate-180" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -190,11 +177,10 @@ const Header = () => {
                           router.push(item.path);
                           setIsMoreDropdownOpen(false);
                         }}
-                        className={`px-4 py-2.5 cursor-pointer transition-all duration-200 ${
-                          isActive(item.path)
+                        className={`px-4 py-2.5 cursor-pointer transition-all duration-200 ${isActive(item.path)
                             ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold"
                             : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         {item.name}
                       </div>
@@ -209,11 +195,10 @@ const Header = () => {
               {isAuthenticated ? (
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
-                    isScrolled
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${isScrolled
                       ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg hover:shadow-xl"
                       : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
+                    }`}
                 >
                   <svg
                     className="w-4 h-4"
@@ -233,11 +218,10 @@ const Header = () => {
               ) : (
                 <button
                   onClick={() => router.push("/login")}
-                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
-                    isScrolled
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${isScrolled
                       ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl"
                       : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  }`}
+                    }`}
                 >
                   <svg
                     className="w-4 h-4"
@@ -260,13 +244,12 @@ const Header = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`xl:hidden p-2 rounded-lg transition-all duration-300 z-50 ${
-                isMobileMenuOpen
+              className={`xl:hidden p-2 rounded-lg transition-all duration-300 z-50 ${isMobileMenuOpen
                   ? "bg-gray-100 text-gray-900"
                   : isScrolled
-                  ? "text-gray-900 hover:bg-gray-100"
-                  : "text-white hover:bg-white/10"
-              }`}
+                    ? "text-gray-900 hover:bg-gray-100"
+                    : "text-white hover:bg-white/10"
+                }`}
             >
               <svg
                 className="w-6 h-6"
@@ -297,17 +280,15 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 xl:hidden transition-opacity duration-300 ${
-          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 xl:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Mobile Menu Sidebar */}
       <div
-        className={`fixed top-20 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 xl:hidden transform transition-transform duration-300 ease-in-out shadow-2xl ${
-          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-20 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 xl:hidden transform transition-transform duration-300 ease-in-out shadow-2xl ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="h-full overflow-y-auto px-6 py-6">
           <div className="space-y-2">
@@ -318,11 +299,10 @@ const Header = () => {
                   router.push(item.path);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
-                  isActive(item.path)
+                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${isActive(item.path)
                     ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                     : "text-gray-700 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {item.name}
               </div>
@@ -339,11 +319,10 @@ const Header = () => {
                   router.push(item.path);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
-                  isActive(item.path)
+                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${isActive(item.path)
                     ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                     : "text-gray-700 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {item.name}
               </div>

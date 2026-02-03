@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const HeroSection = () => {
   const [hoverButton, setHoverButton] = useState(null);
@@ -54,9 +55,8 @@ const HeroSection = () => {
                 <div className="flex items-center justify-center gap-2">
                   <span>Explore Projects</span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      hoverButton === "explore" ? "translate-x-1" : ""
-                    }`}
+                    className={`w-4 h-4 transition-transform duration-300 ${hoverButton === "explore" ? "translate-x-1" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -91,20 +91,24 @@ const HeroSection = () => {
 
                 {/* Mock Gallery Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  {[1, 2, 3, 4].map((i) => (
+                  {[
+                    "/batik_0003.png",
+                    "/batik_motif_named_Sekar_Tanjung_featuring_a_centra_seed42_1.png",
+                    "/batik_with_flower_motifs_seed42_5.png",
+                    "/batik_with_flower_motifs_seed42_7.png",
+                  ].map((src, i) => (
                     <div
                       key={i}
-                      className={`aspect-square bg-gradient-to-br ${
-                        i === 1
-                          ? "from-purple-400 to-pink-400"
-                          : i === 2
-                            ? "from-blue-400 to-cyan-400"
-                            : i === 3
-                              ? "from-green-400 to-emerald-400"
-                              : "from-orange-400 to-red-400"
-                      } rounded-xl opacity-80 animate-pulse`}
-                      style={{ animationDelay: `${i * 200}ms` }}
-                    />
+                      className="relative aspect-square rounded-xl overflow-hidden group"
+                    >
+                      <Image
+                        src={src}
+                        alt={`Batik Sample ${i + 1}`}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300" />
+                    </div>
                   ))}
                 </div>
 

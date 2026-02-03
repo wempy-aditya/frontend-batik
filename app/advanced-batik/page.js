@@ -160,9 +160,9 @@ export default function AdvancedBatikPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 overflow-hidden">
+      <section className="relative py-20 bg-gradient-to-br from-amber-900 via-orange-800 to-amber-900 overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -175,13 +175,13 @@ export default function AdvancedBatikPage() {
 
         {/* Floating Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
         </div>
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
-          <div className="flex items-center text-sm text-purple-200 mb-8">
+          <div className="flex items-center text-sm text-orange-200 mb-8">
             <button
               onClick={() => (window.location.href = "/")}
               className="hover:text-white transition-colors"
@@ -207,7 +207,7 @@ export default function AdvancedBatikPage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
               <svg
-                className="w-4 h-4 text-purple-400"
+                className="w-4 h-4 text-amber-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -225,7 +225,7 @@ export default function AdvancedBatikPage() {
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
-              <span className="bg-gradient-to-r from-white via-purple-100 to-indigo-100 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
                 Batik Text To Image: Nitik
               </span>
             </h1>
@@ -249,7 +249,7 @@ export default function AdvancedBatikPage() {
                 <div className="mb-8">
                   <h2 className="text-3xl font-bold text-gray-900 mb-4 flex items-center gap-3">
                     <svg
-                      className="w-8 h-8 text-purple-600"
+                      className="w-8 h-8 text-amber-600"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -278,7 +278,7 @@ export default function AdvancedBatikPage() {
                     <button
                       onClick={randomizePrompt}
                       disabled={isGenerating || isLoadingPrompts || advancedBatikPrompts.length === 0}
-                      className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       <svg
                         className="w-4 h-4"
@@ -301,7 +301,7 @@ export default function AdvancedBatikPage() {
                     onChange={(e) => setPrompt(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Describe your sophisticated batik design with detailed cultural elements, specific motifs, color schemes, and symbolic meanings..."
-                    className="w-full h-40 px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 text-base leading-relaxed"
+                    className="w-full h-40 px-5 py-4 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 text-base leading-relaxed"
                     disabled={isGenerating}
                   />
                 </div>
@@ -317,7 +317,7 @@ export default function AdvancedBatikPage() {
                       {scenarioOptions.map((option) => (
                         <label
                           key={option.value}
-                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-purple-300 cursor-pointer transition-colors"
+                          className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-amber-300 cursor-pointer transition-colors"
                         >
                           <input
                             type="radio"
@@ -327,7 +327,7 @@ export default function AdvancedBatikPage() {
                             onChange={(e) =>
                               setSelectedScenario(e.target.value)
                             }
-                            className="mt-1 text-purple-600"
+                            className="mt-1 text-amber-600"
                             disabled={isGenerating}
                           />
                           <div>
@@ -400,7 +400,7 @@ export default function AdvancedBatikPage() {
                         }
                         placeholder="-1 for random"
                         disabled={isGenerating}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
                       />
                       <div className="text-xs text-gray-500 mt-1">
                         Use -1 for random, or specific number for reproducible
@@ -423,11 +423,10 @@ export default function AdvancedBatikPage() {
                 <button
                   onClick={generateImage}
                   disabled={isGenerating || !prompt.trim()}
-                  className={`w-full py-5 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform ${
-                    isGenerating || !prompt.trim()
+                  className={`w-full py-5 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform ${isGenerating || !prompt.trim()
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:scale-105 hover:shadow-2xl shadow-lg"
-                  }`}
+                      : "bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:scale-105 hover:shadow-2xl shadow-lg"
+                    }`}
                 >
                   {isGenerating ? (
                     <div className="flex items-center justify-center gap-3">
@@ -513,10 +512,10 @@ export default function AdvancedBatikPage() {
 
                 {/* Loading State */}
                 {isGenerating && (
-                  <div className="flex items-center justify-center h-80 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border-2 border-dashed border-purple-300">
+                  <div className="flex items-center justify-center h-80 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border-2 border-dashed border-amber-300">
                     <div className="text-center">
                       <svg
-                        className="w-16 h-16 text-purple-600 animate-spin mx-auto mb-4"
+                        className="w-16 h-16 text-amber-600 animate-spin mx-auto mb-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -528,10 +527,10 @@ export default function AdvancedBatikPage() {
                           d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      <div className="text-purple-800 font-bold text-lg mb-2">
+                      <div className="text-amber-800 font-bold text-lg mb-2">
                         ⚡ Advanced Processing
                       </div>
-                      <div className="text-purple-700 text-sm">
+                      <div className="text-amber-700 text-sm">
                         Using {selectedScenario} with {steps} steps...
                       </div>
                     </div>
@@ -601,10 +600,10 @@ export default function AdvancedBatikPage() {
 
                 {/* Empty State */}
                 {!generatedImage && !isGenerating && !error && (
-                  <div className="flex items-center justify-center h-80 bg-gradient-to-br from-purple-50/30 to-indigo-50/30 rounded-2xl border-2 border-dashed border-purple-200">
+                  <div className="flex items-center justify-center h-80 bg-gradient-to-br from-amber-50/30 to-orange-50/30 rounded-2xl border-2 border-dashed border-amber-200">
                     <div className="text-center">
                       <svg
-                        className="w-16 h-16 text-purple-400 mx-auto mb-4"
+                        className="w-16 h-16 text-amber-400 mx-auto mb-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -630,7 +629,7 @@ export default function AdvancedBatikPage() {
           </div>
 
           {/* Tips Section */}
-          <div className="mt-16 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-3xl p-12">
+          <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
               ⚡ Advanced Creation Tips
             </h2>
@@ -640,7 +639,7 @@ export default function AdvancedBatikPage() {
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white text-xl">🎯</span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">
@@ -652,7 +651,7 @@ export default function AdvancedBatikPage() {
                 </p>
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white text-xl">⚙️</span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">
@@ -664,7 +663,7 @@ export default function AdvancedBatikPage() {
                 </p>
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-white text-xl">🎨</span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">

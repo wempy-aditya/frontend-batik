@@ -790,7 +790,7 @@ export default function DatasetsPage() {
                         className="text-gray-600 text-sm leading-relaxed mb-4"
                         style={{
                           display: "-webkit-box",
-                          WebkitLineClamp: 7,
+                          WebkitLineClamp: 5,
                           WebkitBoxOrient: "vertical",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
