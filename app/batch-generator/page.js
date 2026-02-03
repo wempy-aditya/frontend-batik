@@ -15,6 +15,12 @@ export default function BatchGeneratorPage() {
   const [advancedBatikPrompts, setAdvancedBatikPrompts] = useState([]);
   const [isLoadingPrompts, setIsLoadingPrompts] = useState(true);
   const abortControllerRef = useRef(null);
+  
+  // Batch API states
+  const [jobId, setJobId] = useState(null);
+  const [jobStatus, setJobStatus] = useState(null);
+  const [isPolling, setIsPolling] = useState(false);
+  const pollingIntervalRef = useRef(null);
 
   // Load batik prompts from JSON file
   useEffect(() => {
@@ -109,6 +115,95 @@ export default function BatchGeneratorPage() {
   // Calculate total generations
   const totalGenerations = prompt.trim() ? imageCount : 0;
 
+  // Create batch job using API
+  const createBatchJob = async () => {
+    if (!prompt.trim()) {
+      setError("Please enter a prompt");
+      return null;
+    }
+
+    if (imageCount < 1 || imageCount > 1000) {
+      setError("Please set between 1 and 1000 images");
+      return null;
+    }
+
+    try {
+      // Build prompts array (all same prompt for now)
+      const prompts = Array(imageCount).fill(prompt);
+      
+      console.log(`[Batch API] Creating job with ${imageCount} prompts...`);
+      
+      const response = await fetch('https://service-t2i.wempyaw.com/batik_product/devt2i/batch/generate/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompts: prompts,
+          scenario: selectedScenario,
+          steps: steps,
+          guidance_scale: guidanceScale,
+          seed_start: seed === -1 ? Math.floor(Math.random() * 1000000) : seed,
+          negative_prompt: "blurry, bad quality, distorted, ugly, deformed"
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      console.log(`[Batch API] Job created:`, data.job_id);
+      return data.job_id;
+    } catch (err) {
+      console.error('[Batch API] Create job error:', err);
+      throw err;
+    }
+  };
+
+  // Poll job status
+  const pollJobStatus = async (jobId) => {
+    try {
+      const response = await fetch(`https://service-t2i.wempyaw.com/batik_product/devt2i/batch/status/${jobId}`);
+      const data = await response.json();
+      
+      console.log(`[Batch API] Status:`, data.status, `- Progress: ${data.completed}/${data.total}`);
+      
+      setJobStatus(data);
+      setProgress({
+        current: data.completed || 0,
+        total: data.total || imageCount
+      });
+      
+      return data;
+    } catch (err) {
+      console.error('[Batch API] Poll status error:', err);
+      throw err;
+    }
+  };
+
+  // Download results
+  const downloadResults = async (jobId) => {
+    try {
+      console.log(`[Batch API] Downloading results for job:`, jobId);
+      
+      // Trigger download
+      const downloadUrl = `https://service-t2i.wempyaw.com/batik_product/devt2i/batch/download/${jobId}`;
+      window.location.href = downloadUrl;
+      
+      // Note: Individual images can't be displayed in generatedImages array
+      // because batch API returns ZIP file, not individual base64 images
+      setGeneratedImages([{
+        success: true,
+        jobId: jobId,
+        message: 'Results downloaded as ZIP file',
+        timestamp: new Date().toISOString()
+      }]);
+    } catch (err) {
+      console.error('[Batch API] Download error:', err);
+      throw err;
+    }
+  };
+
   // Generate batch
   const generateBatch = async () => {
     if (!prompt.trim()) {
@@ -116,52 +211,59 @@ export default function BatchGeneratorPage() {
       return;
     }
 
-    if (imageCount < 1) {
-      setError("Please set at least 1 image to generate");
+    if (imageCount < 1 || imageCount > 1000) {
+      setError("Please set between 1 and 1000 images");
       return;
     }
 
     setIsGenerating(true);
     setError("");
     setGeneratedImages([]);
+    setJobId(null);
+    setJobStatus(null);
     setProgress({ current: 0, total: imageCount });
 
-    abortControllerRef.current = new AbortController();
-
-    // Build generation queue
-    const queue = [];
-    for (let i = 0; i < imageCount; i++) {
-      queue.push({
-        prompt: prompt,
-        scenario: selectedScenario,
-        seed: seed,
-        index: i,
-      });
-    }
-
-    const results = [];
-
     try {
-      // Sequential processing
-      for (const item of queue) {
-        if (abortControllerRef.current.signal.aborted) break;
-
-        const result = await generateSingleImage(
-          item,
-          abortControllerRef.current.signal,
-        );
-        results.push(result);
-        setGeneratedImages([...results]);
-        setProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+      // Create batch job
+      const newJobId = await createBatchJob();
+      
+      if (!newJobId) {
+        throw new Error('Failed to create batch job');
       }
+      
+      setJobId(newJobId);
+      setIsPolling(true);
+      
+      // Start polling status
+      pollingIntervalRef.current = setInterval(async () => {
+        try {
+          const status = await pollJobStatus(newJobId);
+          
+          if (status.status === 'completed') {
+            console.log('[Batch API] Job completed!');
+            clearInterval(pollingIntervalRef.current);
+            setIsPolling(false);
+            setIsGenerating(false);
+            
+            // Auto-download results
+            await downloadResults(newJobId);
+          } else if (status.status === 'failed') {
+            console.error('[Batch API] Job failed');
+            clearInterval(pollingIntervalRef.current);
+            setIsPolling(false);
+            setIsGenerating(false);
+            setError(`Batch job failed: ${status.error || 'Unknown error'}`);
+          }
+        } catch (err) {
+          console.error('[Batch API] Polling error:', err);
+        }
+      }, 5000); // Poll every 5 seconds
+      
     } catch (err) {
-      if (err.name !== "AbortError") {
-        console.error("Batch generation error:", err);
-        setError(`Batch generation failed: ${err.message}`);
-      }
-    } finally {
+      console.error("Batch generation error:", err);
+      setError(`Batch generation failed: ${err.message}`);
       setIsGenerating(false);
-      abortControllerRef.current = null;
+      setIsPolling(false);
     }
   };
 
@@ -226,28 +328,35 @@ export default function BatchGeneratorPage() {
 
   // Stop generation
   const stopGeneration = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
+    setIsPolling(false);
+    setIsGenerating(false);
+    console.log('[Batch API] Generation stopped by user');
   };
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
-  // Download all images
+  // Download all images (from batch API)
   const downloadAllImages = async () => {
-    const successfulImages = generatedImages.filter(
-      (img) => img.success && img.imageUrl,
-    );
-
-    for (let i = 0; i < successfulImages.length; i++) {
-      const img = successfulImages[i];
-      const link = document.createElement("a");
-      link.href = img.imageUrl;
-      link.download = `batch-batik-${img.scenario}-${img.index + 1}-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Small delay between downloads
-      await new Promise((resolve) => setTimeout(resolve, 200));
+    if (!jobId) {
+      setError('No batch job available to download');
+      return;
+    }
+    
+    try {
+      await downloadResults(jobId);
+    } catch (err) {
+      setError(`Download failed: ${err.message}`);
     }
   };
 
@@ -635,7 +744,7 @@ export default function BatchGeneratorPage() {
                 {/* Progress Bar */}
                 {isGenerating && (
                   <div className="mb-6">
-                    <div className="w-full bg-amber-400/30 rounded-full h-3">
+                    <div className="w-full bg-amber-400/30 rounded-full h-3 mb-3">
                       <div
                         className="bg-white rounded-full h-3 transition-all duration-300"
                         style={{
@@ -643,6 +752,30 @@ export default function BatchGeneratorPage() {
                         }}
                       ></div>
                     </div>
+                    
+                    {/* Job Status Info */}
+                    {jobStatus && (
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-amber-100">Job ID:</span>
+                          <span className="font-mono">{jobId}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-100">Status:</span>
+                          <span className="font-semibold capitalize">{jobStatus.status}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-100">Progress:</span>
+                          <span>{jobStatus.completed || 0}/{jobStatus.total || imageCount} ({jobStatus.progress?.toFixed(1) || 0}%)</span>
+                        </div>
+                        {jobStatus.failed > 0 && (
+                          <div className="flex justify-between text-red-300">
+                            <span>Failed:</span>
+                            <span>{jobStatus.failed}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -747,32 +880,32 @@ export default function BatchGeneratorPage() {
                 </div>
 
                 {/* Results Stats */}
-                {generatedImages.length > 0 && (
+                {jobStatus && (
                   <div className="grid grid-cols-3 gap-3 mb-6">
                     <div className="bg-green-50 rounded-xl p-3 text-center">
                       <div className="text-2xl font-bold text-green-600">
-                        {generatedImages.filter((img) => img.success).length}
+                        {jobStatus.completed || 0}
                       </div>
-                      <div className="text-xs text-green-700">Success</div>
+                      <div className="text-xs text-green-700">Completed</div>
                     </div>
                     <div className="bg-red-50 rounded-xl p-3 text-center">
                       <div className="text-2xl font-bold text-red-600">
-                        {generatedImages.filter((img) => !img.success).length}
+                        {jobStatus.failed || 0}
                       </div>
                       <div className="text-xs text-red-700">Failed</div>
                     </div>
                     <div className="bg-amber-50 rounded-xl p-3 text-center">
                       <div className="text-2xl font-bold text-amber-600">
-                        {generatedImages.length}
+                        {jobStatus.total || imageCount}
                       </div>
                       <div className="text-xs text-amber-700">Total</div>
                     </div>
                   </div>
                 )}
 
-                {/* Image Grid */}
+                {/* Batch Job Display */}
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                  {generatedImages.length === 0 && !isGenerating && (
+                  {!jobId && !isGenerating && (
                     <div className="flex items-center justify-center h-60 bg-gradient-to-br from-amber-50/30 to-orange-50/30 rounded-2xl border-2 border-dashed border-amber-200">
                       <div className="text-center">
                         <svg
