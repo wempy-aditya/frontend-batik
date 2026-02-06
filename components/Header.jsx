@@ -91,10 +91,13 @@ const Header = () => {
             >
               <div className="relative">
                 <div className="w-12 h-12 rounded-xl overflow-hidden transform group-hover:scale-110 transition-transform duration-300 shadow-lg bg-white">
-                  <img
-                    src="\ChatGPT Image Feb 2, 2026, 04_03_15 PM.png"
+                  <Image
+                    src="/logo_rispro.png"
                     alt="RISPRO Logo"
+                    width={48}
+                    height={48}
                     className="w-full h-full object-cover"
+                    priority
                   />
                 </div>
               </div>
