@@ -25,9 +25,12 @@ function PDFViewerContent({ pdfLoaded }) {
   const [useHybridMode, setUseHybridMode] = useState(false);
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [fullPdfReady, setFullPdfReady] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [showRetryPrompt, setShowRetryPrompt] = useState(false);
   const renderTaskRef = useRef(null);
   const pageCache = useRef(new Map());
   const backgroundLoadRef = useRef(null);
+  const maxRetries = 3;
 
   // Get proxy URL - Using local Next.js API route (faster!)
   const getProxyUrl = (id) => {
@@ -51,7 +54,7 @@ function PDFViewerContent({ pdfLoaded }) {
     if (pdfLoaded && id && !hasAutoLoaded) {
       console.log('🚀 Auto-loading PDF on mount:', id);
       setHasAutoLoaded(true);
-      loadPDF(id, page);
+      loadPDFWithRetry(id, page);
     }
   }, [searchParams, pdfLoaded]);
 
@@ -61,6 +64,32 @@ function PDFViewerContent({ pdfLoaded }) {
     if (id) params.set("id", id);
     params.set("page", String(page || 1));
     router.push(`/pdf-viewer?${params.toString()}`, { scroll: false });
+  };
+
+  // Load PDF with auto-retry mechanism
+  const loadPDFWithRetry = async (id, initialPage = 1, currentRetry = 0) => {
+    try {
+      setShowRetryPrompt(false);
+      await loadPDF(id, initialPage);
+    } catch (err) {
+      console.error(`❌ Load attempt ${currentRetry + 1} failed:`, err);
+      
+      if (currentRetry < maxRetries) {
+        const delay = Math.min(1000 * Math.pow(2, currentRetry), 5000); // 1s, 2s, 4s max
+        console.log(`🔄 Retrying in ${delay}ms... (Attempt ${currentRetry + 2}/${maxRetries + 1})`);
+        setStatus(`Loading failed. Retrying in ${delay/1000}s... (${currentRetry + 2}/${maxRetries + 1})`);
+        setRetryCount(currentRetry + 1);
+        
+        setTimeout(() => {
+          loadPDFWithRetry(id, initialPage, currentRetry + 1);
+        }, delay);
+      } else {
+        console.error('❌ All retry attempts failed');
+        setError(`Failed to load PDF after ${maxRetries + 1} attempts. Please refresh the page or check your connection.`);
+        setShowRetryPrompt(true);
+        setIsLoading(false);
+      }
+    }
   };
 
   // Load PDF
@@ -379,7 +408,9 @@ function PDFViewerContent({ pdfLoaded }) {
   const handleLoad = () => {
     setFullPdfReady(false);
     pageCache.current.clear();
-    loadPDF(fileId, pageNum);
+    setRetryCount(0);
+    setShowRetryPrompt(false);
+    loadPDFWithRetry(fileId, pageNum);
   };
 
   // Manual trigger untuk load full PDF immediately
@@ -517,16 +548,62 @@ function PDFViewerContent({ pdfLoaded }) {
           </div>
 
           {/* Status Bar */}
-          {(status || error) && (
+          {(status || error || showRetryPrompt) && (
             <div className="mt-4 pt-4 border-t">
-              {status && (
-                <div className="text-sm text-gray-600 mb-2">
+              {status && !showRetryPrompt && (
+                <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
+                  {retryCount > 0 && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Retry {retryCount}/{maxRetries}
+                    </span>
+                  )}
                   {status}
                 </div>
               )}
               {error && (
                 <div className="text-sm bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 whitespace-pre-wrap">
                   {error}
+                </div>
+              )}
+              {showRetryPrompt && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-yellow-800 mb-1">
+                        PDF Failed to Load
+                      </h3>
+                      <p className="text-sm text-yellow-700 mb-3">
+                        The PDF could not be loaded after multiple attempts. This might be due to network issues or browser compatibility.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={() => window.location.reload()}
+                          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Refresh Page
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowRetryPrompt(false);
+                            setError('');
+                            setRetryCount(0);
+                            loadPDFWithRetry(fileId, pageNum);
+                          }}
+                          className="inline-flex items-center justify-center px-4 py-2 border border-yellow-300 text-sm font-medium rounded-lg text-yellow-700 bg-white hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
