@@ -27,10 +27,13 @@ function PDFViewerContent({ pdfLoaded }) {
   const [fullPdfReady, setFullPdfReady] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [showRetryPrompt, setShowRetryPrompt] = useState(false);
+  const [usingLocalFallback, setUsingLocalFallback] = useState(false);
   const renderTaskRef = useRef(null);
   const pageCache = useRef(new Map());
   const backgroundLoadRef = useRef(null);
   const maxRetries = 3;
+  const LOCAL_PDF_PATH = "/document-spmi-umm.pdf";
+  const LOCAL_PDF_DEFAULT_PAGE = 10;
 
   // Get proxy URL - Using local Next.js API route (faster!)
   const getProxyUrl = (id) => {
@@ -70,6 +73,7 @@ function PDFViewerContent({ pdfLoaded }) {
   const loadPDFWithRetry = async (id, initialPage = 1, currentRetry = 0) => {
     try {
       setShowRetryPrompt(false);
+      setUsingLocalFallback(false);
       await loadPDF(id, initialPage);
     } catch (err) {
       console.error(`❌ Load attempt ${currentRetry + 1} failed:`, err);
@@ -84,11 +88,120 @@ function PDFViewerContent({ pdfLoaded }) {
           loadPDFWithRetry(id, initialPage, currentRetry + 1);
         }, delay);
       } else {
-        console.error('❌ All retry attempts failed');
-        setError(`Failed to load PDF after ${maxRetries + 1} attempts. Please refresh the page or check your connection.`);
-        setShowRetryPrompt(true);
-        setIsLoading(false);
+        // Semua retry gagal - Load dari local PDF sebagai fallback
+        console.warn('❌ All proxy attempts failed. Loading local fallback PDF...');
+        setStatus('Loading local document...');
+        setRetryCount(0);
+        
+        try {
+          await loadLocalPDF(LOCAL_PDF_DEFAULT_PAGE);
+          setUsingLocalFallback(true);
+          setError('');
+          setShowRetryPrompt(false);
+          setIsLoading(false);
+        } catch (localErr) {
+          console.error('❌ Local PDF load also failed:', localErr);
+          setError(`Failed to load PDF after ${maxRetries + 1} attempts. Local fallback also failed.`);
+          setShowRetryPrompt(true);
+          setIsLoading(false);
+        }
       }
+    }
+  };
+
+  // Load PDF from local public folder (fallback)
+  const loadLocalPDF = async (initialPage = LOCAL_PDF_DEFAULT_PAGE) => {
+    console.log('📁 Loading local PDF from:', LOCAL_PDF_PATH);
+    
+    setError("");
+    setIsLoading(true);
+    setStatus("Loading local document...");
+    setUseHybridMode(true);
+    setFullPdfReady(false);
+    setIsBackgroundLoading(false);
+
+    // Clear any previous background loading
+    if (backgroundLoadRef.current) {
+      clearTimeout(backgroundLoadRef.current);
+      backgroundLoadRef.current = null;
+    }
+
+    try {
+      // Load local PDF with hybrid mode
+      const loadingTask = window.pdfjsLib.getDocument({
+        url: LOCAL_PDF_PATH,
+        withCredentials: false,
+        disableRange: false,
+        disableStream: false,
+        disableAutoFetch: true,
+        rangeChunkSize: 65536,
+      });
+
+      const pdf = await loadingTask.promise;
+      
+      console.log('✅ Local PDF loaded:', {
+        numPages: pdf.numPages,
+        fingerprint: pdf.fingerprint,
+        initialPage
+      });
+
+      setPdfDoc(pdf);
+      setTotalPages(pdf.numPages);
+      setStatus(`Local Document - Page ${initialPage} of ${pdf.numPages}`);
+
+      const startPage = Math.min(Math.max(1, initialPage), pdf.numPages);
+      await renderPageHybrid(pdf, startPage);
+      setIsLoading(false);
+      
+      // Background load full PDF
+      console.log('🔄 Starting background full PDF load for local document...');
+      setIsBackgroundLoading(true);
+      backgroundLoadRef.current = setTimeout(() => {
+        loadFullPDFInBackgroundLocal(pdf, startPage);
+      }, 1000);
+      
+    } catch (err) {
+      console.error("❌ Local PDF Load Error:", err);
+      throw err; // Re-throw untuk di-catch oleh loadPDFWithRetry
+    }
+  };
+
+  // Load Full Local PDF in Background
+  const loadFullPDFInBackgroundLocal = async (currentPdf, currentPage) => {
+    try {
+      console.log('🔄 Background loading full local PDF...');
+
+      const loadingTask = window.pdfjsLib.getDocument({
+        url: LOCAL_PDF_PATH,
+        withCredentials: false,
+        disableRange: false,
+        disableStream: false,
+        disableAutoFetch: false,
+      });
+
+      loadingTask.onProgress = (progress) => {
+        if (progress.total > 0) {
+          const percent = Math.round((progress.loaded / progress.total) * 100);
+          setStatus(`Page ${pageNum} / ${totalPages} (background: ${percent}%)`);
+        }
+      };
+
+      const pdf = await loadingTask.promise;
+      
+      console.log('✅ Full local PDF loaded in background');
+
+      setPdfDoc(pdf);
+      setTotalPages(pdf.numPages);
+      setFullPdfReady(true);
+      setIsBackgroundLoading(false);
+      setUseHybridMode(false);
+      setStatus(`Local Document Ready - Page ${pageNum} / ${pdf.numPages}`);
+
+      await renderPage(pdf, currentPage);
+      
+    } catch (err) {
+      console.error('⚠️ Background local load failed:', err);
+      setIsBackgroundLoading(false);
     }
   };
 
@@ -548,8 +661,27 @@ function PDFViewerContent({ pdfLoaded }) {
           </div>
 
           {/* Status Bar */}
-          {(status || error || showRetryPrompt) && (
+          {(status || error || showRetryPrompt || usingLocalFallback) && (
             <div className="mt-4 pt-4 border-t">
+              {/* Local Fallback Notice */}
+              {usingLocalFallback && (
+                <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-800">
+                        📁 Loading Local Document
+                      </p>
+                      <p className="text-xs text-blue-700 mt-1">
+                        Remote PDF unavailable. Displaying local SPMI UMM document as fallback.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {status && !showRetryPrompt && (
                 <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
                   {retryCount > 0 && (
