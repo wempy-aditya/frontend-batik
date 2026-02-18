@@ -11,6 +11,18 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Halaman-halaman yang tidak punya hero section gelap
+  // Header akan selalu solid (tidak transparan) di halaman-halaman ini
+  const solidHeaderPages = [
+    "/pdf-viewer",
+    // Tambahkan halaman lain yang membutuhkan header solid di sini
+  ];
+
+  // Cek apakah halaman saat ini membutuhkan header solid
+  const needsSolidHeader = solidHeaderPages.some((page) =>
+    pathname?.startsWith(page),
+  );
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -76,12 +88,13 @@ const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isMobileMenuOpen
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isMobileMenuOpen
             ? "bg-white shadow-lg"
-            : isScrolled
+            : isScrolled || needsSolidHeader
               ? "bg-white/95 backdrop-blur-lg shadow-lg"
               : "bg-transparent"
-          }`}
+        }`}
       >
         <nav className="container mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
@@ -104,21 +117,21 @@ const Header = () => {
               </div>
               <div className="hidden sm:block">
                 <div
-                  className={`text-xl font-bold transition-colors duration-300 ${isMobileMenuOpen || isScrolled
+                  className={`text-xl font-bold transition-colors duration-300 ${
+                    isMobileMenuOpen || isScrolled || needsSolidHeader
                       ? "text-gray-900"
                       : "text-white"
-                    }`}
+                  }`}
                 >
                   RISPRO
                 </div>
                 <div
-                  className={`text-xs transition-colors duration-300 ${isMobileMenuOpen || isScrolled
+                  className={`text-xs transition-colors duration-300 ${
+                    isMobileMenuOpen || isScrolled || needsSolidHeader
                       ? "text-gray-600"
                       : "text-gray-300"
-                    }`}
-                >
-                  Image Processing Platform
-                </div>
+                  }`}
+                ></div>
               </div>
             </div>
 
@@ -128,14 +141,15 @@ const Header = () => {
                 <div
                   key={item.path}
                   onClick={() => router.push(item.path)}
-                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 ${isActive(item.path)
-                      ? isScrolled
+                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
+                    isActive(item.path)
+                      ? isScrolled || needsSolidHeader
                         ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                         : "bg-white/20 backdrop-blur-sm text-white"
-                      : isScrolled
+                      : isScrolled || needsSolidHeader
                         ? "text-gray-700 hover:bg-gray-100"
                         : "text-white hover:bg-white/10"
-                    }`}
+                  }`}
                 >
                   {item.name}
                 </div>
@@ -145,19 +159,21 @@ const Header = () => {
               <div className="relative dropdown-container">
                 <div
                   onClick={() => setIsMoreDropdownOpen(!isMoreDropdownOpen)}
-                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 flex items-center gap-1 ${isMoreActive()
-                      ? isScrolled
+                  className={`px-4 py-2 rounded-lg font-medium cursor-pointer transition-all duration-300 flex items-center gap-1 ${
+                    isMoreActive()
+                      ? isScrolled || needsSolidHeader
                         ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                         : "bg-white/20 backdrop-blur-sm text-white"
-                      : isScrolled
+                      : isScrolled || needsSolidHeader
                         ? "text-gray-700 hover:bg-gray-100"
                         : "text-white hover:bg-white/10"
-                    }`}
+                  }`}
                 >
                   More
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${isMoreDropdownOpen ? "rotate-180" : ""
-                      }`}
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isMoreDropdownOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -181,10 +197,11 @@ const Header = () => {
                           router.push(item.path);
                           setIsMoreDropdownOpen(false);
                         }}
-                        className={`px-4 py-2.5 cursor-pointer transition-all duration-200 ${isActive(item.path)
+                        className={`px-4 py-2.5 cursor-pointer transition-all duration-200 ${
+                          isActive(item.path)
                             ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         {item.name}
                       </div>
@@ -199,10 +216,11 @@ const Header = () => {
               {isAuthenticated ? (
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${isScrolled
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
+                    isScrolled || needsSolidHeader
                       ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg hover:shadow-xl"
                       : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
+                  }`}
                 >
                   <svg
                     className="w-4 h-4"
@@ -222,10 +240,11 @@ const Header = () => {
               ) : (
                 <button
                   onClick={() => router.push("/login")}
-                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${isScrolled
+                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${
+                    isScrolled || needsSolidHeader
                       ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl"
                       : "bg-emerald-600 text-white hover:bg-emerald-700"
-                    }`}
+                  }`}
                 >
                   <svg
                     className="w-4 h-4"
@@ -248,12 +267,13 @@ const Header = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`xl:hidden p-2 rounded-lg transition-all duration-300 z-50 ${isMobileMenuOpen
+              className={`xl:hidden p-2 rounded-lg transition-all duration-300 z-50 ${
+                isMobileMenuOpen
                   ? "bg-gray-100 text-gray-900"
-                  : isScrolled
+                  : isScrolled || needsSolidHeader
                     ? "text-gray-900 hover:bg-gray-100"
                     : "text-white hover:bg-white/10"
-                }`}
+              }`}
             >
               <svg
                 className="w-6 h-6"
@@ -284,15 +304,17 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 xl:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 xl:hidden transition-opacity duration-300 ${
+          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Mobile Menu Sidebar */}
       <div
-        className={`fixed top-20 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 xl:hidden transform transition-transform duration-300 ease-in-out shadow-2xl ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+        className={`fixed top-20 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 xl:hidden transform transition-transform duration-300 ease-in-out shadow-2xl ${
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
       >
         <div className="h-full overflow-y-auto px-6 py-6">
           <div className="space-y-2">
@@ -303,10 +325,11 @@ const Header = () => {
                   router.push(item.path);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${isActive(item.path)
+                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
+                  isActive(item.path)
                     ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                     : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 {item.name}
               </div>
@@ -323,10 +346,11 @@ const Header = () => {
                   router.push(item.path);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${isActive(item.path)
+                className={`px-4 py-3 rounded-lg font-medium cursor-pointer transition-all duration-300 ${
+                  isActive(item.path)
                     ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                     : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                }`}
               >
                 {item.name}
               </div>

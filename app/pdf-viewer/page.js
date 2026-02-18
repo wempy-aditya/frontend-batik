@@ -12,6 +12,31 @@ function PDFViewerContent({ pdfLoaded }) {
   const DEFAULT_PDF_ID = "1nAU-FZKtgaSj6xKKkEr2X9njkWwWwqhK";
   const DEFAULT_PAGE = 10;
 
+  // Force header to be visible (not transparent) on this page
+  useEffect(() => {
+    // Force header to be solid by adding inline styles
+    const header = document.querySelector('header');
+    if (header) {
+      const originalBg = header.style.background;
+      const originalBackdrop = header.style.backdropFilter;
+      const originalShadow = header.style.boxShadow;
+      
+      // Force solid background
+      header.style.background = 'rgba(255, 255, 255, 0.98)';
+      header.style.backdropFilter = 'blur(12px)';
+      header.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+      
+      return () => {
+        // Restore original styles when leaving page
+        if (header) {
+          header.style.background = originalBg;
+          header.style.backdropFilter = originalBackdrop;
+          header.style.boxShadow = originalShadow;
+        }
+      };
+    }
+  }, []);
+
   const [fileId, setFileId] = useState("");
   const [pageNum, setPageNum] = useState(1);
   const [gotoPage, setGotoPage] = useState(1);
@@ -537,7 +562,7 @@ function PDFViewerContent({ pdfLoaded }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 pt-24">
       {/* Main Content */}
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
         {/* Toolbar */}
@@ -553,7 +578,7 @@ function PDFViewerContent({ pdfLoaded }) {
                 value={fileId}
                 onChange={(e) => setFileId(e.target.value)}
                 placeholder="Masukkan File ID dari Google Drive..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
               />
             </div>
 
@@ -566,7 +591,7 @@ function PDFViewerContent({ pdfLoaded }) {
                 min="1"
                 value={pageNum}
                 onChange={(e) => setPageNum(parseInt(e.target.value) || 1)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
               />
             </div>
 
@@ -574,7 +599,7 @@ function PDFViewerContent({ pdfLoaded }) {
               <button
                 onClick={handleLoad}
                 disabled={isLoading || !fileId}
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-6 py-2.5 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? "Loading..." : "Load PDF"}
               </button>
@@ -608,7 +633,7 @@ function PDFViewerContent({ pdfLoaded }) {
                 <button
                   onClick={handleGoto}
                   disabled={!pdfDoc}
-                  className="ml-2 text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ml-2 text-amber-600 hover:text-amber-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Go
                 </button>
@@ -651,16 +676,16 @@ function PDFViewerContent({ pdfLoaded }) {
             <div className="mt-4 pt-4 border-t">
               {/* Local Fallback Notice */}
               {usingLocalFallback && (
-                <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <div className="flex items-start gap-2">
-                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-blue-800">
+                      <p className="text-sm font-medium text-amber-800">
                         📁 Loading Local Document
                       </p>
-                      <p className="text-xs text-blue-700 mt-1">
+                      <p className="text-xs text-amber-700 mt-1">
                         Remote PDF unavailable. Displaying local SPMI UMM document as fallback.
                       </p>
                     </div>
@@ -748,7 +773,7 @@ function PDFViewerContent({ pdfLoaded }) {
                   {fullPdfReady ? (
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   ) : (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                   )}
                 </div>
                 <div>
@@ -767,7 +792,7 @@ function PDFViewerContent({ pdfLoaded }) {
               {useHybridMode && !fullPdfReady && !isBackgroundLoading && (
                 <button 
                   onClick={loadFullPDFNow}
-                  className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
+                  className="flex-shrink-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
                 >
                   Load Complete PDF
                 </button>
@@ -800,7 +825,7 @@ function PDFViewerWrapper() {
       {scriptLoaded ? <PDFViewerContent pdfLoaded={scriptLoaded} /> : (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading PDF.js...</p>
           </div>
         </div>
@@ -812,9 +837,9 @@ function PDFViewerWrapper() {
 export default function PDFViewerPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>

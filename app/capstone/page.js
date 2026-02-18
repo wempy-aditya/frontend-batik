@@ -19,37 +19,37 @@ export default function CapstonePage() {
       try {
         const response = await fetch("/list_capstone.csv");
         const csvText = await response.text();
-        
+
         // Parse CSV manually
         const lines = csvText.split("\n");
         const headers = lines[0].split(",");
-        
+
         const parsedData = [];
         let currentRow = [];
         let currentField = "";
         let insideQuotes = false;
-        
+
         for (let i = 1; i < lines.length; i++) {
           const line = lines[i];
           if (!line.trim()) continue;
-          
+
           for (let j = 0; j < line.length; j++) {
             const char = line[j];
-            
+
             if (char === '"') {
               insideQuotes = !insideQuotes;
-            } else if (char === ',' && !insideQuotes) {
+            } else if (char === "," && !insideQuotes) {
               currentRow.push(currentField.trim());
               currentField = "";
             } else {
               currentField += char;
             }
           }
-          
+
           // Check if row is complete (has all fields)
           if (!insideQuotes && currentRow.length === headers.length - 1) {
             currentRow.push(currentField.trim());
-            
+
             // Create project object
             const project = {
               no: currentRow[0],
@@ -63,7 +63,7 @@ export default function CapstonePage() {
               poster: currentRow[8],
               tanggal: currentRow[9] || "",
             };
-            
+
             parsedData.push(project);
             currentRow = [];
             currentField = "";
@@ -71,7 +71,7 @@ export default function CapstonePage() {
             currentField += "\n";
           }
         }
-        
+
         setProjects(parsedData);
         setLoading(false);
       } catch (error) {
@@ -122,46 +122,66 @@ export default function CapstonePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-        
+      <section className="relative py-20 pt-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 text-white overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0 bg-repeat"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+        </div>
+
+        {/* Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+        </div>
+
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-block mb-6">
-              <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
-                🎓 Student Innovation
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 mb-8">
+              <svg
+                className="w-4 h-4 text-amber-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+              </svg>
+              <span className="text-sm font-semibold text-amber-200">
+                Student Innovation Portfolio
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-              Capstone Projects
+              <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
+                Capstone Projects
+              </span>
             </h1>
-            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-              Discover innovative solutions and groundbreaking applications developed by our talented students
+            <p className="text-xl text-amber-100 mb-8 leading-relaxed">
+              Discover innovative solutions and groundbreaking applications
+              developed by our talented students
             </p>
             <div className="flex items-center justify-center gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
                 <span>{projects.length} Projects</span>
               </div>
               <div className="w-1 h-4 bg-white/30"></div>
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
                 <span>Mobile & Web Development</span>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Decorative elements */}
-        <div className="absolute -bottom-1 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="rgb(249 250 251)"/>
-          </svg>
         </div>
       </section>
 
@@ -176,7 +196,7 @@ export default function CapstonePage() {
                 placeholder="Search projects by title, team members, or description..."
                 value={searchQuery}
                 onChange={handleSearch}
-                className="w-full px-6 py-4 pl-14 rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-gray-700 placeholder-gray-400 shadow-lg"
+                className="w-full px-6 py-4 pl-14 rounded-2xl border-2 border-gray-200 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-300 text-gray-700 placeholder-gray-400 shadow-lg"
               />
               <svg
                 className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -196,15 +216,29 @@ export default function CapstonePage() {
                   onClick={() => setSearchQuery("")}
                   className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
             </div>
             {searchQuery && (
               <p className="mt-3 text-center text-gray-600">
-                Found <span className="font-semibold text-blue-600">{filteredProjects.length}</span> projects
+                Found{" "}
+                <span className="font-semibold text-amber-600">
+                  {filteredProjects.length}
+                </span>{" "}
+                projects
               </p>
             )}
           </div>
@@ -214,7 +248,7 @@ export default function CapstonePage() {
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-600 mx-auto mb-4"></div>
               <p className="text-gray-600 font-medium">Loading projects...</p>
             </div>
           </div>
@@ -231,10 +265,10 @@ export default function CapstonePage() {
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 transform hover:-translate-y-2"
               >
                 {/* Project Header */}
-                <div className="relative bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-6 text-white">
+                <div className="relative bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-6 text-white">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                   <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
-                  
+
                   <div className="relative">
                     <div className="flex items-start justify-between mb-4">
                       <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold">
@@ -242,7 +276,10 @@ export default function CapstonePage() {
                       </span>
                       <div className="flex gap-1">
                         {[...Array(3)].map((_, i) => (
-                          <div key={i} className={`w-1.5 h-1.5 rounded-full bg-white/60 ${hoveredProject === index ? 'animate-pulse' : ''}`}></div>
+                          <div
+                            key={i}
+                            className={`w-1.5 h-1.5 rounded-full bg-white/60 ${hoveredProject === index ? "animate-pulse" : ""}`}
+                          ></div>
                         ))}
                       </div>
                     </div>
@@ -257,10 +294,16 @@ export default function CapstonePage() {
                   {/* Team Members */}
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                       </svg>
-                      <span className="text-sm font-semibold text-gray-700">Team Members</span>
+                      <span className="text-sm font-semibold text-gray-700">
+                        Team Members
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-2">
                       {project.nama}
@@ -278,10 +321,20 @@ export default function CapstonePage() {
                   <div className="mb-4">
                     <button
                       onClick={() => openModal(project)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02]"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       View Details
                     </button>
@@ -295,22 +348,46 @@ export default function CapstonePage() {
                     <div className="grid grid-cols-2 gap-2">
                       {project.proposal && (
                         <button
-                          onClick={() => handleDownload(project.proposal, "Proposal")}
-                          className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn"
+                          onClick={() =>
+                            handleDownload(project.proposal, "Proposal")
+                          }
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn"
                         >
-                          <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-4 h-4 group-hover/btn:scale-110 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                           Proposal
                         </button>
                       )}
                       {project.laporan && (
                         <button
-                          onClick={() => handleDownload(project.laporan, "Laporan")}
+                          onClick={() =>
+                            handleDownload(project.laporan, "Laporan")
+                          }
                           className="flex items-center justify-center gap-2 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn"
                         >
-                          <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-4 h-4 group-hover/btn:scale-110 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                           Report
                         </button>
@@ -318,32 +395,66 @@ export default function CapstonePage() {
                       {project.apk && (
                         <button
                           onClick={() => handleDownload(project.apk, "APK")}
-                          className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn"
+                          className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn"
                         >
-                          <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          <svg
+                            className="w-4 h-4 group-hover/btn:scale-110 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
                           </svg>
                           APK
                         </button>
                       )}
                       {project.source_code && (
                         <button
-                          onClick={() => handleDownload(project.source_code, "Source Code")}
+                          onClick={() =>
+                            handleDownload(project.source_code, "Source Code")
+                          }
                           className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn"
                         >
-                          <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          <svg
+                            className="w-4 h-4 group-hover/btn:scale-110 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                            />
                           </svg>
                           Code
                         </button>
                       )}
                       {project.poster && (
                         <button
-                          onClick={() => handleDownload(project.poster, "Poster")}
+                          onClick={() =>
+                            handleDownload(project.poster, "Poster")
+                          }
                           className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg text-xs font-medium transition-all duration-300 group/btn col-span-2"
                         >
-                          <svg className="w-4 h-4 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-4 h-4 group-hover/btn:scale-110 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
                           Poster
                         </button>
@@ -360,17 +471,29 @@ export default function CapstonePage() {
         {!loading && filteredProjects.length === 0 && (
           <div className="text-center py-20">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="w-12 h-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">No Projects Found</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              No Projects Found
+            </h3>
             <p className="text-gray-600 mb-6">
               We couldn't find any projects matching "{searchQuery}"
             </p>
             <button
               onClick={() => setSearchQuery("")}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition-colors"
             >
               Clear Search
             </button>
@@ -388,7 +511,7 @@ export default function CapstonePage() {
               >
                 Previous
               </button>
-              
+
               <div className="flex gap-2">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
@@ -396,7 +519,7 @@ export default function CapstonePage() {
                     onClick={() => setCurrentPage(i + 1)}
                     className={`w-10 h-10 rounded-lg font-semibold transition-all ${
                       currentPage === i + 1
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
                         : "border-2 border-gray-200 text-gray-600 hover:bg-gray-50"
                     }`}
                   >
@@ -406,7 +529,9 @@ export default function CapstonePage() {
               </div>
 
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 rounded-lg border-2 border-gray-200 text-gray-600 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
@@ -421,22 +546,22 @@ export default function CapstonePage() {
       {isModalOpen && selectedProject && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={closeModal}
           ></div>
 
           {/* Modal Content */}
           <div className="flex min-h-full items-center justify-center p-4">
-            <div 
+            <div
               className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-6 rounded-t-2xl">
+              <div className="relative bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 text-white px-8 py-6 rounded-t-2xl">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
-                
+
                 <div className="relative flex items-start justify-between">
                   <div className="flex-1 pr-4">
                     <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-semibold mb-3">
@@ -450,8 +575,18 @@ export default function CapstonePage() {
                     onClick={closeModal}
                     className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -462,12 +597,18 @@ export default function CapstonePage() {
                 {/* Team Members */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-amber-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">Team Members</h3>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Team Members
+                    </h3>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4">
                     <p className="text-gray-700 leading-relaxed">
@@ -479,12 +620,24 @@ export default function CapstonePage() {
                 {/* Description */}
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-orange-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">Project Description</h3>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Project Description
+                    </h3>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4">
                     <p className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -497,21 +650,45 @@ export default function CapstonePage() {
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                      <svg
+                        className="w-5 h-5 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                        />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">Download Resources</h3>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Download Resources
+                    </h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedProject.proposal && (
                       <button
-                        onClick={() => handleDownload(selectedProject.proposal, "Proposal")}
-                        className="flex items-center gap-3 px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-medium transition-all duration-300 group/btn border border-blue-200"
+                        onClick={() =>
+                          handleDownload(selectedProject.proposal, "Proposal")
+                        }
+                        className="flex items-center gap-3 px-4 py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-medium transition-all duration-300 group/btn border border-amber-200"
                       >
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+                          <svg
+                            className="w-5 h-5 text-amber-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                         </div>
                         <span>Download Proposal</span>
@@ -519,12 +696,24 @@ export default function CapstonePage() {
                     )}
                     {selectedProject.laporan && (
                       <button
-                        onClick={() => handleDownload(selectedProject.laporan, "Laporan")}
+                        onClick={() =>
+                          handleDownload(selectedProject.laporan, "Laporan")
+                        }
                         className="flex items-center gap-3 px-4 py-3 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl font-medium transition-all duration-300 group/btn border border-green-200"
                       >
                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-5 h-5 text-green-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                         </div>
                         <span>Download Report</span>
@@ -532,12 +721,24 @@ export default function CapstonePage() {
                     )}
                     {selectedProject.apk && (
                       <button
-                        onClick={() => handleDownload(selectedProject.apk, "APK")}
-                        className="flex items-center gap-3 px-4 py-3 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl font-medium transition-all duration-300 group/btn border border-purple-200"
+                        onClick={() =>
+                          handleDownload(selectedProject.apk, "APK")
+                        }
+                        className="flex items-center gap-3 px-4 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl font-medium transition-all duration-300 group/btn border border-orange-200"
                       >
-                        <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+                          <svg
+                            className="w-5 h-5 text-orange-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
                           </svg>
                         </div>
                         <span>Download APK</span>
@@ -545,12 +746,27 @@ export default function CapstonePage() {
                     )}
                     {selectedProject.source_code && (
                       <button
-                        onClick={() => handleDownload(selectedProject.source_code, "Source Code")}
+                        onClick={() =>
+                          handleDownload(
+                            selectedProject.source_code,
+                            "Source Code",
+                          )
+                        }
                         className="flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-medium transition-all duration-300 group/btn border border-gray-200"
                       >
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          <svg
+                            className="w-5 h-5 text-gray-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                            />
                           </svg>
                         </div>
                         <span>Download Source Code</span>
@@ -558,12 +774,24 @@ export default function CapstonePage() {
                     )}
                     {selectedProject.poster && (
                       <button
-                        onClick={() => handleDownload(selectedProject.poster, "Poster")}
+                        onClick={() =>
+                          handleDownload(selectedProject.poster, "Poster")
+                        }
                         className="flex items-center gap-3 px-4 py-3 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-xl font-medium transition-all duration-300 group/btn border border-orange-200 sm:col-span-2"
                       >
                         <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center group-hover/btn:scale-110 transition-transform">
-                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <svg
+                            className="w-5 h-5 text-orange-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
                           </svg>
                         </div>
                         <span>Download Poster</span>

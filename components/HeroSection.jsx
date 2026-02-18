@@ -32,16 +32,16 @@ const HeroSection = () => {
           <div className="text-center lg:text-left space-y-8">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent leading-tight">
-                Advanced AI Image
+                Integrated Informatics
                 <span className="block bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                  Processing Platform
+                  Innovation Platform
                 </span>
               </h1>
 
               <p className="text-xl md:text-2xl text-gray-300 max-w-2xl leading-relaxed">
-                Experience Image Retrieval, Classification, and Generative AI —
-                all in one place. Unlock the power of cutting-edge computer
-                vision technology.
+                Explore Data Science, Software Engineering, Computer Networks,
+                and Smart Game Development in a unified environment designed for
+                research, innovation, and real-world applications.
               </p>
             </div>
 
@@ -55,8 +55,9 @@ const HeroSection = () => {
                 <div className="flex items-center justify-center gap-2">
                   <span>Explore Projects</span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-300 ${hoverButton === "explore" ? "translate-x-1" : ""
-                      }`}
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      hoverButton === "explore" ? "translate-x-1" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -92,10 +93,10 @@ const HeroSection = () => {
                 {/* Mock Gallery Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   {[
-                    "/batik_0003.png",
-                    "/batik_motif_named_Sekar_Tanjung_featuring_a_centra_seed42_1.png",
-                    "/batik_with_flower_motifs_seed42_5.png",
-                    "/batik_with_flower_motifs_seed42_7.png",
+                    "/data_science.png",
+                    "/software_development.png",
+                    "/computer_network.png",
+                    "/smart_game.png",
                   ].map((src, i) => (
                     <div
                       key={i}
