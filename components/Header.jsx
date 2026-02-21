@@ -78,6 +78,10 @@ const Header = () => {
   const moreItems = [
     { name: "News", path: "/news" },
     { name: "PDF Viewer", path: "/pdf-viewer" },
+    // { name: "Batik Inpainting", path: "/inpainting" },
+    // { name: "Batik ControlNet", path: "/controlnet" },
+    // { name: "Batik IP-Adapter", path: "/ip-adapter" },
+    // { name: "Batik Multi-ControlNet", path: "/multi-controlnet" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
