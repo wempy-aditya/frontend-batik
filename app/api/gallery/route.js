@@ -4,33 +4,30 @@ const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/v1`;
 
 export async function GET(request) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader) {
-      return NextResponse.json({ error: "No authorization header" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const offset = searchParams.get("offset") || "0";
     const limit = searchParams.get("limit") || "20";
 
-    const response = await fetch(`${API_BASE_URL}/gallery/?offset=${offset}&limit=${limit}`, {
-      method: "GET",
-      headers: {
-        Authorization: authHeader,
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await response.json();
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/gallery/?offset=${offset}&limit=${limit}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      }
+    );
 
     if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+      throw new Error(`Failed to fetch gallery: ${response.status}`);
     }
 
+    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error in gallery API route:", error);
-    return NextResponse.json({ error: "Internal server error", details: error.message }, { status: 500 });
+    return NextResponse.json([], { status: 200 });
   }
 }
 

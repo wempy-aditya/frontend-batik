@@ -45,62 +45,62 @@ const GalleryCarousel = () => {
   }, []);
 
   const fallbackGalleryImages = [
-    {
-      id: 1,
-      gradient: "from-amber-500 via-orange-500 to-red-500",
-      prompt: "Cyberpunk cityscape at neon-lit night",
-      style: "Digital Art",
-      model: "DALL-E 3",
-    },
-    {
-      id: 2,
-      gradient: "from-orange-500 via-red-500 to-pink-500",
-      prompt: "Serene mountain landscape with aurora borealis",
-      style: "Photorealistic",
-      model: "Midjourney",
-    },
-    {
-      id: 3,
-      gradient: "from-yellow-500 via-amber-500 to-orange-500",
-      prompt: "Abstract geometric patterns in motion",
-      style: "Abstract",
-      model: "Stable Diffusion",
-    },
-    {
-      id: 4,
-      gradient: "from-amber-500 via-orange-500 to-red-500",
-      prompt: "Vintage robot in steampunk laboratory",
-      style: "Steampunk",
-      model: "DALL-E 3",
-    },
-    {
-      id: 5,
-      gradient: "from-orange-600 via-amber-600 to-yellow-500",
-      prompt: "Ethereal portrait with flowing light effects",
-      style: "Portrait",
-      model: "Midjourney",
-    },
-    {
-      id: 6,
-      gradient: "from-amber-500 via-yellow-500 to-orange-500",
-      prompt: "Futuristic space station orbiting alien planet",
-      style: "Sci-Fi",
-      model: "Stable Diffusion",
-    },
-    {
-      id: 7,
-      gradient: "from-orange-500 via-amber-500 to-yellow-500",
-      prompt: "Mystical forest with bioluminescent creatures",
-      style: "Fantasy",
-      model: "DALL-E 3",
-    },
-    {
-      id: 8,
-      gradient: "from-red-500 via-orange-500 to-amber-500",
-      prompt: "Art deco architecture in golden hour",
-      style: "Architecture",
-      model: "Midjourney",
-    },
+    // {
+    //   id: 1,
+    //   gradient: "from-amber-500 via-orange-500 to-red-500",
+    //   prompt: "Cyberpunk cityscape at neon-lit night",
+    //   style: "Digital Art",
+    //   model: "DALL-E 3",
+    // },
+    // {
+    //   id: 2,
+    //   gradient: "from-orange-500 via-red-500 to-pink-500",
+    //   prompt: "Serene mountain landscape with aurora borealis",
+    //   style: "Photorealistic",
+    //   model: "Midjourney",
+    // },
+    // {
+    //   id: 3,
+    //   gradient: "from-yellow-500 via-amber-500 to-orange-500",
+    //   prompt: "Abstract geometric patterns in motion",
+    //   style: "Abstract",
+    //   model: "Stable Diffusion",
+    // },
+    // {
+    //   id: 4,
+    //   gradient: "from-amber-500 via-orange-500 to-red-500",
+    //   prompt: "Vintage robot in steampunk laboratory",
+    //   style: "Steampunk",
+    //   model: "DALL-E 3",
+    // },
+    // {
+    //   id: 5,
+    //   gradient: "from-orange-600 via-amber-600 to-yellow-500",
+    //   prompt: "Ethereal portrait with flowing light effects",
+    //   style: "Portrait",
+    //   model: "Midjourney",
+    // },
+    // {
+    //   id: 6,
+    //   gradient: "from-amber-500 via-yellow-500 to-orange-500",
+    //   prompt: "Futuristic space station orbiting alien planet",
+    //   style: "Sci-Fi",
+    //   model: "Stable Diffusion",
+    // },
+    // {
+    //   id: 7,
+    //   gradient: "from-orange-500 via-amber-500 to-yellow-500",
+    //   prompt: "Mystical forest with bioluminescent creatures",
+    //   style: "Fantasy",
+    //   model: "DALL-E 3",
+    // },
+    // {
+    //   id: 8,
+    //   gradient: "from-red-500 via-orange-500 to-amber-500",
+    //   prompt: "Art deco architecture in golden hour",
+    //   style: "Architecture",
+    //   model: "Midjourney",
+    // },
   ];
 
   const displayGalleryImages = loading
