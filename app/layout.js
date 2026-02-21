@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "AI Vision Lab - Advanced Image Processing Platform",
+  title: "Riset dan Produk Informatika",
   description:
-    "Experience Image Retrieval, Classification, and Generative AI — all in one place. Unlock the power of cutting-edge computer vision technology.",
+    "An integrated platform supporting Data Science, Software Engineering, Computer Networks, and Smart Game Development for research, development, and advanced computing innovation.",
 };
 
 export default function RootLayout({ children }) {
@@ -20,9 +20,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
+          <ConditionalLayout>{children}</ConditionalLayout>
         </AuthProvider>
       </body>
     </html>

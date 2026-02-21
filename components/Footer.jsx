@@ -38,9 +38,9 @@ const Footer = () => {
               <span className="text-xl font-bold">RISPRO</span>
             </div>
             <p className="text-gray-400 leading-relaxed text-sm md:text-base">
-              Advancing the frontiers of computer vision and artificial
-              intelligence through innovative research and cutting-edge
-              technology.
+              Advancing the frontiers of informatics through innovative research
+              and cutting-edge technology in Data Science, Software Engineering,
+              Computer Networks, and Smart Game Development.
             </p>
           </div>
 

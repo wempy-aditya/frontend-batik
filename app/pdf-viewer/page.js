@@ -15,17 +15,18 @@ function PDFViewerContent({ pdfLoaded }) {
   // Force header to be visible (not transparent) on this page
   useEffect(() => {
     // Force header to be solid by adding inline styles
-    const header = document.querySelector('header');
+    const header = document.querySelector("header");
     if (header) {
       const originalBg = header.style.background;
       const originalBackdrop = header.style.backdropFilter;
       const originalShadow = header.style.boxShadow;
-      
+
       // Force solid background
-      header.style.background = 'rgba(255, 255, 255, 0.98)';
-      header.style.backdropFilter = 'blur(12px)';
-      header.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
-      
+      header.style.background = "rgba(255, 255, 255, 0.98)";
+      header.style.backdropFilter = "blur(12px)";
+      header.style.boxShadow =
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+
       return () => {
         // Restore original styles when leaving page
         if (header) {
@@ -64,7 +65,7 @@ function PDFViewerContent({ pdfLoaded }) {
   const getProxyUrl = (id) => {
     // Option 1: Local Next.js proxy (recommended - same server, lebih cepat)
     return `/api/proxy-pdf?id=${encodeURIComponent(id)}`;
-    
+
     // Option 2: Cloudflare Workers (backup jika local proxy gagal)
     // return `https://bitter-darkness-fab2.wahyukusuma.workers.dev/pdf?id=${encodeURIComponent(id)}`;
   };
@@ -73,14 +74,14 @@ function PDFViewerContent({ pdfLoaded }) {
   useEffect(() => {
     const id = searchParams.get("id") || DEFAULT_PDF_ID;
     const page = parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10);
-    
+
     setFileId(id);
     setPageNum(page);
     setGotoPage(page);
 
     // Auto-load PDF saat pertama kali dan PDF.js sudah ready
     if (pdfLoaded && id && !hasAutoLoaded) {
-      console.log('🚀 Auto-loading PDF on mount:', id);
+      console.log("🚀 Auto-loading PDF on mount:", id);
       setHasAutoLoaded(true);
       loadPDFWithRetry(id, page);
     }
@@ -102,31 +103,39 @@ function PDFViewerContent({ pdfLoaded }) {
       await loadPDF(id, initialPage);
     } catch (err) {
       console.error(`❌ Load attempt ${currentRetry + 1} failed:`, err);
-      
+
       if (currentRetry < maxRetries) {
         const delay = Math.min(1000 * Math.pow(2, currentRetry), 5000); // 1s, 2s, 4s max
-        console.log(`🔄 Retrying in ${delay}ms... (Attempt ${currentRetry + 2}/${maxRetries + 1})`);
-        setStatus(`Loading failed. Retrying in ${delay/1000}s... (${currentRetry + 2}/${maxRetries + 1})`);
+        console.log(
+          `🔄 Retrying in ${delay}ms... (Attempt ${currentRetry + 2}/${maxRetries + 1})`,
+        );
+        setStatus(
+          `Loading failed. Retrying in ${delay / 1000}s... (${currentRetry + 2}/${maxRetries + 1})`,
+        );
         setRetryCount(currentRetry + 1);
-        
+
         setTimeout(() => {
           loadPDFWithRetry(id, initialPage, currentRetry + 1);
         }, delay);
       } else {
         // Semua retry gagal - Load dari local PDF sebagai fallback
-        console.warn('❌ All proxy attempts failed. Loading local fallback PDF...');
-        setStatus('Loading local document...');
+        console.warn(
+          "❌ All proxy attempts failed. Loading local fallback PDF...",
+        );
+        setStatus("Loading local document...");
         setRetryCount(0);
-        
+
         try {
           await loadLocalPDF(LOCAL_PDF_DEFAULT_PAGE);
           setUsingLocalFallback(true);
-          setError('');
+          setError("");
           setShowRetryPrompt(false);
           setIsLoading(false);
         } catch (localErr) {
-          console.error('❌ Local PDF load also failed:', localErr);
-          setError(`Failed to load PDF after ${maxRetries + 1} attempts. Local fallback also failed.`);
+          console.error("❌ Local PDF load also failed:", localErr);
+          setError(
+            `Failed to load PDF after ${maxRetries + 1} attempts. Local fallback also failed.`,
+          );
           setShowRetryPrompt(true);
           setIsLoading(false);
         }
@@ -136,8 +145,8 @@ function PDFViewerContent({ pdfLoaded }) {
 
   // Load PDF from local public folder (fallback)
   const loadLocalPDF = async (initialPage = LOCAL_PDF_DEFAULT_PAGE) => {
-    console.log('📁 Loading local PDF from:', LOCAL_PDF_PATH);
-    
+    console.log("📁 Loading local PDF from:", LOCAL_PDF_PATH);
+
     setError("");
     setIsLoading(true);
     setStatus("Loading local document...");
@@ -163,11 +172,11 @@ function PDFViewerContent({ pdfLoaded }) {
       });
 
       const pdf = await loadingTask.promise;
-      
-      console.log('✅ Local PDF loaded:', {
+
+      console.log("✅ Local PDF loaded:", {
         numPages: pdf.numPages,
         fingerprint: pdf.fingerprint,
-        initialPage
+        initialPage,
       });
 
       setPdfDoc(pdf);
@@ -177,14 +186,13 @@ function PDFViewerContent({ pdfLoaded }) {
       const startPage = Math.min(Math.max(1, initialPage), pdf.numPages);
       await renderPageHybrid(pdf, startPage);
       setIsLoading(false);
-      
+
       // Background load full PDF
-      console.log('🔄 Starting background full PDF load for local document...');
+      console.log("🔄 Starting background full PDF load for local document...");
       setIsBackgroundLoading(true);
       backgroundLoadRef.current = setTimeout(() => {
         loadFullPDFInBackgroundLocal(pdf, startPage);
       }, 1000);
-      
     } catch (err) {
       console.error("❌ Local PDF Load Error:", err);
       throw err; // Re-throw untuk di-catch oleh loadPDFWithRetry
@@ -194,7 +202,7 @@ function PDFViewerContent({ pdfLoaded }) {
   // Load Full Local PDF in Background
   const loadFullPDFInBackgroundLocal = async (currentPdf, currentPage) => {
     try {
-      console.log('🔄 Background loading full local PDF...');
+      console.log("🔄 Background loading full local PDF...");
 
       const loadingTask = window.pdfjsLib.getDocument({
         url: LOCAL_PDF_PATH,
@@ -207,13 +215,15 @@ function PDFViewerContent({ pdfLoaded }) {
       loadingTask.onProgress = (progress) => {
         if (progress.total > 0) {
           const percent = Math.round((progress.loaded / progress.total) * 100);
-          setStatus(`Page ${pageNum} / ${totalPages} (background: ${percent}%)`);
+          setStatus(
+            `Page ${pageNum} / ${totalPages} (background: ${percent}%)`,
+          );
         }
       };
 
       const pdf = await loadingTask.promise;
-      
-      console.log('✅ Full local PDF loaded in background');
+
+      console.log("✅ Full local PDF loaded in background");
 
       setPdfDoc(pdf);
       setTotalPages(pdf.numPages);
@@ -223,9 +233,8 @@ function PDFViewerContent({ pdfLoaded }) {
       setStatus(`Local Document Ready - Page ${pageNum} / ${pdf.numPages}`);
 
       await renderPage(pdf, currentPage);
-      
     } catch (err) {
-      console.error('⚠️ Background local load failed:', err);
+      console.error("⚠️ Background local load failed:", err);
       setIsBackgroundLoading(false);
     }
   };
@@ -233,14 +242,16 @@ function PDFViewerContent({ pdfLoaded }) {
   // Load PDF
   const loadPDF = async (id, initialPage = 1) => {
     if (!id) {
-      setError("File ID kosong. Tambahkan ?id=... pada URL atau isi input File ID.");
+      setError(
+        "File ID kosong. Tambahkan ?id=... pada URL atau isi input File ID.",
+      );
       return;
     }
 
     setError("");
     setIsLoading(true);
     setStatus("Loading page...");
-    setUseHybridMode(true);  // LANGSUNG pakai Hybrid Mode untuk speed
+    setUseHybridMode(true); // LANGSUNG pakai Hybrid Mode untuk speed
     setFullPdfReady(false);
     setIsBackgroundLoading(false);
 
@@ -252,17 +263,16 @@ function PDFViewerContent({ pdfLoaded }) {
 
     // STRATEGY: Load hybrid mode first (single page, super fast!)
     try {
-      console.log('⚡ FAST LOAD: Loading single page', initialPage, 'first');
+      console.log("⚡ FAST LOAD: Loading single page", initialPage, "first");
       await loadPDFHybrid(id, initialPage);
       setIsLoading(false);
-      
+
       // BACKGROUND: Setelah page pertama sukses, load full PDF di background
-      console.log('🔄 Starting background full PDF load...');
+      console.log("🔄 Starting background full PDF load...");
       setIsBackgroundLoading(true);
       backgroundLoadRef.current = setTimeout(() => {
         loadFullPDFInBackground(id, initialPage);
-      }, 1000);  // Delay 1 detik biar page pertama smooth dulu
-      
+      }, 1000); // Delay 1 detik biar page pertama smooth dulu
     } catch (err) {
       console.error("❌ Fast Load Error:", err);
       setError(`Failed to load PDF: ${err.message}`);
@@ -275,29 +285,31 @@ function PDFViewerContent({ pdfLoaded }) {
   const loadFullPDFInBackground = async (id, currentPage) => {
     try {
       const url = getProxyUrl(id);
-      console.log('🔄 Background loading full PDF...');
+      console.log("🔄 Background loading full PDF...");
 
       const loadingTask = window.pdfjsLib.getDocument({
         url,
         withCredentials: false,
         disableRange: false,
         disableStream: false,
-        disableAutoFetch: false,  // Load everything!
+        disableAutoFetch: false, // Load everything!
       });
 
       // Silent progress tracking
       loadingTask.onProgress = (progress) => {
         if (progress.total > 0) {
           const percent = Math.round((progress.loaded / progress.total) * 100);
-          setStatus(`Page ${pageNum} / ${totalPages} (background: ${percent}%)`);
+          setStatus(
+            `Page ${pageNum} / ${totalPages} (background: ${percent}%)`,
+          );
         }
       };
 
       const pdf = await loadingTask.promise;
-      
-      console.log('✅ Full PDF loaded in background:', {
+
+      console.log("✅ Full PDF loaded in background:", {
         numPages: pdf.numPages,
-        fingerprint: pdf.fingerprint
+        fingerprint: pdf.fingerprint,
       });
 
       // Replace hybrid PDF dengan full PDF
@@ -305,14 +317,13 @@ function PDFViewerContent({ pdfLoaded }) {
       setTotalPages(pdf.numPages);
       setFullPdfReady(true);
       setIsBackgroundLoading(false);
-      setUseHybridMode(false);  // Switch ke full mode
+      setUseHybridMode(false); // Switch ke full mode
       setStatus(`Full PDF Ready - Page ${pageNum} / ${pdf.numPages}`);
 
       // Re-render current page dengan full PDF
       await renderPage(pdf, currentPage);
-      
     } catch (err) {
-      console.error('⚠️ Background load failed (staying in hybrid mode):', err);
+      console.error("⚠️ Background load failed (staying in hybrid mode):", err);
       setIsBackgroundLoading(false);
       // Tetap pakai hybrid mode kalau background load gagal
     }
@@ -321,24 +332,24 @@ function PDFViewerContent({ pdfLoaded }) {
   // Load PDF in Hybrid Mode - metadata + on-demand page rendering
   const loadPDFHybrid = async (id, initialPage = 1) => {
     const url = getProxyUrl(id);
-    console.log('⚡ Loading PDF in HYBRID mode (single page first):', url);
+    console.log("⚡ Loading PDF in HYBRID mode (single page first):", url);
 
     // Load dengan range request - hanya metadata + halaman yang dibutuhkan
     const loadingTask = window.pdfjsLib.getDocument({
       url,
       withCredentials: false,
-      disableRange: false,  // Enable range request
+      disableRange: false, // Enable range request
       disableStream: false,
-      disableAutoFetch: true,  // PENTING: Jangan auto-fetch semua pages
-      rangeChunkSize: 65536,   // 64KB chunks
+      disableAutoFetch: true, // PENTING: Jangan auto-fetch semua pages
+      rangeChunkSize: 65536, // 64KB chunks
     });
 
     const pdf = await loadingTask.promise;
-    
-    console.log('✅ PDF metadata + first page loaded:', {
+
+    console.log("✅ PDF metadata + first page loaded:", {
       numPages: pdf.numPages,
       fingerprint: pdf.fingerprint,
-      initialPage
+      initialPage,
     });
 
     setPdfDoc(pdf);
@@ -364,10 +375,10 @@ function PDFViewerContent({ pdfLoaded }) {
     // Check cache first
     const cacheKey = `${pdf.fingerprint}-${pageNumber}-${scale}`;
     if (pageCache.current.has(cacheKey)) {
-      console.log('📦 Using cached page:', pageNumber);
+      console.log("📦 Using cached page:", pageNumber);
       const cachedData = pageCache.current.get(cacheKey);
       const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
       canvas.width = cachedData.width;
       canvas.height = cachedData.height;
       context.putImageData(cachedData.imageData, 0, 0);
@@ -382,7 +393,7 @@ function PDFViewerContent({ pdfLoaded }) {
     const page = await pdf.getPage(pageNumber);
     const viewport = page.getViewport({ scale, rotation: 0 });
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
 
     canvas.width = Math.floor(viewport.width);
     canvas.height = Math.floor(viewport.height);
@@ -396,15 +407,15 @@ function PDFViewerContent({ pdfLoaded }) {
 
     try {
       await renderTask.promise;
-      
+
       // Cache rendered page
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       pageCache.current.set(cacheKey, {
         imageData,
         width: canvas.width,
-        height: canvas.height
+        height: canvas.height,
       });
-      
+
       // Limit cache size (max 10 pages)
       if (pageCache.current.size > 10) {
         const firstKey = pageCache.current.keys().next().value;
@@ -416,8 +427,8 @@ function PDFViewerContent({ pdfLoaded }) {
       setStatus(`Page ${pageNumber} / ${totalPages} (hybrid)`);
       updateURL(fileId, pageNumber);
     } catch (err) {
-      if (err.name === 'RenderingCancelledException') {
-        console.log('Rendering cancelled');
+      if (err.name === "RenderingCancelledException") {
+        console.log("Rendering cancelled");
       } else {
         throw err;
       }
@@ -460,8 +471,8 @@ function PDFViewerContent({ pdfLoaded }) {
       setStatus(`Page ${pageNumber} / ${totalPages}`);
       updateURL(fileId, pageNumber);
     } catch (err) {
-      if (err.name === 'RenderingCancelledException') {
-        console.log('Rendering cancelled');
+      if (err.name === "RenderingCancelledException") {
+        console.log("Rendering cancelled");
       } else {
         throw err;
       }
@@ -617,7 +628,7 @@ function PDFViewerContent({ pdfLoaded }) {
               >
                 ← Prev
               </button>
-              
+
               <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
                 <span className="text-sm text-gray-600">Page</span>
                 <input
@@ -629,7 +640,9 @@ function PDFViewerContent({ pdfLoaded }) {
                   onKeyDown={(e) => e.key === "Enter" && handleGoto()}
                   className="w-16 text-center border-0 focus:ring-0 p-0 text-sm"
                 />
-                <span className="text-sm text-gray-600">/ {totalPages || "—"}</span>
+                <span className="text-sm text-gray-600">
+                  / {totalPages || "—"}
+                </span>
                 <button
                   onClick={handleGoto}
                   disabled={!pdfDoc}
@@ -678,21 +691,30 @@ function PDFViewerContent({ pdfLoaded }) {
               {usingLocalFallback && (
                 <div className="mb-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <div className="flex items-start gap-2">
-                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-amber-800">
                         📁 Loading Local Document
                       </p>
                       <p className="text-xs text-amber-700 mt-1">
-                        Remote PDF unavailable. Displaying local SPMI UMM document as fallback.
+                        Remote PDF unavailable. Displaying local SPMI UMM
+                        document as fallback.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
-              
+
               {status && !showRetryPrompt && (
                 <div className="text-sm text-gray-600 mb-2 flex items-center gap-2">
                   {retryCount > 0 && (
@@ -712,8 +734,16 @@ function PDFViewerContent({ pdfLoaded }) {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
-                      <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      <svg
+                        className="w-5 h-5 text-yellow-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                     <div className="flex-1">
@@ -721,22 +751,34 @@ function PDFViewerContent({ pdfLoaded }) {
                         PDF Failed to Load
                       </h3>
                       <p className="text-sm text-yellow-700 mb-3">
-                        The PDF could not be loaded after multiple attempts. This might be due to network issues or browser compatibility.
+                        The PDF could not be loaded after multiple attempts.
+                        This might be due to network issues or browser
+                        compatibility.
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={() => window.location.reload()}
                           className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
                         >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          <svg
+                            className="w-4 h-4 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
                           </svg>
                           Refresh Page
                         </button>
                         <button
                           onClick={() => {
                             setShowRetryPrompt(false);
-                            setError('');
+                            setError("");
                             setRetryCount(0);
                             loadPDFWithRetry(fileId, pageNum);
                           }}
@@ -778,19 +820,19 @@ function PDFViewerContent({ pdfLoaded }) {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {fullPdfReady ? 'Full PDF Ready' : 'Fast Preview Mode'}
+                    {fullPdfReady ? "Full PDF Ready" : "Fast Preview Mode"}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {fullPdfReady 
-                      ? 'All pages loaded. Navigation and zoom operations are now instant.' 
-                      : isBackgroundLoading 
-                        ? 'Loading complete document in background. You can continue navigating.' 
-                        : 'Pages are loaded on-demand for faster initial load time.'}
+                    {fullPdfReady
+                      ? "All pages loaded. Navigation and zoom operations are now instant."
+                      : isBackgroundLoading
+                        ? "Loading complete document in background. You can continue navigating."
+                        : "Pages are loaded on-demand for faster initial load time."}
                   </p>
                 </div>
               </div>
               {useHybridMode && !fullPdfReady && !isBackgroundLoading && (
-                <button 
+                <button
                   onClick={loadFullPDFNow}
                   className="flex-shrink-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
                 >
@@ -816,13 +858,15 @@ function PDFViewerWrapper() {
           if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc =
               "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-            console.log('✅ PDF.js loaded and ready');
+            console.log("✅ PDF.js loaded and ready");
             setScriptLoaded(true);
           }
         }}
         strategy="afterInteractive"
       />
-      {scriptLoaded ? <PDFViewerContent pdfLoaded={scriptLoaded} /> : (
+      {scriptLoaded ? (
+        <PDFViewerContent pdfLoaded={scriptLoaded} />
+      ) : (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600 mx-auto mb-4"></div>
@@ -836,14 +880,16 @@ function PDFViewerWrapper() {
 
 export default function PDFViewerPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <PDFViewerWrapper />
     </Suspense>
   );
