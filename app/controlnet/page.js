@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const CONTROLNET_API_URL = "https://multi-controlnet.wempyaw.com";
+const CONTROLNET_API_URL = "https://controlnet.wempyaw.com";
 
 const CONTROLNET_TYPES = [
   {
