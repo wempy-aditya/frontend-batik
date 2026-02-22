@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const IPADAPTER_API_URL = "https://ipadapter.wempyaw.com";
+const IPADAPTER_API_URL = "https://ip-adapter.wempyaw.com/";
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },
@@ -13,6 +13,7 @@ const SCENARIO_OPTIONS = [
   { value: "scenario2_5", label: "Scenario 2.5", description: "Sub-variant 2.5" },
   { value: "scenario3_1", label: "Scenario 3.1", description: "Extended scenario 3" },
   { value: "scenario3_2", label: "Scenario 3.2", description: "Extended scenario 3.2" },
+  { value: "scenario4_1", label: "Scenario 4.1", description: "Extended scenario 4.1" },
 ];
 
 const SCALE_PRESETS = [

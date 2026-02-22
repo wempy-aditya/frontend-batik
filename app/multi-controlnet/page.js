@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const MULTI_CONTROLNET_API_URL = "https://multicontrolnet.wempyaw.com";
+const MULTI_CONTROLNET_API_URL = "https://multi-controlnet.wempyaw.com";
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },
@@ -13,6 +13,7 @@ const SCENARIO_OPTIONS = [
   { value: "scenario2_5", label: "Scenario 2.5", description: "Sub-variant 2.5" },
   { value: "scenario3_1", label: "Scenario 3.1", description: "Extended scenario 3" },
   { value: "scenario3_2", label: "Scenario 3.2", description: "Extended scenario 3.2" },
+  { value: "scenario4_1", label: "Scenario 4.1", description: "Extended scenario 4.1" },
 ];
 
 const CANNY_PRESETS = [
@@ -22,10 +23,10 @@ const CANNY_PRESETS = [
 ];
 
 const BLEND_PRESETS = [
-  { label: "Equal Blend", s1: 0.5, s2: 0.5, s3: null, desc: "Perfect 50/50 fusion" },
-  { label: "Dominant 1", s1: 0.7, s2: 0.3, s3: null, desc: "Motif 1 dominates (70%)" },
-  { label: "Dominant 2", s1: 0.3, s2: 0.7, s3: null, desc: "Motif 2 dominates (70%)" },
-  { label: "Subtle Accent", s1: 0.8, s2: 0.2, s3: null, desc: "Motif 1 + subtle Motif 2 hint" },
+  { label: "Equal Blend", s1: 0.5, s2: 0.5, desc: "Perfect 50/50 fusion" },
+  { label: "Dominant 1", s1: 0.7, s2: 0.3, desc: "Motif 1 dominates (70%)" },
+  { label: "Dominant 2", s1: 0.3, s2: 0.7, desc: "Motif 2 dominates (70%)" },
+  { label: "Subtle Accent", s1: 0.8, s2: 0.2, desc: "Motif 1 + subtle Motif 2 hint" },
 ];
 
 const EXAMPLE_PROMPTS = [
@@ -139,13 +140,10 @@ export default function MultiControlNetPage() {
   const [preview1, setPreview1] = useState(null);
   const [image2, setImage2] = useState(null);
   const [preview2, setPreview2] = useState(null);
-  const [image3, setImage3] = useState(null);
-  const [preview3, setPreview3] = useState(null);
 
   // Scales
   const [scale1, setScale1] = useState(0.5);
   const [scale2, setScale2] = useState(0.5);
-  const [scale3, setScale3] = useState(0.5);
 
   // Canny
   const [cannyLow, setCannyLow] = useState(100);
@@ -189,7 +187,6 @@ export default function MultiControlNetPage() {
   const applyBlendPreset = (preset) => {
     setScale1(preset.s1);
     setScale2(preset.s2);
-    if (preset.s3 !== null) setScale3(preset.s3);
   };
 
   const applyCannyPreset = (preset) => {
@@ -200,7 +197,6 @@ export default function MultiControlNetPage() {
   const resetParams = () => {
     setScale1(0.5);
     setScale2(0.5);
-    setScale3(0.5);
     setCannyLow(100);
     setCannyHigh(200);
     setSteps(40);
@@ -236,10 +232,6 @@ export default function MultiControlNetPage() {
       formData.append("canny_high", String(cannyHigh));
       if (negativePrompt.trim()) {
         formData.append("negative_prompt", negativePrompt.trim());
-      }
-      if (image3) {
-        formData.append("image3", image3);
-        formData.append("scale3", String(scale3));
       }
       if (returnEdges) {
         formData.append("return_edges", "true");
@@ -294,7 +286,7 @@ export default function MultiControlNetPage() {
     document.body.removeChild(link);
   };
 
-  const imageCount = [image1, image2, image3].filter(Boolean).length;
+  const imageCount = [image1, image2].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
@@ -339,7 +331,7 @@ export default function MultiControlNetPage() {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed mb-8">
-              Seamlessly blend <strong className="text-amber-300">2–3 batik motifs</strong> into one unified design using multi-ControlNet edge fusion — structural blending without visible seams.
+              Seamlessly blend <strong className="text-amber-300">2 batik motifs</strong> into one unified design using multi-ControlNet edge fusion — structural blending without visible seams.
             </p>
 
             {/* Flow diagram */}
@@ -368,7 +360,7 @@ export default function MultiControlNetPage() {
               {[
                 { icon: "✅", text: "Seamless Blending" },
                 { icon: "⚖️", text: "Adjustable Weights" },
-                { icon: "🔗", text: "2–3 Input Images" },
+                { icon: "🔗", text: "2 Input Images" },
               ].map((f) => (
                 <div key={f.text} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <span>{f.icon}</span>
@@ -384,7 +376,7 @@ export default function MultiControlNetPage() {
       <section className="bg-amber-600/90 py-4">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-6 text-white text-sm font-medium">
-            {["Upload 2–3 batik motif images", "Set blend weights per image", "Describe the fusion style", "Get seamlessly blended result!"].map((step, i) => (
+            {["Upload 2 batik motif images", "Set blend weights per image", "Describe the fusion style", "Get seamlessly blended result!"].map((step, i) => (
               <span key={i} className="flex items-center gap-2">
                 <span className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-xs font-bold">{i + 1}</span>
                 {step}
@@ -445,7 +437,7 @@ export default function MultiControlNetPage() {
                   Upload Motif Images & Set Blend Weights
                 </h2>
                 <p className="text-gray-500 text-sm mb-6">
-                  Upload 2 required batik images (+ optional 3rd). Each image is converted to <strong>Canny edges</strong> and blended as a ControlNet constraint.
+                  Upload 2 batik images. Each image is converted to <strong>Canny edges</strong> and blended as a ControlNet constraint.
                 </p>
 
                 {/* Blend weight presets */}
@@ -465,7 +457,7 @@ export default function MultiControlNetPage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-2 gap-6">
                   {/* Image 1 */}
                   <div>
                     <p className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
@@ -523,62 +515,26 @@ export default function MultiControlNetPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Image 3 */}
-                  <div>
-                    <p className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                      <span className="w-5 h-5 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs">3</span>
-                      Motif C
-                      <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">Optional</span>
-                    </p>
-                    <DropZone
-                      label="Third Batik Motif"
-                      accept="image/jpeg,image/png,image/webp"
-                      file={image3}
-                      preview={preview3}
-                      onFile={(f) => handleImage(f, setImage3, setPreview3)}
-                      onClear={() => clearImage(setImage3, setPreview3)}
-                      icon="✨"
-                      hint="For 3-way fusion"
-                    />
-                    {image3 && (
-                      <div className="mt-4">
-                        <WeightSlider
-                          label="Weight (scale3)"
-                          value={scale3}
-                          onChange={setScale3}
-                          color="red"
-                        />
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Weight balance hint */}
                 {image1 && image2 && (
                   <div className="mt-5 p-3 bg-amber-50 border border-amber-200 rounded-xl">
                     <p className="text-xs text-amber-800 font-semibold mb-1">⚖️ Current Blend Ratio</p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center overflow-hidden rounded-full">
                       <div
-                        className="h-3 bg-amber-500 rounded-l-full transition-all"
-                        style={{ width: `${(scale1 / (scale1 + scale2 + (image3 ? scale3 : 0))) * 100}%` }}
+                        className="h-3 bg-amber-500 transition-all"
+                        style={{ width: `${(scale1 / (scale1 + scale2)) * 100}%` }}
                       ></div>
                       <div
                         className="h-3 bg-orange-500 transition-all"
-                        style={{ width: `${(scale2 / (scale1 + scale2 + (image3 ? scale3 : 0))) * 100}%` }}
+                        style={{ width: `${(scale2 / (scale1 + scale2)) * 100}%` }}
                       ></div>
-                      {image3 && (
-                        <div
-                          className="h-3 bg-red-400 rounded-r-full transition-all"
-                          style={{ width: `${(scale3 / (scale1 + scale2 + scale3)) * 100}%` }}
-                        ></div>
-                      )}
                     </div>
                     <p className="text-xs text-amber-700 mt-1">
-                      A: {Math.round((scale1 / (scale1 + scale2 + (image3 ? scale3 : 0))) * 100)}% ·
-                      B: {Math.round((scale2 / (scale1 + scale2 + (image3 ? scale3 : 0))) * 100)}%
-                      {image3 && ` · C: ${Math.round((scale3 / (scale1 + scale2 + scale3)) * 100)}%`}
-                      <span className="ml-2 text-gray-400">(Total weight: {(scale1 + scale2 + (image3 ? scale3 : 0)).toFixed(1)})</span>
+                      A: {Math.round((scale1 / (scale1 + scale2)) * 100)}% ·
+                      B: {Math.round((scale2 / (scale1 + scale2)) * 100)}%
+                      <span className="ml-2 text-gray-400">(Total weight: {(scale1 + scale2).toFixed(1)})</span>
                     </p>
                   </div>
                 )}
@@ -866,7 +822,7 @@ export default function MultiControlNetPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       <p className="text-amber-800 font-bold text-base mb-1">🔀 Fusing motifs...</p>
-                      <p className="text-amber-600 text-sm">{imageCount} motifs · weights {scale1}/{scale2}{image3 ? `/${scale3}` : ""}</p>
+                      <p className="text-amber-600 text-sm">2 motifs · weights {scale1}/{scale2}</p>
                     </div>
                   </div>
                 )}
@@ -896,7 +852,7 @@ export default function MultiControlNetPage() {
 
                     <div className="text-xs text-gray-500 space-y-1 p-3 bg-gray-50 rounded-xl">
                       <div><strong>Scenario:</strong> {scenario}</div>
-                      <div><strong>Weights:</strong> {scale1} / {scale2}{image3 ? ` / ${scale3}` : ""}</div>
+                      <div><strong>Weights:</strong> {scale1} / {scale2}</div>
                       <div><strong>Canny:</strong> {cannyLow}/{cannyHigh} · <strong>CFG:</strong> {guidanceScale}</div>
                       <div><strong>Steps:</strong> {steps} · <strong>Seed:</strong> {usedSeed || seed}</div>
                     </div>
@@ -912,28 +868,18 @@ export default function MultiControlNetPage() {
                 )}
 
                 {/* Input motifs reference */}
-                {(preview1 || preview2) && resultImage && !isProcessing && (
+                {preview1 && preview2 && resultImage && !isProcessing && (
                   <div className="mt-5">
                     <p className="text-xs font-semibold text-gray-500 mb-2">Input Motifs</p>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {preview1 && (
-                        <div>
-                          <p className="text-xs text-center text-amber-500 font-semibold mb-1">A</p>
-                          <img src={preview1} alt="Motif A" className="w-full h-16 object-cover rounded-lg border border-amber-200" />
-                        </div>
-                      )}
-                      {preview2 && (
-                        <div>
-                          <p className="text-xs text-center text-orange-500 font-semibold mb-1">B</p>
-                          <img src={preview2} alt="Motif B" className="w-full h-16 object-cover rounded-lg border border-orange-200" />
-                        </div>
-                      )}
-                      {preview3 && (
-                        <div>
-                          <p className="text-xs text-center text-red-400 font-semibold mb-1">C</p>
-                          <img src={preview3} alt="Motif C" className="w-full h-16 object-cover rounded-lg border border-red-200" />
-                        </div>
-                      )}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div>
+                        <p className="text-xs text-center text-amber-500 font-semibold mb-1">A</p>
+                        <img src={preview1} alt="Motif A" className="w-full h-16 object-cover rounded-lg border border-amber-200" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-center text-orange-500 font-semibold mb-1">B</p>
+                        <img src={preview2} alt="Motif B" className="w-full h-16 object-cover rounded-lg border border-orange-200" />
+                      </div>
                     </div>
                   </div>
                 )}

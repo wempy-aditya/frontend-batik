@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const CONTROLNET_API_URL = "https://controlnet.wempyaw.com";
+const CONTROLNET_API_URL = "https://multi-controlnet.wempyaw.com";
 
 const CONTROLNET_TYPES = [
   {
@@ -49,6 +49,7 @@ const SCENARIO_OPTIONS = [
   { value: "scenario2_5", label: "Scenario 2.5", description: "Sub-variant 2.5" },
   { value: "scenario3_1", label: "Scenario 3.1", description: "Extended scenario 3" },
   { value: "scenario3_2", label: "Scenario 3.2", description: "Extended scenario 3.2" },
+  { value: "scenario4_1", label: "Scenario 4.1", description: "Extended scenario 4.1" },
 ];
 
 const EXAMPLE_PROMPTS = [
@@ -135,7 +136,7 @@ export default function ControlNetPage() {
   const [controlnetScale, setControlnetScale] = useState(1.0);
   const [steps, setSteps] = useState(40);
   const [guidanceScale, setGuidanceScale] = useState(8.0);
-  const [seed, setSeed] = useState(-1);
+  const [seed, setSeed] = useState(0);
   const [cannyLow, setCannyLow] = useState(100);
   const [cannyHigh, setCannyHigh] = useState(200);
   const [returnEdge, setReturnEdge] = useState(false);
