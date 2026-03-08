@@ -335,8 +335,8 @@ export default function FileManager() {
                   <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                     {file.file_type === "image" ? (
                       <img 
-                        src={`https://spmb1.wempyaw.com${file.file_url}`} 
-                        // src={`https://rispro.umm.ac.id${file.file_url}`} 
+                        // src={`https://spmb1.wempyaw.com${file.file_url}`} 
+                        src={`https://rispro.umm.ac.id${file.file_url}`} 
                         alt={file.original_filename}
                         className="w-full h-full object-cover"
                       />
