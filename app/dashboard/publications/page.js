@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "../../../components/AuthProvider";
 import { useState, useEffect } from "react";
+import { parseApiError } from "@/lib/handleApiError";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -242,11 +243,9 @@ export default function PublicationsPage() {
         setIsModalOpen(false);
         resetForm();
       } else {
-        const errorData = await response.json();
-        console.error("Submit error:", errorData);
-        throw new Error(
-          errorData.error || errorData.message || "Failed to save publication",
-        );
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
     } catch (error) {
       console.error("Error saving publication:", error);
@@ -283,11 +282,13 @@ export default function PublicationsPage() {
         setIsDeleteModalOpen(false);
         setPublicationToDelete(null);
       } else {
-        throw new Error("Failed to delete publication");
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
     } catch (error) {
       console.error("Error deleting publication:", error);
-      setError("Failed to delete publication: " + error.message);
+      setError(error.message);
     }
   };
 

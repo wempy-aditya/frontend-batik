@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { parseApiError } from "@/lib/handleApiError";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -113,8 +114,9 @@ export default function NewsPage() {
         setIsModalOpen(false);
         resetForm();
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save news");
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
     } catch (error) {
       console.error("Error saving news:", error);
@@ -148,11 +150,13 @@ export default function NewsPage() {
         setIsDeleteModalOpen(false);
         setNewsToDelete(null);
       } else {
-        throw new Error("Failed to delete news");
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
     } catch (error) {
       console.error("Error deleting news:", error);
-      setError("Failed to delete news: " + error.message);
+      setError(error.message);
     }
   };
 

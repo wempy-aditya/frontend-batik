@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { parseApiError } from "@/lib/handleApiError";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -38,6 +39,7 @@ export default function GalleryManagement() {
   const [isFilePickerOpen, setIsFilePickerOpen] = useState(false);
   const [availableFiles, setAvailableFiles] = useState([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchGalleries();
@@ -187,6 +189,7 @@ export default function GalleryManagement() {
   };
 
   const openModal = async (mode, gallery = null) => {
+    setError("");
     setModalMode(mode);
     if (mode === "create") {
       setCurrentGallery(null);
@@ -263,16 +266,17 @@ export default function GalleryManagement() {
       });
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to ${currentGallery ? "update" : "create"} gallery`
-        );
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
 
+      setError("");
       await fetchGalleries();
       handleCloseModal();
     } catch (error) {
       console.error("Error:", error);
-      alert(error.message);
+      setError(error.message);
     }
   };
 
@@ -289,18 +293,23 @@ export default function GalleryManagement() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete gallery");
+        const msg = await parseApiError(response);
+        setError(msg);
+        handleCloseDeleteModal();
+        return;
       }
 
+      setError("");
       await fetchGalleries();
       handleCloseDeleteModal();
     } catch (error) {
       console.error("Error deleting gallery:", error);
-      alert("Failed to delete gallery");
+      setError("Gagal menghapus gallery.");
     }
   };
 
   const openDeleteModal = (gallery) => {
+    setError("");
     setGalleryToDelete(gallery);
     setShowDeleteModal(true);
   };
@@ -440,6 +449,22 @@ export default function GalleryManagement() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
+      {/* Error Banner */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-red-700 text-sm flex-1">{error}</p>
+            <button onClick={() => setError("")} className="text-red-400 hover:text-red-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
       {/* Page Header */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">

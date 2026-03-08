@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../components/AuthProvider";
+import { parseApiError } from "@/lib/handleApiError";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -162,8 +163,9 @@ export default function ManageDatasetsPage() {
         setIsModalOpen(false);
         resetForm();
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save dataset");
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
     } catch (error) {
       console.error("Error saving dataset:", error);
@@ -197,11 +199,13 @@ export default function ManageDatasetsPage() {
         setIsDeleteModalOpen(false);
         setDatasetToDelete(null);
       } else {
-        throw new Error("Failed to delete dataset");
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
     } catch (error) {
       console.error("Error deleting dataset:", error);
-      setError("Failed to delete dataset: " + error.message);
+      setError(error.message);
     }
   };
 

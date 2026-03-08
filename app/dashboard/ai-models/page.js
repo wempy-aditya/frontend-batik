@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../components/AuthProvider';
+import { parseApiError } from '@/lib/handleApiError';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -263,8 +264,9 @@ export default function ManageAIModelsPage() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
 
       await fetchAiModels();
@@ -272,7 +274,7 @@ export default function ManageAIModelsPage() {
       setModelToDelete(null);
     } catch (error) {
       console.error('Error deleting AI model:', error);
-      setError('Failed to delete AI model: ' + error.message);
+      setError(error.message);
     }
   };
 
@@ -352,12 +354,12 @@ export default function ManageAIModelsPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData}`);
+        const msg = await parseApiError(response);
+        setError(msg);
+        return;
       }
 
       const result = await response.json();
-      console.log('Submit result:', result);
 
       setIsModalOpen(false);
       await fetchAiModels();
