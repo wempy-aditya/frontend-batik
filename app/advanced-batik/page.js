@@ -67,6 +67,11 @@ export default function AdvancedBatikPage() {
       label: "Scenario 2.5",
       description: "Tiled Patch 6",
     },
+    {
+      value: "scenario4_1_1",
+      label: "Scenario 4.1",
+      description: "Nitik 4 Patch",
+    },
   ];
 
   const randomizePrompt = () => {
