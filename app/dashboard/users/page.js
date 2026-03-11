@@ -25,6 +25,7 @@ export default function UserManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
@@ -145,18 +146,11 @@ export default function UserManagementPage() {
       }
 
       const data = await response.json();
-      console.log("Users response:", data);
-      console.log("Users array:", data.data);
-
-      // Log first user to check data structure
-      if (data.data && data.data.length > 0) {
-        console.log("First user sample:", data.data[0]);
-        console.log("First user is_superuser:", data.data[0].is_superuser);
-      }
 
       setUsers(data.data || []);
       setTotalCount(data.total_count || 0);
-      setTotalPages(data.pages || 1);
+      setHasMore(data.has_more || false);
+      setTotalPages(Math.ceil((data.total_count || 0) / itemsPerPage) || 1);
     } catch (error) {
       console.error("Error fetching users:", error);
       setError("Failed to fetch users: " + error.message);
@@ -1107,27 +1101,49 @@ export default function UserManagementPage() {
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="bg-white md:bg-slate-50 rounded-xl md:rounded-none px-4 sm:px-6 py-4 mt-3 md:mt-0 border md:border-0 md:border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            {totalCount > itemsPerPage && (
+              <div className="bg-white md:bg-slate-50 rounded-xl md:rounded-none px-4 sm:px-6 py-4 mt-3 md:mt-0 border md:border-0 md:border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="text-xs sm:text-sm text-slate-600">
-                  Page {currentPage} of {totalPages} ({totalCount} users)
+                  Menampilkan {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, totalCount)} dari {totalCount} pengguna
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Previous
+                    ‹ Prev
                   </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .reduce((acc, p, idx, arr) => {
+                      if (idx > 0 && p - arr[idx - 1] > 1) acc.push("...");
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, idx) =>
+                      p === "..." ? (
+                        <span key={`dots-${idx}`} className="px-2 text-slate-400 text-sm">…</span>
+                      ) : (
+                        <button
+                          key={p}
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === p
+                              ? "bg-amber-500 text-white border border-amber-500"
+                              : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )}
                   <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={!hasMore}
+                    className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Next
+                    Next ›
                   </button>
                 </div>
               </div>
