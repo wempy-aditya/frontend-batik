@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
+    const authHeader = request.headers.get("authorization");
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "http://localhost:8000";
 
     // Build API URL with all supported filters
     const params = new URLSearchParams();
@@ -35,23 +40,43 @@ export async function GET(request) {
     const sortBy = searchParams.get("sort_by") || "latest";
     params.append("sort_by", sortBy);
 
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/projects?${params.toString()}`;
+    const url = `${apiBaseUrl}/api/v1/public/projects/?${params.toString()}`;
 
     const response = await fetch(url, {
       headers: {
-        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
       },
       cache: "no-store",
     });
 
     if (!response.ok) {
-      return NextResponse.json({ data: [], total: 0, offset: 0, limit: 12, has_more: false }, { status: 200 });
+      let errorBody;
+      try {
+        errorBody = await response.json();
+      } catch {
+        errorBody = { error: await response.text() };
+      }
+      return NextResponse.json(
+        {
+          error: "Failed to fetch public projects",
+          detail: errorBody,
+          backend_status: response.status,
+        },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching public projects:", error);
-    return NextResponse.json({ data: [], total: 0, offset: 0, limit: 12, has_more: false }, { status: 200 });
+    return NextResponse.json(
+      {
+        error: "Error fetching public projects",
+        detail: error.message,
+      },
+      { status: 500 }
+    );
   }
 }

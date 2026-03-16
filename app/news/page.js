@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function NewsPage() {
+  const { token } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [newsArticles, setNewsArticles] = useState([]);
   const [featuredNews, setFeaturedNews] = useState([]);
@@ -14,7 +16,13 @@ export default function NewsPage() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        const response = await fetch("/api/news/public");
+        const localToken = localStorage.getItem("access_token");
+        const activeToken = localToken || token;
+        const response = await fetch("/api/news/public", {
+          headers: {
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setNewsArticles(data.data || []);
@@ -27,13 +35,19 @@ export default function NewsPage() {
     };
 
     fetchNews();
-  }, []);
+  }, [token]);
 
   // Fetch featured news
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const response = await fetch("/api/news/public/featured?limit=2");
+        const localToken = localStorage.getItem("access_token");
+        const activeToken = localToken || token;
+        const response = await fetch("/api/news/public/featured?limit=2", {
+          headers: {
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setFeaturedNews(data.data || []);
@@ -44,7 +58,7 @@ export default function NewsPage() {
     };
 
     fetchFeatured();
-  }, []);
+  }, [token]);
 
   const categories = [
     { id: "all", name: "All News", count: newsArticles.length },

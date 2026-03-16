@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function ProjectsPage() {
+  const { token } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isFeatured, setIsFeatured] = useState(false);
   const [sortBy, setSortBy] = useState("latest");
@@ -14,6 +16,7 @@ export default function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [apiError, setApiError] = useState("");
   const router = useRouter();
 
   const sortOptions = [
@@ -51,6 +54,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true);
+      setApiError("");
       try {
         // Build query params sesuai dokumentasi API
         const params = new URLSearchParams();
@@ -81,27 +85,49 @@ export default function ProjectsPage() {
 
         const url = `/api/projects/public?${params.toString()}`;
 
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
+        const localToken = localStorage.getItem("access_token");
+        const activeToken = localToken || token;
+        const response = await fetch(url, {
+          headers: {
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+          },
+        });
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const backendDetail =
+            errData?.detail?.detail ||
+            errData?.detail?.error ||
+            errData?.detail ||
+            errData?.error;
+          setApiError(
+            typeof backendDetail === "string"
+              ? backendDetail
+              : "Gagal memuat proyek. Coba login ulang."
+          );
+          setProjects([]);
+          setTotalItems(0);
+          setTotalPages(1);
+          return;
+        }
 
-          if (data && Array.isArray(data.data)) {
-            setProjects(data.data);
-            setTotalItems(data.total || 0);
-            setTotalPages(Math.ceil((data.total || 0) / limit));
-          } else if (Array.isArray(data)) {
-            setProjects(data);
-            setTotalItems(data.length);
-            setTotalPages(1);
-          } else {
-            console.log("Projects data structure:", data);
-            setProjects([]);
-            setTotalItems(0);
-            setTotalPages(1);
-          }
+        const data = await response.json();
+
+        if (data && Array.isArray(data.data)) {
+          setProjects(data.data);
+          setTotalItems(data.total || 0);
+          setTotalPages(Math.ceil((data.total || 0) / limit));
+        } else if (Array.isArray(data)) {
+          setProjects(data);
+          setTotalItems(data.length);
+          setTotalPages(1);
+        } else {
+          setProjects([]);
+          setTotalItems(0);
+          setTotalPages(1);
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
+        setApiError("Gagal memuat proyek dari server.");
         setProjects([]);
         setTotalItems(0);
         setTotalPages(1);
@@ -110,7 +136,7 @@ export default function ProjectsPage() {
       }
     };
     fetchProjects();
-  }, [selectedCategory, isFeatured, sortBy, searchQuery, currentPage]);
+  }, [selectedCategory, isFeatured, sortBy, searchQuery, currentPage, token]);
 
   const fallbackProjects = [];
 
@@ -238,6 +264,11 @@ export default function ProjectsPage() {
         <div className="container mx-auto px-6 lg:px-8">
           {/* Filters Section - Compact Unified Container */}
           <div className="mb-12 bg-white rounded-2xl border-2 border-gray-100 p-6 shadow-lg">
+            {apiError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {apiError}
+              </div>
+            )}
             {/* Main Filter Bar */}
             <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center mb-4">
               {/* Search Bar */}

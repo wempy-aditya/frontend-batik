@@ -1030,7 +1030,8 @@ export default function ManageAIModelsPage() {
                         disabled={modalMode === 'view'}
                       >
                         <option value="public">Public</option>
-                        <option value="private">Private</option>
+                        <option value="registered">Registered</option>
+                        <option value="premium">Premium</option>
                       </select>
                     </div>
 

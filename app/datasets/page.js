@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function DatasetsPage() {
+  const { token } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedAccess, setSelectedAccess] = useState("all");
   const [selectedFormat, setSelectedFormat] = useState("all");
@@ -127,7 +129,13 @@ export default function DatasetsPage() {
 
         const url = `/api/datasets/public?${params.toString()}`;
 
-        const response = await fetch(url);
+        const localToken = localStorage.getItem("access_token");
+        const activeToken = localToken || token;
+        const response = await fetch(url, {
+          headers: {
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+          },
+        });
         if (response.ok) {
           const data = await response.json();
 
@@ -165,6 +173,7 @@ export default function DatasetsPage() {
     sortBy,
     searchQuery,
     currentPage,
+    token,
   ]);
 
   const fallbackDatasets = [];

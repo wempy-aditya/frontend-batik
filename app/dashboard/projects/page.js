@@ -1434,7 +1434,8 @@ export default function Projects() {
                         className="w-full px-4 py-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300 bg-white"
                       >
                         <option value="public">Public</option>
-                        <option value="private">Private</option>
+                        <option value="registered">Registered</option>
+                        <option value="premium">Premium</option>
                       </select>
                     </div>
 

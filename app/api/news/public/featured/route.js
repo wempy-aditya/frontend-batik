@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public`;
-
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
+    const authHeader = request.headers.get("authorization");
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "http://localhost:8000";
     const limit = searchParams.get("limit") || "5";
 
-    const response = await fetch(`${API_BASE_URL}/news/featured?limit=${limit}`, {
+    const response = await fetch(`${apiBaseUrl}/api/v1/public/news/featured?limit=${limit}`, {
       headers: {
-        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
       },
       cache: "no-store",
     });

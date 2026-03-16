@@ -24,6 +24,10 @@ export default function PublicationsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(100);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -54,6 +58,9 @@ export default function PublicationsPage() {
 
   useEffect(() => {
     fetchPublications();
+  }, [currentPage, itemsPerPage]);
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
@@ -61,24 +68,61 @@ export default function PublicationsPage() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("access_token");
+      const offset = (currentPage - 1) * itemsPerPage;
 
-      const response = await fetch("/api/publications", {
+      const response = await fetch(
+        `/api/publications?offset=${offset}&limit=${itemsPerPage}`,
+        {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
+        },
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setPublications(data.data?.data || []);
+        const responsePayload = data?.data || {};
+        const fetchedPublications = Array.isArray(responsePayload?.data)
+          ? responsePayload.data
+          : [];
+        const parsedTotal = Number(responsePayload?.total);
+        const parsedPages = Number(responsePayload?.pages);
+        const parsedPage = Number(responsePayload?.page);
+
+        setPublications(fetchedPublications);
+        setTotalItems(Number.isFinite(parsedTotal) ? parsedTotal : 0);
+
+        const fallbackTotalPages = Math.max(
+          1,
+          Math.ceil(
+            (Number.isFinite(parsedTotal) ? parsedTotal : fetchedPublications.length) /
+              itemsPerPage,
+          ),
+        );
+
+        const resolvedTotalPages = Number.isFinite(parsedPages)
+          ? Math.max(1, parsedPages)
+          : fallbackTotalPages;
+        setTotalPages(resolvedTotalPages);
+
+        if (fetchedPublications.length === 0 && currentPage > 1) {
+          const targetPage = Math.max(1, resolvedTotalPages);
+          if (targetPage !== currentPage) {
+            setCurrentPage(targetPage);
+          }
+        } else if (Number.isFinite(parsedPage) && parsedPage !== currentPage) {
+          setCurrentPage(parsedPage);
+        }
       } else {
         throw new Error("Failed to fetch publications");
       }
     } catch (error) {
       console.error("Error fetching publications:", error);
       setError("Failed to load publications");
+      setTotalItems(2);
+      setTotalPages(1);
       // Use mock data for now
       setPublications([
         {
@@ -128,6 +172,23 @@ export default function PublicationsPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePageChange = (nextPage) => {
+    if (nextPage < 1 || nextPage > totalPages || nextPage === currentPage) {
+      return;
+    }
+    setCurrentPage(nextPage);
+  };
+
+  const handleItemsPerPageChange = (event) => {
+    const nextLimit = Number(event.target.value);
+    if (!Number.isFinite(nextLimit) || nextLimit <= 0) {
+      return;
+    }
+
+    setItemsPerPage(nextLimit);
+    setCurrentPage(1);
   };
 
   const fetchCategories = async () => {
@@ -730,9 +791,9 @@ export default function PublicationsPage() {
                 <div className="flex justify-between items-center text-xs text-slate-500 pb-4 mb-4 border-b border-slate-100">
                   <span>
                     Published:{" "}
-                    {new Date(
-                      publication.publication_date,
-                    ).toLocaleDateString()}
+                    {
+                      publication.year
+                    }
                   </span>
                   <span className="bg-slate-100/80 backdrop-blur-sm px-2.5 py-1 rounded-lg font-medium">
                     {publication.access_level}
@@ -872,6 +933,71 @@ export default function PublicationsPage() {
             </div>
           )}
         </div>
+
+        {totalItems > 0 && (
+          <div className="mt-8 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/60 shadow-sm px-4 sm:px-6 py-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <p className="text-sm text-slate-600">
+                Menampilkan{" "}
+                <span className="font-semibold text-slate-800">
+                  {(currentPage - 1) * itemsPerPage + 1}
+                </span>{" "}
+                -{" "}
+                <span className="font-semibold text-slate-800">
+                  {Math.min(currentPage * itemsPerPage, totalItems)}
+                </span>{" "}
+                dari{" "}
+                <span className="font-semibold text-slate-800">{totalItems}</span>
+                {" "}publikasi
+              </p>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="itemsPerPage"
+                    className="text-sm text-slate-600 whitespace-nowrap"
+                  >
+                    Per halaman
+                  </label>
+                  <select
+                    id="itemsPerPage"
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                  >
+                    <option value={6}>6</option>
+                    <option value={9}>9</option>
+                    <option value={12}>12</option>
+                    <option value={18}>18</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Prev
+                  </button>
+
+                  <span className="px-3 py-2 rounded-xl text-sm font-medium text-slate-700 bg-slate-100/80">
+                    Page {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Publication Modal */}
@@ -1915,7 +2041,7 @@ export default function PublicationsPage() {
                         className="w-full p-3 border-2 border-slate-200 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all hover:border-slate-300"
                       >
                         <option value="public">Public</option>
-                        <option value="private">Private</option>
+                        <option value="registered">Registered</option>
                         <option value="premium">Premium</option>
                       </select>
                     </div>
@@ -1933,7 +2059,7 @@ export default function PublicationsPage() {
                       >
                         <option value="draft">Draft</option>
                         <option value="published">Published</option>
-                        <option value="archived">Archived</option>
+                        {/* <option value="archived">Archived</option> */}
                       </select>
                     </div>
                   </div>

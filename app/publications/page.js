@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CitationExportModal from "@/components/CitationExportModal";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function PublicationsPage() {
+  const { token } = useAuth();
   const router = useRouter();
   const [publications, setPublications] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -116,7 +118,13 @@ export default function PublicationsPage() {
 
         const url = `/api/publications/public?${params.toString()}`;
 
-        const response = await fetch(url);
+        const localToken = localStorage.getItem("access_token");
+        const activeToken = localToken || token;
+        const response = await fetch(url, {
+          headers: {
+            ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+          },
+        });
         if (response.ok) {
           const data = await response.json();
 
@@ -157,6 +165,7 @@ export default function PublicationsPage() {
     selectedAuthor,
     isFeatured,
     sortBy,
+    token,
   ]);
 
   const fallbackPublications = [];

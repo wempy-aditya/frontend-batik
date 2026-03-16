@@ -338,9 +338,9 @@ export default function ProjectDetailPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-gray-900 mb-2">{tech}</h3>
-                          <p className="text-gray-600">
+                          {/* <p className="text-gray-600">
                             Essential technology for implementing advanced features and ensuring optimal performance.
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     </div>

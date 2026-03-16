@@ -4,19 +4,15 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const authHeader = request.headers.get("authorization");
+
     const apiBaseUrl =
       process.env.NEXT_PUBLIC_API_URL ||
       process.env.NEXT_PUBLIC_BACKEND_URL ||
       "http://localhost:8000";
-    const offset = searchParams.get("offset") || "0";
-    const limit = searchParams.get("limit") || "12";
-    const search = searchParams.get("search") || "";
 
-    let url = `${apiBaseUrl}/api/v1/public/news/?offset=${offset}&limit=${limit}`;
+    const limit = searchParams.get("limit") || "5";
 
-    if (search) {
-      url += `&search=${encodeURIComponent(search)}`;
-    }
+    const url = `${apiBaseUrl}/api/v1/public/ai-models/featured?limit=${encodeURIComponent(limit)}`;
 
     const response = await fetch(url, {
       headers: {
@@ -27,13 +23,23 @@ export async function GET(request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ data: [], total: 0, offset: 0, limit: 12, has_more: false }, { status: 200 });
+      const errorBody = await response.text();
+      return NextResponse.json(
+        {
+          error: "Failed to fetch featured AI models",
+          detail: errorBody,
+          backend_status: response.status,
+        },
+        { status: response.status }
+      );
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching public news:", error);
-    return NextResponse.json({ data: [], total: 0, offset: 0, limit: 12, has_more: false }, { status: 200 });
+    return NextResponse.json(
+      { error: "Error fetching featured AI models", detail: error.message },
+      { status: 500 }
+    );
   }
 }

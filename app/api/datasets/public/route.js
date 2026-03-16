@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/public`;
-
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
+    const authHeader = request.headers.get("authorization");
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_BACKEND_URL ||
+      "http://localhost:8000";
 
     // Build API URL with all supported filters
     const params = new URLSearchParams();
@@ -55,9 +58,15 @@ export async function GET(request) {
     const sortBy = searchParams.get("sort_by") || "latest";
     params.append("sort_by", sortBy);
 
-    const url = `${API_BASE_URL}/datasets?${params.toString()}`;
+    const url = `${apiBaseUrl}/api/v1/public/datasets/?${params.toString()}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
+      },
+      cache: "no-store",
+    });
 
     if (!response.ok) {
       return NextResponse.json({ data: [], total: 0, offset: 0, limit: 12, has_more: false }, { status: 200 });
