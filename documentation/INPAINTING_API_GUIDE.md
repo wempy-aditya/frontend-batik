@@ -1,4 +1,4 @@
-# Batik Inpainting API - Complete Guide
+# Batik Inpainting API - Complete Guide [V DONE]
 
 **Precise Motif Editing with Mask-Based Control**
 
@@ -17,11 +17,11 @@ Inpainting allows you to **edit specific areas** of an image while **preserving 
 
 ## 🆚 **Comparison with Other Methods:**
 
-| Method | Control Level | Precision | Best For |
-|--------|---------------|-----------|----------|
-| **Inpainting** | ✅ **Mask-based** | ✅ **Exact area** | **Specific edits** ⭐ |
-| ControlNet | ⚠️ Structure-based | ⚠️ Whole image | Color change |
-| IP-Adapter | ❌ Semantic only | ❌ Whole image | Style transfer |
+| Method         | Control Level      | Precision         | Best For              |
+| -------------- | ------------------ | ----------------- | --------------------- |
+| **Inpainting** | ✅ **Mask-based**  | ✅ **Exact area** | **Specific edits** ⭐ |
+| ControlNet     | ⚠️ Structure-based | ⚠️ Whole image    | Color change          |
+| IP-Adapter     | ❌ Semantic only   | ❌ Whole image    | Style transfer        |
 
 **Inpainting is THE BEST for "ubah motif bunga jadi mawar"!**
 
@@ -47,6 +47,7 @@ python create_mask.py --image Brendhi.jpg --mask half_left  # Satu mask spesifik
 ```
 
 Hasil mask yang dibuat (tersimpan di folder yang sama dengan gambar):
+
 ```
 mask_full.png, mask_center.png, mask_center_small.png,
 mask_quadrant_topleft.png, mask_quadrant_topright.png,
@@ -71,6 +72,7 @@ python test_inpainting.py
 ### **Endpoint:** `POST /inpaint`
 
 **Required Fields:**
+
 - `image`: Original batik image (file upload)
 - `mask`: Mask image — **putih = area yang DIUBAH, hitam = area yang DIPERTAHANKAN**
 - `prompt`: Deskripsi apa yang ingin digenerate di area mask
@@ -78,14 +80,14 @@ python test_inpainting.py
 
 **Optional Fields:**
 
-| Field | Default | Keterangan |
-|-------|---------|-----------|
-| `steps` | 30 | Inference steps (lebih tinggi = lebih detail) |
-| `guidance_scale` | 7.5 | CFG scale — seberapa kuat ikut prompt |
-| `seed` | -1 | Random seed (-1 = random) |
-| `negative_prompt` | `"blurry, bad quality, distorted"` | Hal yang dihindari |
-| `return_mask` | false | Jika `true`, return mask (untuk debug) |
-| `strength` | 0.99 | ⚠️ *Diterima untuk kompatibilitas tapi **diabaikan** oleh pipeline* |
+| Field             | Default                            | Keterangan                                                          |
+| ----------------- | ---------------------------------- | ------------------------------------------------------------------- |
+| `steps`           | 30                                 | Inference steps (lebih tinggi = lebih detail)                       |
+| `guidance_scale`  | 7.5                                | CFG scale — seberapa kuat ikut prompt                               |
+| `seed`            | -1                                 | Random seed (-1 = random)                                           |
+| `negative_prompt` | `"blurry, bad quality, distorted"` | Hal yang dihindari                                                  |
+| `return_mask`     | false                              | Jika `true`, return mask (untuk debug)                              |
+| `strength`        | 0.99                               | ⚠️ _Diterima untuk kompatibilitas tapi **diabaikan** oleh pipeline_ |
 
 > ⚠️ **Catatan penting tentang `strength`:**
 > Parameter `strength` **tidak berpengaruh** pada hasil inpainting.
@@ -94,14 +96,14 @@ python test_inpainting.py
 
 **Available Scenarios:**
 
-| Scenario | Dataset |
-|----------|---------|
-| `scenario1` | Dataset batik dasar |
-| `scenario2` | Extended dataset |
-| `scenario2_1` s.d. `scenario2_5` | Sub-variant scenario 2 |
-| `scenario3_1`, `scenario3_2` | Extended scenario 3 |
-| `scenario4_1` ⭐ | Dataset terbaru (recommended) |
-| `scenario4_1_1` | Alias untuk scenario4_1 |
+| Scenario                         | Dataset                       |
+| -------------------------------- | ----------------------------- |
+| `scenario1`                      | Dataset batik dasar           |
+| `scenario2`                      | Extended dataset              |
+| `scenario2_1` s.d. `scenario2_5` | Sub-variant scenario 2        |
+| `scenario3_1`, `scenario3_2`     | Extended scenario 3           |
+| `scenario4_1` ⭐                 | Dataset terbaru (recommended) |
+| `scenario4_1_1`                  | Alias untuk scenario4_1       |
 
 ---
 
@@ -216,21 +218,21 @@ python create_mask.py --list
 
 **Mask types yang tersedia:**
 
-| Type | Deskripsi |
-|------|-----------|
-| `full` | Seluruh gambar |
-| `center50` | Kotak tengah 50% |
-| `center30` | Kotak tengah 30% (kecil) |
-| `quadrant_tl/tr/bl/br` | Salah satu dari 4 kuadran |
-| `half_left/right/top/bottom` | Setengah gambar |
-| `third_left/center_v/right` | Sepertiga vertikal |
-| `third_top/center_h/bottom` | Sepertiga horizontal |
-| `strip_top/bottom/left/right` | Strip 20% di sisi tertentu |
-| `cross` | Bentuk plus/salib di tengah |
-| `ellipse_center` | Ellips/oval di tengah |
-| `ring` | Donut/ring (tepi minus tengah) |
-| `border` | Bingkai sekeliling gambar |
-| `four_corners` | Keempat sudut sekaligus |
+| Type                          | Deskripsi                      |
+| ----------------------------- | ------------------------------ |
+| `full`                        | Seluruh gambar                 |
+| `center50`                    | Kotak tengah 50%               |
+| `center30`                    | Kotak tengah 30% (kecil)       |
+| `quadrant_tl/tr/bl/br`        | Salah satu dari 4 kuadran      |
+| `half_left/right/top/bottom`  | Setengah gambar                |
+| `third_left/center_v/right`   | Sepertiga vertikal             |
+| `third_top/center_h/bottom`   | Sepertiga horizontal           |
+| `strip_top/bottom/left/right` | Strip 20% di sisi tertentu     |
+| `cross`                       | Bentuk plus/salib di tengah    |
+| `ellipse_center`              | Ellips/oval di tengah          |
+| `ring`                        | Donut/ring (tepi minus tengah) |
+| `border`                      | Bingkai sekeliling gambar      |
+| `four_corners`                | Keempat sudut sekaligus        |
 
 ### **Method 2: Manual (Photoshop / GIMP)**
 
@@ -262,28 +264,29 @@ mask.save('mask_brown.png')
 
 ## ⚙️ **Parameter Tuning:**
 
-### **Guidance Scale** ← *Inilah kontrol utama perubahan*
+### **Guidance Scale** ← _Inilah kontrol utama perubahan_
 
-| Nilai | Efek | Use Case |
-|-------|------|----------|
-| **5–7** | Lebih bebas, kreatif | Eksplorasi gaya |
-| **7.5** | Balanced (default) | General editing |
-| **8.5–9** | Kuat ikut prompt | Target perubahan spesifik |
-| **9.5–10** | Sangat kuat | Perubahan drastis |
+| Nilai      | Efek                 | Use Case                  |
+| ---------- | -------------------- | ------------------------- |
+| **5–7**    | Lebih bebas, kreatif | Eksplorasi gaya           |
+| **7.5**    | Balanced (default)   | General editing           |
+| **8.5–9**  | Kuat ikut prompt     | Target perubahan spesifik |
+| **9.5–10** | Sangat kuat          | Perubahan drastis         |
 
 > 💡 **Tips:** Gunakan `guidance_scale` tinggi (9–10) ketika ingin perubahan yang signifikan. Ini menggantikan fungsi `strength` yang tidak aktif.
 
 ### **Steps**
 
-| Nilai | Kualitas | Kecepatan |
-|-------|----------|-----------|
-| 20–30 | Cukup | Cepat |
-| 40–50 | Baik ⭐ | Sedang |
-| 50+ | Diminishing returns | Lambat |
+| Nilai | Kualitas            | Kecepatan |
+| ----- | ------------------- | --------- |
+| 20–30 | Cukup               | Cepat     |
+| 40–50 | Baik ⭐             | Sedang    |
+| 50+   | Diminishing returns | Lambat    |
 
 ### **`strength` (Tidak Berpengaruh)**
 
 Parameter ini **diterima** API untuk kompatibilitas backward tapi **tidak digunakan** oleh `StableDiffusionInpaintPipeline`. Seberapa besar perubahan dikontrol sepenuhnya oleh:
+
 1. **Kualitas mask** (seberapa jelas area putih/hitam)
 2. **`guidance_scale`** (seberapa kuat prompt diikuti)
 3. **`steps`** (kualitas detail)
@@ -295,17 +298,20 @@ Parameter ini **diterima** API untuk kompatibilitas backward tapi **tidak diguna
 ### **1. Prompt yang Efektif untuk Batik**
 
 ✅ **Prompt yang bagus:**
+
 ```
 "traditional Javanese kawung batik motif, flat 2D illustration, dark navy background,
 cream and gold geometric pattern, intricate batik style"
 ```
 
 ❌ **Prompt yang buruk:**
+
 ```
 "roses"   # Terlalu singkat, tidak ada konteks batik
 ```
 
 **Kata kunci penting untuk prompt batik:**
+
 - Style: `batik style`, `traditional batik`, `flat 2D illustration`, `hand-drawn batik`
 - Textur: `intricate pattern`, `detailed motif`, `traditional Indonesian textile`
 - Anti-realistis: tambahkan ke `negative_prompt` → `realistic, photo, 3d, gradient`
@@ -319,11 +325,13 @@ cream and gold geometric pattern, intricate batik style"
 ### **3. Mask Quality**
 
 ✅ **Mask yang bagus:**
+
 - Putih jelas (255) dan hitam jelas (0)
 - Tidak ada area abu-abu yang ambigu
 - Ukuran minimal ~100×100px area putih
 
 ❌ **Mask yang buruk:**
+
 - Area putih terlalu kecil (< 64×64px efektif)
 - Banyak noise / gradasi
 
@@ -345,6 +353,7 @@ with open('debug_mask.png', 'wb') as f:
 ### **Problem: Output tidak berubah sama sekali**
 
 **Penyebab & Solusi:**
+
 1. ✅ **Cek mask** — Pastikan area yang ingin diubah berwarna **putih** (255), bukan hitam
 2. ✅ **Naikkan `guidance_scale`** ke 9–10
 3. ✅ **Tambah kata di `negative_prompt`** yang menyebutkan warna/style asli yang ingin dihilangkan
@@ -353,6 +362,7 @@ with open('debug_mask.png', 'wb') as f:
 ### **Problem: Hasil terlihat realistis/fotografi, tidak seperti batik**
 
 **Solusi:**
+
 ```python
 'negative_prompt': 'realistic, photo, 3d render, photorealistic, bokeh, depth of field'
 'prompt': '... batik style, flat 2D illustration, traditional batik pattern ...'
@@ -361,6 +371,7 @@ with open('debug_mask.png', 'wb') as f:
 ### **Problem: Tepi antara area yang diedit dan yang tidak kelihatan tidak natural**
 
 **Solusi:**
+
 - Gunakan mask yang sedikit lebih besar dari target area
 - Tambahkan `"seamless, blending"` ke prompt
 - Engine otomatis melakukan dilasi mask 9px untuk blending
@@ -368,6 +379,7 @@ with open('debug_mask.png', 'wb') as f:
 ### **Problem: Area yang salah berubah**
 
 **Solusi:**
+
 - Gunakan `return_mask=true` untuk verifikasi mask
 - Ingat: **putih = berubah, hitam = dipertahankan**
 - Pastikan ukuran mask sama dengan ukuran gambar
