@@ -15,6 +15,7 @@ export default function UserManagementPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
+  const [isCurrentUserLoading, setIsCurrentUserLoading] = useState(true);
 
   // Filters
   const [filterRole, setFilterRole] = useState("all"); // all, admin, registered, premium
@@ -101,10 +102,14 @@ export default function UserManagementPage() {
 
   const fetchCurrentUser = async () => {
     try {
+      setIsCurrentUserLoading(true);
       const userInfo = await getUserInfo();
       setCurrentUser(userInfo);
     } catch (error) {
       console.error("Error fetching current user:", error);
+      setCurrentUser(null);
+    } finally {
+      setIsCurrentUserLoading(false);
     }
   };
 
@@ -492,7 +497,22 @@ export default function UserManagementPage() {
     );
   });
 
-  if (isLoading) {
+  const isSuperuser = !!currentUser?.is_superuser;
+  const visibleUsers = !currentUser
+    ? []
+    : isSuperuser
+      ? filteredUsers
+      : filteredUsers.filter((user) => {
+          if (currentUser.id && user.id === currentUser.id) return true;
+          if (currentUser.username && user.username === currentUser.username)
+            return true;
+          if (currentUser.email && user.email === currentUser.email) return true;
+          return false;
+        });
+
+  const visibleTotalCount = isSuperuser ? totalCount : visibleUsers.length;
+
+  if (isLoading || isCurrentUserLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-amber-50/30 to-slate-50">
         <div className="text-center">
@@ -631,79 +651,52 @@ export default function UserManagementPage() {
             </div>
           )}
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search by name, email, or username..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-              />
-            </div>
-            <select
-              value={filterRole}
-              onChange={(e) => {
-                setFilterRole(e.target.value);
-                setFilterStatus("all");
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="registered">Registered</option>
-              <option value="premium">Premium</option>
-            </select>
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value);
-                setFilterRole("all");
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-            <button
-              onClick={handleCreate}
-              className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 flex items-center gap-2 whitespace-nowrap"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Add User
-            </button>
-          </div>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 w-full">
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium">
-                    Total Users
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
-                    {totalCount}
-                  </p>
+          {isSuperuser && (
+            <>
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or username..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                  />
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <select
+                  value={filterRole}
+                  onChange={(e) => {
+                    setFilterRole(e.target.value);
+                    setFilterStatus("all");
+                    setCurrentPage(1);
+                  }}
+                  className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="registered">Registered</option>
+                  <option value="premium">Premium</option>
+                </select>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => {
+                    setFilterStatus(e.target.value);
+                    setFilterRole("all");
+                    setCurrentPage(1);
+                  }}
+                  className="px-4 py-2.5 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <button
+                  onClick={handleCreate}
+                  className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 transition-all duration-300 flex items-center gap-2 whitespace-nowrap"
+                >
                   <svg
-                    className="w-6 h-6 text-blue-600"
+                    className="w-5 h-5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -712,77 +705,108 @@ export default function UserManagementPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                      d="M12 4v16m8-8H4"
                     />
                   </svg>
-                </div>
+                  Add User
+                </button>
               </div>
-            </div>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8 w-full">
+                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-600 text-sm font-medium">
+                        Total Users
+                      </p>
+                      <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
+                        {visibleTotalCount}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <svg
+                        className="w-6 h-6 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium">Admins</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-purple-900 mt-1">
-                    {users.filter((u) => u.role === "admin").length}
-                  </p>
+                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-600 text-sm font-medium">Admins</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-purple-900 mt-1">
+                        {visibleUsers.filter((u) => u.role === "admin").length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      {roleIcons.admin}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  {roleIcons.admin}
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-amber-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium">Premium</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-amber-900 mt-1">
-                    {users.filter((u) => u.role === "premium").length}
-                  </p>
+                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-amber-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-600 text-sm font-medium">Premium</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-amber-900 mt-1">
+                        {visibleUsers.filter((u) => u.role === "premium").length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      {roleIcons.premium}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  {roleIcons.premium}
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-600 text-sm font-medium">
-                    Active Users
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-green-900 mt-1">
-                    {users.filter((u) => u.is_active).length}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-slate-600 text-sm font-medium">
+                        Active Users
+                      </p>
+                      <p className="text-2xl sm:text-3xl font-bold text-green-900 mt-1">
+                        {visibleUsers.filter((u) => u.is_active).length}
+                      </p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <svg
+                        className="w-6 h-6 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
 
           {/* Users List - Mobile First */}
           <div className="w-full">
-            {filteredUsers.length > 0 ? (
+            {visibleUsers.length > 0 ? (
               <>
                 {/* Mobile Card View - Priority #1 */}
                 <div className="md:hidden space-y-3">
-                  {filteredUsers.map((user) => (
+                  {visibleUsers.map((user) => (
                     <div
                       key={user.id}
                       className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
@@ -935,7 +959,7 @@ export default function UserManagementPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200">
-                        {filteredUsers.map((user) => (
+                        {visibleUsers.map((user) => (
                           <tr
                             key={user.id}
                             className="hover:bg-slate-50 transition-colors"
@@ -1094,14 +1118,16 @@ export default function UserManagementPage() {
                   </div>
                   <p className="text-slate-600 font-medium">No users found</p>
                   <p className="text-slate-500 text-sm mt-1">
-                    Try adjusting your filters
+                    {isSuperuser
+                      ? "Try adjusting your filters"
+                      : "Your account data is not available in this page result"}
                   </p>
                 </div>
               </div>
             )}
 
             {/* Pagination */}
-            {totalCount > itemsPerPage && (
+            {isSuperuser && totalCount > itemsPerPage && (
               <div className="bg-white md:bg-slate-50 rounded-xl md:rounded-none px-4 sm:px-6 py-4 mt-3 md:mt-0 border md:border-0 md:border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <div className="text-xs sm:text-sm text-slate-600">
                   Menampilkan {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, totalCount)} dari {totalCount} pengguna

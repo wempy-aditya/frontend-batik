@@ -9,7 +9,8 @@ function PDFViewerContent({ pdfLoaded }) {
   const canvasRef = useRef(null);
 
   // Default PDF configuration
-  const DEFAULT_PDF_ID = "1nAU-FZKtgaSj6xKKkEr2X9njkWwWwqhK";
+  const DEFAULT_PDF_ID = "";
+  // const DEFAULT_PDF_ID = "1nAU-FZKtgaSj6xKKkEr2X9njkWwWwqhK";
   const DEFAULT_PAGE = 10;
 
   // Force header to be visible (not transparent) on this page
@@ -55,8 +56,10 @@ function PDFViewerContent({ pdfLoaded }) {
   const [showRetryPrompt, setShowRetryPrompt] = useState(false);
   const [usingLocalFallback, setUsingLocalFallback] = useState(false);
   const renderTaskRef = useRef(null);
+  const renderQueueRef = useRef(Promise.resolve());
   const pageCache = useRef(new Map());
   const backgroundLoadRef = useRef(null);
+  const currentFileIdRef = useRef("");
   const maxRetries = 3;
   const LOCAL_PDF_PATH = "/document-spmi-umm.pdf";
   const LOCAL_PDF_DEFAULT_PAGE = 10;
@@ -90,10 +93,15 @@ function PDFViewerContent({ pdfLoaded }) {
   // Update URL params
   const updateURL = (id, page) => {
     const params = new URLSearchParams();
-    if (id) params.set("id", id);
+    const effectiveId = id || currentFileIdRef.current || searchParams.get("id") || "";
+    if (effectiveId) params.set("id", effectiveId);
     params.set("page", String(page || 1));
     router.push(`/pdf-viewer?${params.toString()}`, { scroll: false });
   };
+
+  useEffect(() => {
+    currentFileIdRef.current = fileId || "";
+  }, [fileId]);
 
   // Load PDF with auto-retry mechanism
   const loadPDFWithRetry = async (id, initialPage = 1, currentRetry = 0) => {
@@ -248,6 +256,8 @@ function PDFViewerContent({ pdfLoaded }) {
       return;
     }
 
+    currentFileIdRef.current = id;
+
     setError("");
     setIsLoading(true);
     setStatus("Loading page...");
@@ -360,125 +370,149 @@ function PDFViewerContent({ pdfLoaded }) {
     await renderPageHybrid(pdf, startPage);
   };
 
-  // Render page in Hybrid Mode - with caching
-  const renderPageHybrid = async (pdf, pageNumber) => {
-    if (!pdf || !canvasRef.current) return;
+  const cancelCurrentRender = async () => {
+    if (!renderTaskRef.current) return;
 
-    // Cancel previous render
-    if (renderTaskRef.current) {
-      renderTaskRef.current.cancel();
-      renderTaskRef.current = null;
-    }
+    const activeRenderTask = renderTaskRef.current;
+    renderTaskRef.current = null;
 
-    setStatus(`Loading page ${pageNumber}...`);
-
-    // Check cache first
-    const cacheKey = `${pdf.fingerprint}-${pageNumber}-${scale}`;
-    if (pageCache.current.has(cacheKey)) {
-      console.log("📦 Using cached page:", pageNumber);
-      const cachedData = pageCache.current.get(cacheKey);
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
-      canvas.width = cachedData.width;
-      canvas.height = cachedData.height;
-      context.putImageData(cachedData.imageData, 0, 0);
-      setPageNum(pageNumber);
-      setGotoPage(pageNumber);
-      setStatus(`Page ${pageNumber} / ${totalPages} (cached)`);
-      updateURL(fileId, pageNumber);
-      return;
-    }
-
-    // Load page on-demand (hanya page ini, bukan semua PDF)
-    const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale, rotation: 0 });
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-
-    const renderTask = page.render({
-      canvasContext: context,
-      viewport: viewport,
-    });
-
-    renderTaskRef.current = renderTask;
+    activeRenderTask.cancel();
 
     try {
-      await renderTask.promise;
+      await activeRenderTask.promise;
+    } catch (_) {
+      // Ignore cancellation/rejection from previous render task
+    }
+  };
 
-      // Cache rendered page
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      pageCache.current.set(cacheKey, {
-        imageData,
-        width: canvas.width,
-        height: canvas.height,
+  const runRenderExclusive = (renderFn) => {
+    renderQueueRef.current = renderQueueRef.current
+      .catch(() => {
+        // Keep queue alive if previous render failed/cancelled
+      })
+      .then(async () => {
+        await cancelCurrentRender();
+        return renderFn();
       });
 
-      // Limit cache size (max 10 pages)
-      if (pageCache.current.size > 10) {
-        const firstKey = pageCache.current.keys().next().value;
-        pageCache.current.delete(firstKey);
+    return renderQueueRef.current;
+  };
+
+  // Render page in Hybrid Mode - with caching
+  const renderPageHybrid = async (pdf, pageNumber) => {
+    return runRenderExclusive(async () => {
+      if (!pdf || !canvasRef.current) return;
+
+      setStatus(`Loading page ${pageNumber}...`);
+
+      // Check cache first
+      const cacheKey = `${pdf.fingerprint}-${pageNumber}-${scale}`;
+      if (pageCache.current.has(cacheKey)) {
+        console.log("📦 Using cached page:", pageNumber);
+        const cachedData = pageCache.current.get(cacheKey);
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
+        canvas.width = cachedData.width;
+        canvas.height = cachedData.height;
+        context.putImageData(cachedData.imageData, 0, 0);
+        setPageNum(pageNumber);
+        setGotoPage(pageNumber);
+        setStatus(`Page ${pageNumber} / ${totalPages} (cached)`);
+        updateURL(fileId, pageNumber);
+        return;
       }
 
-      setPageNum(pageNumber);
-      setGotoPage(pageNumber);
-      setStatus(`Page ${pageNumber} / ${totalPages} (hybrid)`);
-      updateURL(fileId, pageNumber);
-    } catch (err) {
-      if (err.name === "RenderingCancelledException") {
-        console.log("Rendering cancelled");
-      } else {
-        throw err;
+      // Load page on-demand (hanya page ini, bukan semua PDF)
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale, rotation: 0 });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      const renderTask = page.render({
+        canvasContext: context,
+        viewport: viewport,
+      });
+
+      renderTaskRef.current = renderTask;
+
+      try {
+        await renderTask.promise;
+
+        // Cache rendered page
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        pageCache.current.set(cacheKey, {
+          imageData,
+          width: canvas.width,
+          height: canvas.height,
+        });
+
+        // Limit cache size (max 10 pages)
+        if (pageCache.current.size > 10) {
+          const firstKey = pageCache.current.keys().next().value;
+          pageCache.current.delete(firstKey);
+        }
+
+        setPageNum(pageNumber);
+        setGotoPage(pageNumber);
+        setStatus(`Page ${pageNumber} / ${totalPages} (hybrid)`);
+        updateURL(fileId, pageNumber);
+      } catch (err) {
+        if (err.name === "RenderingCancelledException") {
+          console.log("Rendering cancelled");
+        } else {
+          throw err;
+        }
+      } finally {
+        if (renderTaskRef.current === renderTask) {
+          renderTaskRef.current = null;
+        }
       }
-    } finally {
-      renderTaskRef.current = null;
-    }
+    });
   };
 
   // Render specific page
   const renderPage = async (pdf, pageNumber) => {
-    if (!pdf || !canvasRef.current) return;
+    return runRenderExclusive(async () => {
+      if (!pdf || !canvasRef.current) return;
 
-    // Cancel previous render jika masih berjalan
-    if (renderTaskRef.current) {
-      renderTaskRef.current.cancel();
-      renderTaskRef.current = null;
-    }
+      const page = await pdf.getPage(pageNumber);
+      const viewport = page.getViewport({ scale, rotation: 0 });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
 
-    const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale, rotation: 0 });
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
 
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
+      setStatus(`Rendering page ${pageNumber}...`);
 
-    setStatus(`Rendering page ${pageNumber}...`);
+      const renderTask = page.render({
+        canvasContext: context,
+        viewport: viewport,
+      });
 
-    const renderTask = page.render({
-      canvasContext: context,
-      viewport: viewport,
-    });
+      renderTaskRef.current = renderTask;
 
-    renderTaskRef.current = renderTask;
-
-    try {
-      await renderTask.promise;
-      setPageNum(pageNumber);
-      setGotoPage(pageNumber);
-      setStatus(`Page ${pageNumber} / ${totalPages}`);
-      updateURL(fileId, pageNumber);
-    } catch (err) {
-      if (err.name === "RenderingCancelledException") {
-        console.log("Rendering cancelled");
-      } else {
-        throw err;
+      try {
+        await renderTask.promise;
+        setPageNum(pageNumber);
+        setGotoPage(pageNumber);
+        setStatus(`Page ${pageNumber} / ${totalPages}`);
+        updateURL(fileId, pageNumber);
+      } catch (err) {
+        if (err.name === "RenderingCancelledException") {
+          console.log("Rendering cancelled");
+        } else {
+          throw err;
+        }
+      } finally {
+        if (renderTaskRef.current === renderTask) {
+          renderTaskRef.current = null;
+        }
       }
-    } finally {
-      renderTaskRef.current = null;
-    }
+    });
   };
 
   // Navigation handlers
@@ -555,6 +589,7 @@ function PDFViewerContent({ pdfLoaded }) {
   };
 
   const handleLoad = () => {
+    currentFileIdRef.current = fileId;
     setFullPdfReady(false);
     pageCache.current.clear();
     setRetryCount(0);
