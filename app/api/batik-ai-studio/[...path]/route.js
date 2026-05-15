@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import dns from "node:dns";
 import { randomUUID } from "node:crypto";
 
 const API_ROOT =
   "https://batik-studio.wempyaw.com";
+
+// Prefer IPv4 to avoid intermittent IPv6 routing/DNS issues in some servers.
+dns.setDefaultResultOrder("ipv4first");
 
 const DEFAULT_TIMEOUT_MS = 20000;
 const MAX_RETRIES = 2;
@@ -112,6 +116,10 @@ async function proxyRequest(request, params, method) {
     console.error("Batik AI Studio proxy error:", {
       id: requestId,
       error: error?.message || String(error),
+      cause: error?.cause?.message,
+      code: error?.cause?.code || error?.code,
+      syscall: error?.cause?.syscall || error?.syscall,
+      errno: error?.cause?.errno || error?.errno,
     });
     return NextResponse.json(
       {
