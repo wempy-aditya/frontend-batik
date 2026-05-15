@@ -1,7 +1,53 @@
 import { NextResponse } from "next/server";
 
-// const API_ROOT = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
-const API_ROOT = 'https://batik-studio.wempyaw.com';
+const API_ROOT =
+  "https://batik-studio.wempyaw.com";
+
+const DEFAULT_TIMEOUT_MS = 20000;
+const MAX_RETRIES = 2;
+
+function shouldRetryStatus(status) {
+  return status === 408 || status === 429 || status >= 500;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+async function fetchWithRetry(url, options, retries, timeoutMs) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetchWithTimeout(url, options, timeoutMs);
+
+      if (!shouldRetryStatus(response.status) || attempt === retries) {
+        return response;
+      }
+
+      const backoff = Math.min(1000 * (attempt + 1), 3000);
+      await wait(backoff);
+    } catch (error) {
+      if (attempt === retries) {
+        throw error;
+      }
+
+      const backoff = Math.min(1000 * (attempt + 1), 3000);
+      await wait(backoff);
+    }
+  }
+
+  throw new Error("Retry attempts exhausted");
+}
 
 function buildTargetUrl(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -29,11 +75,24 @@ async function proxyRequest(request, params, method) {
     body = await request.text();
   }
 
-  const response = await fetch(targetUrl, {
-    method,
-    headers,
-    body,
-  });
+  let response;
+  try {
+    response = await fetchWithRetry(
+      targetUrl,
+      { method, headers, body },
+      MAX_RETRIES,
+      DEFAULT_TIMEOUT_MS
+    );
+  } catch (error) {
+    console.error("Batik AI Studio proxy error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to reach backend",
+        details: error?.message || String(error),
+      },
+      { status: 502 }
+    );
+  }
 
   const contentType = response.headers.get("content-type") || "";
 
