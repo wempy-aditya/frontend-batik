@@ -80,6 +80,7 @@ export default function BatikAIStudioPage() {
   const [sleeve, setSleeve] = useState("panjang");
   const [resultPrompt, setResultPrompt] = useState("");
   const [resultData, setResultData] = useState(null);
+  const [showFluxPrompt, setShowFluxPrompt] = useState(false);
 
   const [isStage1Loading, setIsStage1Loading] = useState(false);
   const [isStage2Loading, setIsStage2Loading] = useState(false);
@@ -846,14 +847,31 @@ export default function BatikAIStudioPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-semibold text-gray-700">Prompt (optional)</label>
-                      <textarea
-                        value={resultPrompt}
-                        onChange={(event) => setResultPrompt(event.target.value)}
-                        rows={3}
-                        className="w-full mt-2 rounded-xl border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                        placeholder="Optional style prompt for FLUX"
-                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-700">
+                          Prompt (optional)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowFluxPrompt((prev) => !prev)}
+                          className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-orange-700 transition hover:bg-orange-50"
+                        >
+                          {showFluxPrompt ? "Hide Prompt" : "Add Prompt"}
+                        </button>
+                      </div>
+                      {showFluxPrompt ? (
+                        <textarea
+                          value={resultPrompt}
+                          onChange={(event) => setResultPrompt(event.target.value)}
+                          rows={3}
+                          className="w-full mt-2 rounded-xl border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                          placeholder="Optional style prompt for FLUX"
+                        />
+                      ) : (
+                        <div className="mt-2 text-xs text-gray-400">
+                          Prompt is optional. Click Add Prompt to include it.
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
