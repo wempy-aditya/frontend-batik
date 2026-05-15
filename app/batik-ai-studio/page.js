@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const API_PROXY_BASE = "/api/batik-ai-studio";
 const API_V1_PREFIX = "/api/v1";
@@ -15,8 +15,8 @@ const STEPS = [
 ];
 
 const SCENARIO_OPTIONS = [
-  { value: "scenario2", label: "Scenario 2", description: "Tiled patch" },
-  { value: "scenario4_1", label: "Scenario 4.1", description: "Nitik 4 patch" },
+    { value: "scenario2", label: "Scenario 2", description: "Tiled patch" },
+    { value: "scenario4_1", label: "Scenario 4.1", description: "Nitik 4 patch" },
 ];
 
 const STYLE_OPTIONS = [
@@ -62,8 +62,11 @@ function isEven(value) {
 export default function BatikAIStudioPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [prompt, setPrompt] = useState("");
-  const [scenario, setScenario] = useState("scenario4_1");
-  const [numMotifs, setNumMotifs] = useState(4);
+  const [scenario, setScenario] = useState("scenario2");
+  const [numMotifs, setNumMotifs] = useState(2);
+
+  const [promptLibrary, setPromptLibrary] = useState([]);
+  const [isPromptLoading, setIsPromptLoading] = useState(true);
 
   const [sessionId, setSessionId] = useState("");
   const [generatedMotifs, setGeneratedMotifs] = useState([]);
@@ -102,6 +105,36 @@ export default function BatikAIStudioPage() {
   const canComposeFabric = selectedMotifs.length === 2;
   const hasFabric = Boolean(fabricData?.id);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPromptLibrary = async () => {
+      try {
+        const response = await fetch("/data/batik-nitik-prompts.json");
+        const data = await response.json();
+        const motifs = Array.isArray(data?.motifs) ? data.motifs : [];
+        if (isMounted) {
+          setPromptLibrary(motifs);
+        }
+      } catch (error) {
+        console.error("Failed to load prompt library:", error);
+        if (isMounted) {
+          setPromptLibrary([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsPromptLoading(false);
+        }
+      }
+    };
+
+    loadPromptLibrary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const addConsoleMessage = (type, message) => {
     setConsoleMessages((prev) => [
       {
@@ -112,6 +145,29 @@ export default function BatikAIStudioPage() {
       },
       ...prev,
     ].slice(0, 25));
+  };
+
+  const handleRandomPrompt = () => {
+    if (!promptLibrary.length) {
+      addConsoleMessage("error", "Prompt library is empty.");
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * promptLibrary.length);
+    const selected = promptLibrary[randomIndex];
+    const selectedPrompt = selected?.prompt || "";
+
+    if (!selectedPrompt) {
+      addConsoleMessage("error", "Selected prompt is empty.");
+      return;
+    }
+
+    setPrompt(selectedPrompt);
+    if (selected?.name) {
+      addConsoleMessage("info", `Random prompt selected: ${selected.name}.`);
+    } else {
+      addConsoleMessage("info", "Random prompt selected.");
+    }
   };
 
   const openPreview = (title, url) => {
@@ -411,8 +467,8 @@ export default function BatikAIStudioPage() {
             </div> */}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
+          <div className="grid lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3 space-y-8">
               {currentStep === 1 && (
                 <div className="bg-white rounded-3xl shadow-lg border border-orange-100 p-6 md:p-8">
                 <div className="flex items-center justify-between mb-6">
@@ -426,7 +482,17 @@ export default function BatikAIStudioPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-semibold text-gray-700">Prompt</label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold text-gray-700">Prompt</label>
+                        <button
+                          type="button"
+                          onClick={handleRandomPrompt}
+                          disabled={isPromptLoading || promptLibrary.length === 0}
+                          className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 disabled:opacity-50"
+                        >
+                          {isPromptLoading ? "Loading..." : "Random Prompt"}
+                        </button>
+                      </div>
                       <textarea
                         value={prompt}
                         onChange={(event) => setPrompt(event.target.value)}
@@ -434,6 +500,9 @@ export default function BatikAIStudioPage() {
                         className="w-full mt-2 rounded-xl border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                         placeholder="Describe batik motif for Stage 1"
                       />
+                      <div className="mt-1 text-xs text-gray-400">
+                        Source: batik-nitik-prompts.json ({promptLibrary.length} prompts)
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -902,7 +971,7 @@ export default function BatikAIStudioPage() {
               )}
             </div>
 
-            <aside className="space-y-6">
+            <aside className="space-y-6 lg:col-span-1">
               <div className="bg-white rounded-3xl shadow-lg border border-orange-100 p-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Agent History</h3>
                 <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">

@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 
-// Prefer environment variable so production can override the backend host.
-// Fallback to NEXT_PUBLIC_API_URL / NEXT_PUBLIC_BACKEND_URL for convenience,
-// then to the historical default.
-const API_ROOT =
-  process.env.BATIK_AI_STUDIO_API_BASE ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  'https://batik-studio.wempyaw.com';
+// const API_ROOT = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+const API_ROOT = 'https://batik-studio.wempyaw.com';
 
 function buildTargetUrl(path) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
@@ -35,27 +29,11 @@ async function proxyRequest(request, params, method) {
     body = await request.text();
   }
 
-  let response;
-  try {
-    response = await fetch(targetUrl, {
-      method,
-      headers,
-      body,
-    });
-  } catch (err) {
-    // Network/DNS error — return JSON with helpful guidance for production.
-    console.error('Proxy fetch error:', err);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Unable to reach backend host',
-        details: err?.message || String(err),
-        hint:
-          'Check server DNS and outbound network access. Set BATIK_AI_STUDIO_API_BASE to a reachable backend URL.',
-      },
-      { status: 502 }
-    );
-  }
+  const response = await fetch(targetUrl, {
+    method,
+    headers,
+    body,
+  });
 
   const contentType = response.headers.get("content-type") || "";
 
