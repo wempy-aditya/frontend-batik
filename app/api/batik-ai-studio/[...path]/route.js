@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 
 const API_ROOT =
   "https://batik-studio.wempyaw.com";
@@ -66,13 +67,37 @@ async function proxyRequest(request, params, method) {
   const { path } = resolvedParams;
   const pathString = Array.isArray(path) ? path.join("/") : path;
   const targetUrl = buildTargetUrl(pathString || "");
+  const requestId = typeof randomUUID === "function"
+    ? randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  console.log("Batik AI Studio proxy request", {
+    id: requestId,
+    method,
+    path: pathString || "/",
+    targetUrl,
+  });
 
   const headers = {};
   let body;
 
   if (method !== "GET") {
     headers["Content-Type"] = request.headers.get("content-type") || "application/json";
-    body = await request.text();
+    try {
+      body = await request.text();
+    } catch (error) {
+      console.error("Batik AI Studio proxy read body error", {
+        id: requestId,
+        error: error?.message || String(error),
+      });
+      return NextResponse.json(
+        {
+          error: "Failed to read request body",
+          details: error?.message || String(error),
+        },
+        { status: 400 }
+      );
+    }
   }
 
   let response;
@@ -84,7 +109,10 @@ async function proxyRequest(request, params, method) {
       DEFAULT_TIMEOUT_MS
     );
   } catch (error) {
-    console.error("Batik AI Studio proxy error:", error);
+    console.error("Batik AI Studio proxy error:", {
+      id: requestId,
+      error: error?.message || String(error),
+    });
     return NextResponse.json(
       {
         error: "Failed to reach backend",
@@ -108,6 +136,16 @@ async function proxyRequest(request, params, method) {
   }
 
   const text = await response.text();
+
+  if (!response.ok) {
+    console.error("Batik AI Studio backend error", {
+      id: requestId,
+      status: response.status,
+      url: targetUrl,
+      contentType,
+      body: text?.slice(0, 2000) || "",
+    });
+  }
   return new NextResponse(text, {
     status: response.status,
     headers: {
