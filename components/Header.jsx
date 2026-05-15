@@ -76,6 +76,7 @@ const Header = () => {
   ];
 
   const moreItems = [
+    // { name: "Batik AI Studio", path: "/batik-ai-studio" },
     { name: "Ai Models", path: "/ai-models/models" },
     { name: "News", path: "/news" },
     { name: "PDF Viewer", path: "/pdf-viewer" },
