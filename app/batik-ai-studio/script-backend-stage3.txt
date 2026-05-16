@@ -1,0 +1,2953 @@
+"""
+TAHAP 3 — Overlay Kain ke Mockup Baju (Mesh + TPS + Mass-Spring Physics)
+Endpoints:
+  GET  /api/v1/stage3/mockups         — list mockup baju yang tersedia
+  POST /api/v1/stage3/apply           — overlay kain ke mockup
+  POST /api/v1/stage3/segment         — debug: kembalikan part masks hasil segmentasi
+  GET  /api/v1/stage3/results         — list hasil overlay
+  GET  /api/v1/stage3/results/<id>    — detail hasil
+
+warp_mode options (POST /apply):
+  "physics" — [VER-16 DEFAULT] Mass-Spring simulation → TPS warp
+  "tps"     — Thin Plate Spline direct (ver15)
+  "mesh"    — Mesh affine per-triangle (ver14)
+
+Pipeline (warp_mode="physics"):
+  0. Semantic Segmentation  — parse garment mask → per-part masks
+  1. Extract Garment Region — isolasi area baju via mask, simpan shading layer
+  5. Texture Tiling         — tile batik texture seamless ke ukuran penuh mockup
+  P1. Build Particle Grid   — [VER-16] grid partikel sesuai bbox garment
+  P2. Build Springs         — [VER-16] structural + shear + bend springs per part
+  P3. Apply External Forces — [VER-16] gravity, per-part body forces, shading crease
+  P4. Verlet Integration    — [VER-16] iteratif step simulasi dengan constraint
+  P5. Equilibrium → TPS     — [VER-16] posisi ekuilibrium jadi control points TPS
+  T2–T4. TPS warp + remap  — smooth deformasi dari posisi physics
+  6. Preserve Shading       — per-part soft-light blend
+  7. Final Compositing      — feathered alpha composite ke mockup
+
+CHANGELOG ver16 — Mass-Spring Physics:
+  [FEAT-10] MassSpringMesh class: grid partikel 2D yang dihubungkan spring.
+            - Structural springs  : tetangga horizontal & vertikal (kestabilan dasar)
+            - Shear springs       : diagonal (resistance terhadap skew)
+            - Bend springs        : jangkauan 2 (resistance terhadap lipatan tajam)
+            Per-part spring stiffness:
+              • torso        : k_struct=0.9, k_shear=0.4, k_bend=0.2
+              • sleeve       : k_struct=0.6, k_shear=0.2, k_bend=0.08 (fleksibel)
+              • collar       : k_struct=1.8, k_shear=0.9, k_bend=0.5  (rigid)
+            Per-part particle mass:
+              • sleeve tip   : mass=0.6  (ujung lengan lebih ringan → droop)
+              • collar       : mass=2.0  (kerah berat → tetap di tempatnya)
+              • default      : mass=1.0
+
+  [FEAT-11] _mss_apply_forces(): external forces yang disimulasikan:
+            - Gravity              : (0, +g) per partikel — menarik kain ke bawah
+            - Body curvature force : mendorong partikel torso ke arah kontur badan
+            - Sleeve cylinder force: mendorong lengan ke arah silindris
+            - Shading crease force : Sobel luminance gradient → crease di lipatan
+            - Collar tension       : tarik ke atas (counter-gravity untuk kerah)
+
+  [FEAT-12] Verlet integration dengan velocity damping:
+            x(t+dt) = x(t) + (1-d)·v·dt + a·dt²
+            v(t+dt) = (x_new - x_old) / dt  (implicit dari posisi)
+            Iterasi: default 80 steps, dt=0.016 (≈60fps physics)
+            Constraint: partikel di dalam mask garment saja yang digerakkan.
+
+  [FEAT-13] _mss_to_tps_points(): konversi posisi equilibrium partikel
+            (setelah simulasi) menjadi (src_pts, dst_pts) untuk TPS solver.
+            Hanya partikel dengan displacement signifikan (>0.5px) yang dijadikan
+            control points — mereduksi noise dari partikel yang hampir tidak bergerak.
+
+  [FEAT-14] _physics_warp_texture(): orchestrator physics pipeline.
+            Bisa fallback ke TPS jika physics menghasilkan displacement tidak wajar
+            (max displacement > 50% bbox — indikasi simulasi divergen).
+
+  [FEAT-15] physics_steps, physics_dt, gravity_strength parameter di POST /apply.
+
+CHANGELOG ver15 (masih berlaku):
+  [FEAT-5–9] TPS warping, per-part stiffness, warp_mode parameter.
+
+CHANGELOG ver14 (masih berlaku):
+  [FEAT-1–4] Semantic segmentation, per-part deformation, per-part shading.
+
+CHANGELOG bugfix (masih berlaku):
+  [BUG-1–4] Affine inverse mapping, UV src/dst, soft-light blend, warp_mask dilate.
+"""
+import uuid
+import json
+import io
+import os
+import base64
+import logging
+from pathlib import Path
+from flask import Blueprint, request, jsonify, current_app
+from PIL import Image, ImageFilter
+
+import numpy as np
+
+try:
+    import cv2
+    HAS_CV2 = True
+except ImportError:
+    HAS_CV2 = False
+
+try:
+    from scipy.ndimage import binary_dilation
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+try:
+    from scipy.interpolate import RBFInterpolator  # noqa: F401 — availability check only
+    HAS_SCIPY_INTERP = True
+except ImportError:
+    HAS_SCIPY_INTERP = False
+
+from extensions import db
+from models import Fabric, MockupResult
+
+stage3_bp = Blueprint("stage3", __name__)
+logger = logging.getLogger(__name__)
+
+if not HAS_CV2:
+    logger.warning(
+        "OpenCV (cv2) not available. TPS remap will use numpy fallback; "
+        "mesh warp also uses numpy fallback. Install opencv-python for best performance."
+    )
+
+if not HAS_SCIPY:
+    logger.warning(
+        "scipy not available. warp_mask gap-fill akan menggunakan PIL fallback."
+    )
+
+if not HAS_SCIPY_INTERP:
+    logger.debug(
+        "scipy.interpolate (RBFInterpolator) tidak tersedia. "
+        "TPS solver menggunakan implementasi numpy built-in — tidak ada perbedaan kualitas."
+    )
+
+
+# ─── Mockup registry ─────────────────────────────────────────────────────────
+
+MOCKUP_REGISTRY = {
+    "pria_lengan_panjang": {
+        "id": "pria_lengan_panjang",
+        "label": "Pria - Kemeja Lengan Panjang",
+        "has_back": True,
+        "front_file":       "Lengan_panjang_pria.png",
+        "front_mask_file":  "Lengan_panjang_pria-masked.png",
+        "back_file":        "Lengan_panjang_pria_belakang.png",
+        "back_mask_file":   "Lengan_panjang_pria_belakang-masked.png",
+    },
+    "pria_lengan_pendek": {
+        "id": "pria_lengan_pendek",
+        "label": "Pria - Kemeja Lengan Pendek",
+        "has_back": True,
+        "front_file":       "Lengan_pendek_pria.png",
+        "front_mask_file":  "Lengan_pendek_pria-masked.png",
+        "back_file":        "Lengan_pendek_pria_belakang.png",
+        "back_mask_file":   "Lengan_pendek_pria_belakang-masked.png",
+    },
+    "wanita_lengan_pendek": {
+        "id": "wanita_lengan_pendek",
+        "label": "Wanita - Lengan Pendek ",
+        "has_back": True,
+        "front_file":       "Lengan_pendek_wanita.png",
+        "front_mask_file":  "Lengan_pendek_wanita-masked.png",
+        "back_file":        "Lengan_pendek_wanita_belakang.png",
+        "back_mask_file":   "Lengan_pendek_wanita_belakang-masked.png",
+    },
+    "wanita_lengan_panjang": {
+        "id": "wanita_lengan_panjang",
+        "label": "Wanita - Lengan Panjang",
+        "has_back": True,
+        "front_file":       "Lengan_panjang_wanita.png",
+        "front_mask_file":  "Lengan_panjang_wanita-masked.png",
+        "back_file":        "Lengan_panjang_wanita_belakang.png",
+        "back_mask_file":   "Lengan_panjang_wanita_belakang-masked.png",
+    },
+}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MESH-BASED TEXTURE DEFORMATION PIPELINE
+#
+#  Pendekatan:
+#    • Grid-based mesh warping  (NxM subdivisi bounding box)
+#    • Per-cell affine transform (quad → 2 triangle → cv2.warpAffine)
+#    • Mask-based blending      (feathered alpha edge)
+#    • Shading preservation     (soft-light blend)
+#    • Tanpa 3D engine
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+# ─── Step 1: Extract Garment Region ──────────────────────────────────────────
+
+def _step1_extract_garment_region(
+    mockup_img: Image.Image,
+    mask_img: Image.Image,
+) -> dict:
+    """
+    Apply mask to isolate garment area.
+    Keep original shading layer separately for later blending.
+
+    Returns dict:
+      bbox      : (x_min, y_min, x_max, y_max) bounding box of garment
+      mask_arr  : uint8 ndarray (H, W) — binary mask 0/255
+      shading   : float32 ndarray (H, W) 0..1 — grayscale luminance of mockup
+    """
+    mask_arr = np.array(mask_img.convert("L"))
+
+    # --- bounding box of masked region ---
+    rows = np.any(mask_arr > 127, axis=1)
+    cols = np.any(mask_arr > 127, axis=0)
+
+    h, w = mask_arr.shape
+    if not rows.any() or not cols.any():
+        bbox = (0, 0, w - 1, h - 1)
+    else:
+        y_indices = np.where(rows)[0]
+        x_indices = np.where(cols)[0]
+        bbox = (int(x_indices[0]), int(y_indices[0]),
+                int(x_indices[-1]), int(y_indices[-1]))
+
+    # --- shading layer (grayscale luminance) ---
+    shading = np.array(mockup_img.convert("L")).astype(np.float32) / 255.0
+
+    return {"bbox": bbox, "mask_arr": mask_arr, "shading": shading}
+
+
+# ─── Step 0: Semantic Segmentation per Part ──────────────────────────────────
+# [FEAT-1] Segmentasi berbasis geometry — tidak butuh model ML.
+# Metode: bagi bbox garment menjadi zona geometris berdasarkan posisi relatif.
+# Fallback graceful jika coverage per-part terlalu kecil.
+
+def _segment_garment_parts(
+    mask_arr: np.ndarray,
+    bbox: tuple,
+) -> dict:
+    """
+    Parse binary mask garment menjadi per-part semantic masks.
+
+    Parts yang dihasilkan:
+      • torso        — badan utama baju
+      • sleeve_left  — lengan kiri (dari perspektif penonton)
+      • sleeve_right — lengan kanan (dari perspektif penonton)
+      • collar       — area kerah / leher
+
+    Segmentasi dilakukan secara geometris berdasarkan posisi relatif dalam bbox:
+      ┌──────────────────────────────┐
+      │        COLLAR (top 12%)      │
+      ├──────────────────────────────┤
+      │SL │                    │ SR  │
+      │EE │       TORSO        │ EE  │
+      │FT │                    │ VE  │
+      │(L)│                    │ (R) │
+      └──────────────────────────────┘
+      Sleeve zone: kiri/kanan 28% dari lebar bbox, di bawah collar zone.
+      Collar zone : top 12% bbox + lebar tengah 50%.
+      Torso       : sisa dari union mask setelah sleeve dan collar.
+
+    Coverage threshold: jika suatu part < 3% total mask → fallback ke entire mask
+    sehingga pipeline tetap berjalan pada mockup yang tidak punya semua part.
+
+    Returns dict:
+      {
+        "torso":        uint8 ndarray (H, W) 0/255,
+        "sleeve_left":  uint8 ndarray (H, W) 0/255,
+        "sleeve_right": uint8 ndarray (H, W) 0/255,
+        "collar":       uint8 ndarray (H, W) 0/255,
+        "full":         uint8 ndarray (H, W) 0/255,   # original mask
+      }
+    """
+    h, w = mask_arr.shape
+    x_min, y_min, x_max, y_max = bbox
+    bbox_w = max(1, x_max - x_min)
+    bbox_h = max(1, y_max - y_min)
+    total_px = max(1, int(np.count_nonzero(mask_arr > 127)))
+    min_coverage = int(total_px * 0.03)  # threshold 3%
+
+    # ── Zona geometris (dalam image-space coordinates) ────────────────────────
+    collar_h_frac   = 0.12   # top 12% bbox → collar
+    sleeve_w_frac   = 0.28   # kiri/kanan 28% bbox → sleeve
+    collar_w_frac   = 0.50   # lebar tengah collar (50% dari bbox_w, centered)
+
+    collar_y_bottom = y_min + int(bbox_h * collar_h_frac)
+    sleeve_x_right  = x_min + int(bbox_w * sleeve_w_frac)        # batas kanan sleeve kiri
+    sleeve_x_left   = x_max - int(bbox_w * sleeve_w_frac)        # batas kiri sleeve kanan
+    collar_x_start  = x_min + int(bbox_w * (0.5 - collar_w_frac / 2))
+    collar_x_end    = x_min + int(bbox_w * (0.5 + collar_w_frac / 2))
+
+    # ── Buat boolean zone masks ───────────────────────────────────────────────
+    ys = np.arange(h)[:, None]
+    xs = np.arange(w)[None, :]
+
+    zone_collar = (
+        (ys >= y_min) & (ys < collar_y_bottom) &
+        (xs >= collar_x_start) & (xs < collar_x_end)
+    )
+    zone_sleeve_left = (
+        (ys >= collar_y_bottom) & (ys <= y_max) &
+        (xs >= x_min) & (xs < sleeve_x_right)
+    )
+    zone_sleeve_right = (
+        (ys >= collar_y_bottom) & (ys <= y_max) &
+        (xs >= sleeve_x_left) & (xs <= x_max)
+    )
+
+    binary = mask_arr > 127
+
+    collar_mask       = (binary & zone_collar).astype(np.uint8) * 255
+    sleeve_left_mask  = (binary & zone_sleeve_left).astype(np.uint8) * 255
+    sleeve_right_mask = (binary & zone_sleeve_right).astype(np.uint8) * 255
+
+    # Torso = seluruh mask dikurangi collar dan sleeve
+    torso_zone = binary & ~zone_collar & ~zone_sleeve_left & ~zone_sleeve_right
+    torso_mask = torso_zone.astype(np.uint8) * 255
+
+    # ── Fallback per part ─────────────────────────────────────────────────────
+    full_mask = (binary).astype(np.uint8) * 255
+
+    def _with_fallback(part_mask: np.ndarray, name: str) -> np.ndarray:
+        if int(np.count_nonzero(part_mask)) >= min_coverage:
+            return part_mask
+        logger.debug(
+            f"[segment] {name} coverage < 3% ({np.count_nonzero(part_mask)}px) "
+            f"→ fallback ke full mask"
+        )
+        return full_mask
+
+    parts = {
+        "torso":        _with_fallback(torso_mask,       "torso"),
+        "sleeve_left":  _with_fallback(sleeve_left_mask, "sleeve_left"),
+        "sleeve_right": _with_fallback(sleeve_right_mask,"sleeve_right"),
+        "collar":       _with_fallback(collar_mask,      "collar"),
+        "full":         full_mask,
+    }
+
+    logger.debug(
+        f"[segment] torso={np.count_nonzero(parts['torso'])}px "
+        f"sl={np.count_nonzero(parts['sleeve_left'])}px "
+        f"sr={np.count_nonzero(parts['sleeve_right'])}px "
+        f"collar={np.count_nonzero(parts['collar'])}px"
+    )
+    return parts
+
+
+
+# [FIX BUG-2] Fungsi sekarang mengembalikan DUA array:
+#   src_vertices — grid image-space yang dipakai sebagai UV lookup ke tiled_arr
+#                  (tidak berubah, merepresentasikan "dari mana texture diambil")
+#   dst_vertices — salinan awal yang akan dideformasi di Step 3
+#                  (merepresentasikan "ke mana pixel ditulis di output")
+# Sebelumnya hanya satu array dikembalikan dan dipakai ambigiously sebagai keduanya,
+# sehingga koordinat sampling texture menjadi salah setelah deformasi diterapkan.
+
+def _step2_generate_mesh_grid(
+    bbox: tuple,
+    grid_cols: int = 20,
+    grid_rows: int = 30,
+) -> "tuple[np.ndarray, np.ndarray]":
+    """
+    Subdivide garment bounding box into NxM grid.
+
+    Returns:
+      src_vertices : float32 ndarray (grid_rows+1, grid_cols+1, 2)
+                     posisi awal dalam image-space — dipakai sebagai UV lookup
+                     ke tiled_arr (tidak diubah sepanjang pipeline).
+      dst_vertices : float32 ndarray (grid_rows+1, grid_cols+1, 2)
+                     salinan src_vertices — akan dideformasi oleh Step 3 untuk
+                     menentukan posisi output tiap vertex di canvas mockup.
+    """
+    x_min, y_min, x_max, y_max = bbox
+    xs = np.linspace(x_min, x_max, grid_cols + 1, dtype=np.float32)
+    ys = np.linspace(y_min, y_max, grid_rows + 1, dtype=np.float32)
+    xx, yy = np.meshgrid(xs, ys)
+    src_vertices = np.stack([xx, yy], axis=-1)
+    dst_vertices = src_vertices.copy()
+    return src_vertices, dst_vertices
+
+
+# ─── Step 3: Define Target Deformation Points ────────────────────────────────
+
+def _step3_define_deformation_points(
+    src_vertices: np.ndarray,
+    dst_vertices: np.ndarray,
+    mask_arr: np.ndarray,
+    shading: np.ndarray,
+    mockup_dir: Path,
+    mockup_id: str,
+    side: str,
+    grid_cols: int,
+    grid_rows: int,
+    curvature_strength: float = 1.0,
+    part_masks: "dict | None" = None,
+) -> np.ndarray:
+    """
+    Tentukan titik deformasi target untuk mesh.
+
+    Prioritas:
+      1. Load dari file JSON predefined (per mockup & side)
+      2. Kalau tidak ada → auto-generate dari kontur mask + gradient luminance
+
+    [FEAT-2 VER-14] Terima part_masks dan teruskan ke _auto_generate_deformation
+    agar tiap part mendapat parameter deformasi yang berbeda:
+      • sleeve → curvature kuat (efek tabung silindris)
+      • torso  → body bulge normal
+      • collar → warp minimal
+
+    [FIX BUG-2] Menerima dst_vertices (bukan src_vertices) sebagai basis deformasi,
+    sehingga src_vertices tetap bersih sebagai UV reference.
+
+    Returns:
+      dst_vertices_deformed : float32 ndarray (grid_rows+1, grid_cols+1, 2)
+    """
+    # --- try predefined control points ---
+    cp_offsets = _load_control_points_json(
+        mockup_dir, mockup_id, side, grid_cols, grid_rows
+    )
+    if cp_offsets is not None:
+        logger.info(f"Using predefined control points for {mockup_id}/{side}")
+        return dst_vertices + cp_offsets
+
+    # --- auto-generate from mask + shading gradients (with per-part support) ---
+    return _auto_generate_deformation(
+        dst_vertices, mask_arr, shading,
+        grid_cols, grid_rows, curvature_strength,
+        part_masks=part_masks,
+    )
+
+
+def _load_control_points_json(
+    mockup_dir: Path,
+    mockup_id: str,
+    side: str,
+    grid_cols: int,
+    grid_rows: int,
+) -> "np.ndarray | None":
+    """
+    Load predefined control-point offsets dari JSON.
+
+    Expected file : {mockup_dir}/{mockup_id}_{side}_control_points.json
+    Format:
+      {
+        "grid_cols": 20,
+        "grid_rows": 30,
+        "offsets": [[dx0, dy0], [dx1, dy1], ...]   // row-major, (rows+1)*(cols+1) entries
+      }
+
+    Returns offset ndarray shaped (grid_rows+1, grid_cols+1, 2) or None.
+    """
+    cp_file = mockup_dir / f"{mockup_id}_{side}_control_points.json"
+    if not cp_file.exists():
+        return None
+
+    try:
+        with open(cp_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        expected_cols = data.get("grid_cols", grid_cols)
+        expected_rows = data.get("grid_rows", grid_rows)
+        offsets = np.array(data["offsets"], dtype=np.float32)
+        offsets = offsets.reshape(expected_rows + 1, expected_cols + 1, 2)
+
+        # Resize offset grid jika dimensi tidak cocok
+        if expected_cols != grid_cols or expected_rows != grid_rows:
+            resized = np.zeros((grid_rows + 1, grid_cols + 1, 2), dtype=np.float32)
+            for ch in range(2):
+                chan = offsets[:, :, ch]
+                img = Image.fromarray(chan)
+                img_resized = img.resize(
+                    (grid_cols + 1, grid_rows + 1), Image.BILINEAR
+                )
+                resized[:, :, ch] = np.array(img_resized)
+            offsets = resized
+
+        logger.info(f"Loaded control points from {cp_file}")
+        return offsets
+
+    except Exception as e:
+        logger.warning(f"Failed to load control points {cp_file}: {e}")
+        return None
+
+
+def _auto_generate_deformation(
+    dst_vertices: np.ndarray,
+    mask_arr: np.ndarray,
+    shading: np.ndarray,
+    grid_cols: int,
+    grid_rows: int,
+    curvature_strength: float = 1.0,
+    part_masks: "dict | None" = None,
+) -> np.ndarray:
+    """
+    Auto-generate deformed vertices dari:
+      • mask boundary gradient  → vertices di dekat tepi ditarik sedikit ke dalam
+      • mockup luminance gradient → lipatan/crease displacement
+      • body curvature bias → horizontal bulge di tengah badan
+
+    [FEAT-2 VER-14] Terima part_masks untuk deformasi per-part:
+      • Sleeve   : curvature_strength × 1.6, edge_pull × 2.2 → efek tabung silindris
+      • Torso    : curvature_strength × 1.0, body bulge aktif (tidak berubah)
+      • Collar   : curvature_strength × 0.15 → hampir flat, warp minimal
+      Priority lookup: collar > sleeve_left/right > torso.
+
+    curvature_strength mengontrol intensitas keseluruhan (0 = nonaktif, 1 = normal).
+
+    [FIX BUG-2] Menerima dst_vertices sebagai input dan output, bukan src_vertices.
+    """
+    deformed = dst_vertices.copy()
+    h, w = mask_arr.shape
+
+    # --- Sobel helper (pure-numpy, tanpa cv2) ---
+    kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
+    ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
+
+    def _sobel(arr, kernel):
+        ah, aw = arr.shape
+        padded = np.pad(arr, 1, mode="edge")
+        out = np.zeros_like(arr)
+        for i in range(3):
+            for j in range(3):
+                out += kernel[i, j] * padded[i : i + ah, j : j + aw]
+        return out
+
+    # --- mask gradient (boundary curvature) ---
+    mask_blur = np.array(
+        Image.fromarray(mask_arr).filter(ImageFilter.GaussianBlur(radius=8))
+    ).astype(np.float32)
+    mask_gx = _sobel(mask_blur, kx)
+    mask_gy = _sobel(mask_blur, ky)
+    mask_mag = np.sqrt(mask_gx ** 2 + mask_gy ** 2) + 1e-6
+    mask_gx_n = mask_gx / mask_mag
+    mask_gy_n = mask_gy / mask_mag
+
+    # --- luminance gradient (fold / crease displacement) ---
+    shading_255 = shading * 255.0
+    lum_gx = _sobel(shading_255, kx)
+    lum_gy = _sobel(shading_255, ky)
+    lum_max = np.percentile(np.sqrt(lum_gx ** 2 + lum_gy ** 2), 99) + 1e-6
+    lum_gx_n = np.clip(lum_gx / lum_max, -1.0, 1.0)
+    lum_gy_n = np.clip(lum_gy / lum_max, -1.0, 1.0)
+
+    # --- body curvature reference ---
+    bbox_w = dst_vertices[-1, -1, 0] - dst_vertices[0, 0, 0]
+    bbox_h = dst_vertices[-1, -1, 1] - dst_vertices[0, 0, 1]
+    center_x = (dst_vertices[0, 0, 0] + dst_vertices[-1, -1, 0]) / 2.0
+    center_y = (dst_vertices[0, 0, 1] + dst_vertices[-1, -1, 1]) / 2.0
+
+    cs = float(curvature_strength)
+
+    # [FEAT-2] Pre-extract part arrays untuk lookup per-pixel
+    has_parts = part_masks is not None
+    if has_parts:
+        _collar_arr       = part_masks.get("collar")
+        _sleeve_left_arr  = part_masks.get("sleeve_left")
+        _sleeve_right_arr = part_masks.get("sleeve_right")
+    else:
+        _collar_arr = _sleeve_left_arr = _sleeve_right_arr = None
+
+    def _part_multipliers(xi: int, yi: int):
+        """Returns (curvature_scale, edge_scale) for pixel position."""
+        if not has_parts:
+            return 1.0, 1.0
+        if _collar_arr is not None and _collar_arr[yi, xi] > 127:
+            return 0.15, 0.10   # collar: hampir flat
+        if _sleeve_left_arr is not None and _sleeve_left_arr[yi, xi] > 127:
+            return 1.6, 2.2     # sleeve: silindris
+        if _sleeve_right_arr is not None and _sleeve_right_arr[yi, xi] > 127:
+            return 1.6, 2.2     # sleeve: silindris
+        return 1.0, 1.0         # torso: normal
+
+    for r in range(grid_rows + 1):
+        for c in range(grid_cols + 1):
+            x, y = dst_vertices[r, c]
+            xi = int(np.clip(x, 0, w - 1))
+            yi = int(np.clip(y, 0, h - 1))
+
+            # Skip vertices di luar mask
+            if mask_arr[yi, xi] < 64:
+                continue
+
+            # [FEAT-2] Per-part multipliers
+            curv_scale, edge_scale = _part_multipliers(xi, yi)
+            part_cs = cs * curv_scale
+
+            # 1) Mask boundary pull
+            edge_dx = mask_gx_n[yi, xi] * part_cs * 1.5 * edge_scale
+            edge_dy = mask_gy_n[yi, xi] * part_cs * 1.5 * edge_scale
+
+            # 2) Luminance fold displacement (lipatan kain)
+            fold_dx = lum_gx_n[yi, xi] * part_cs * 4.0
+            fold_dy = lum_gy_n[yi, xi] * part_cs * 4.0
+
+            # 3) Body curvature — horizontal bulge di tengah badan
+            rel_y = (y - center_y) / (bbox_h / 2.0 + 1e-6)
+            rel_x = (x - center_x) / (bbox_w / 2.0 + 1e-6)
+            body_factor = np.exp(-2.0 * rel_y ** 2) * part_cs
+            body_dx = rel_x * body_factor * 2.0
+            body_dy = 0.0
+
+            deformed[r, c, 0] += edge_dx + fold_dx + body_dx
+            deformed[r, c, 1] += edge_dy + fold_dy + body_dy
+
+    return deformed
+
+
+# ─── Step 4: Per-Cell Affine Transformation ───────────────────────────────────
+
+def _step4_mesh_warp_texture(
+    tiled_arr: np.ndarray,
+    src_vertices: np.ndarray,
+    dst_vertices: np.ndarray,
+    grid_cols: int,
+    grid_rows: int,
+    output_shape: tuple,
+) -> "tuple[np.ndarray, np.ndarray]":
+    """
+    Per-cell affine transformation:
+      • Setiap mesh quad di-split jadi 2 triangle
+      • Compute affine transform matrix per triangle
+      • Warp bagian texture yang sesuai
+      • Blend ke output canvas
+
+    Uses cv2.getAffineTransform + cv2.warpAffine jika tersedia,
+    fallback ke barycentric coordinate mapping via numpy.
+
+    [FIX BUG-1 & BUG-2]
+      src_vertices = UV coords di tiled_arr (tidak dideformasi)
+      dst_vertices = posisi output di canvas (dideformasi)
+    Affine matrix dihitung sebagai INVERSE: dst → src,
+    sesuai dengan cara kerja cv2.warpAffine (inverse mapping).
+
+    Returns:
+      (warped_texture, warp_mask)  — uint8 ndarrays
+    """
+    oh, ow = output_shape[:2]
+    output = np.zeros((oh, ow, 3), dtype=np.uint8)
+    warp_mask = np.zeros((oh, ow), dtype=np.uint8)
+
+    for r in range(grid_rows):
+        for c in range(grid_cols):
+            # Source quad — UV lookup positions in tiled_arr (unchanged)
+            s_tl = src_vertices[r, c]
+            s_tr = src_vertices[r, c + 1]
+            s_bl = src_vertices[r + 1, c]
+            s_br = src_vertices[r + 1, c + 1]
+
+            # Destination quad — deformed output positions on canvas
+            d_tl = dst_vertices[r, c]
+            d_tr = dst_vertices[r, c + 1]
+            d_bl = dst_vertices[r + 1, c]
+            d_br = dst_vertices[r + 1, c + 1]
+
+            # Triangle 1: TL → TR → BL
+            _warp_single_triangle(
+                tiled_arr,
+                np.float32([s_tl, s_tr, s_bl]),
+                np.float32([d_tl, d_tr, d_bl]),
+                output, warp_mask,
+            )
+            # Triangle 2: TR → BR → BL
+            _warp_single_triangle(
+                tiled_arr,
+                np.float32([s_tr, s_br, s_bl]),
+                np.float32([d_tr, d_br, d_bl]),
+                output, warp_mask,
+            )
+
+    return output, warp_mask
+
+
+def _warp_single_triangle(
+    src_img: np.ndarray,
+    src_tri: np.ndarray,
+    dst_tri: np.ndarray,
+    output: np.ndarray,
+    output_mask: np.ndarray,
+):
+    """Dispatch ke cv2 atau numpy fallback."""
+    if HAS_CV2:
+        _warp_triangle_cv2(src_img, src_tri, dst_tri, output, output_mask)
+    else:
+        _warp_triangle_numpy(src_img, src_tri, dst_tri, output, output_mask)
+
+
+def _warp_triangle_cv2(
+    src_img: np.ndarray,
+    src_tri: np.ndarray,
+    dst_tri: np.ndarray,
+    output: np.ndarray,
+    output_mask: np.ndarray,
+):
+    """
+    Affine warp satu triangle menggunakan OpenCV.
+
+    [FIX BUG-1] Matrix affine dihitung INVERSE: dst_local → src_local.
+    cv2.warpAffine melakukan inverse mapping secara internal — untuk setiap
+    pixel di output (dst), ia mencari pixel yang sesuai di src.
+    Matrix getAffineTransform(A, B) menghasilkan transform A→B.
+    Jadi untuk mendapatkan dst→src (inverse), kita harus memanggil
+    getAffineTransform(dst_local, src_local), bukan sebaliknya.
+
+    Sebelumnya (SALAH):
+        mat = cv2.getAffineTransform(src_local, dst_local)
+        warped = cv2.warpAffine(src_crop, mat, ...)
+        → matrix adalah forward (src→dst), tapi warpAffine menggunakannya
+          sebagai inverse, sehingga sampling terjadi di koordinat yang salah.
+
+    Sesudah (BENAR):
+        mat = cv2.getAffineTransform(dst_local, src_local)
+        warped = cv2.warpAffine(tiled_arr[region], mat, ...)
+        → matrix adalah inverse (dst→src), sampling benar.
+    """
+    oh, ow = output.shape[:2]
+    sh, sw = src_img.shape[:2]
+
+    # Bounding rect of destination triangle
+    dr = cv2.boundingRect(np.array([dst_tri], dtype=np.float32))
+    dx, dy, dw, dh = dr
+
+    # Clip to output bounds
+    dx2 = min(dx + dw, ow)
+    dy2 = min(dy + dh, oh)
+    dx = max(dx, 0)
+    dy = max(dy, 0)
+    dw = dx2 - dx
+    dh = dy2 - dy
+    if dw <= 1 or dh <= 1:
+        return
+
+    # Dst triangle → local bounding-rect coords
+    dst_local = dst_tri - np.float32([dx, dy])
+
+    # Bounding rect of source triangle (+ margin for interpolation)
+    sr = cv2.boundingRect(np.array([src_tri], dtype=np.float32))
+    sx, sy, s_w, s_h = sr
+    sx2 = min(sx + s_w + 2, sw)
+    sy2 = min(sy + s_h + 2, sh)
+    sx = max(sx - 1, 0)
+    sy = max(sy - 1, 0)
+    s_w = sx2 - sx
+    s_h = sy2 - sy
+    if s_w <= 1 or s_h <= 1:
+        return
+
+    # Src triangle → local bounding-rect coords
+    src_local = src_tri - np.float32([sx, sy])
+
+    # Crop source region dari tiled_arr
+    src_crop = src_img[sy : sy + s_h, sx : sx + s_w].copy()
+
+    # [FIX BUG-1] Affine matrix INVERSE: dst_local → src_local
+    # (bukan src_local → dst_local seperti sebelumnya)
+    try:
+        mat = cv2.getAffineTransform(dst_local, src_local)
+    except cv2.error:
+        return
+
+    # Warp: untuk tiap pixel di dst rect, sample dari src_crop menggunakan mat
+    warped = cv2.warpAffine(
+        src_crop, mat, (dw, dh),
+        flags=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_REFLECT_101,
+    )
+
+    # Triangle mask di destination bounding rect
+    tri_mask = np.zeros((dh, dw), dtype=np.uint8)
+    pts = np.array(dst_local, dtype=np.int32)
+    cv2.fillConvexPoly(tri_mask, pts, 255)
+
+    # Composite ke output
+    mask_bool = tri_mask > 0
+    roi = output[dy : dy + dh, dx : dx + dw]
+    warped_clipped = warped[: roi.shape[0], : roi.shape[1]]
+    mask_clipped = mask_bool[: roi.shape[0], : roi.shape[1]]
+    roi[mask_clipped] = warped_clipped[mask_clipped]
+
+    output_mask[dy : dy + dh, dx : dx + dw] = np.maximum(
+        output_mask[dy : dy + dh, dx : dx + dw], tri_mask[: roi.shape[0], : roi.shape[1]]
+    )
+
+
+def _warp_triangle_numpy(
+    src_img: np.ndarray,
+    src_tri: np.ndarray,
+    dst_tri: np.ndarray,
+    output: np.ndarray,
+    output_mask: np.ndarray,
+):
+    """
+    Fallback affine warp menggunakan barycentric coordinate mapping (pure numpy).
+    Lebih lambat dari cv2 namun tidak memerlukan dependency tambahan.
+
+    Implementasi ini sudah benar secara konseptual:
+      - iterasi pixel di dst triangle
+      - hitung barycentric coords di dst space
+      - map ke src coords via barycentric interpolation
+    Tidak ada perubahan di sini (numpy fallback tidak terpengaruh BUG-1).
+    """
+    oh, ow = output.shape[:2]
+    sh, sw = src_img.shape[:2]
+
+    # Bounding rect of dst triangle
+    x_min = max(0, int(np.floor(dst_tri[:, 0].min())))
+    y_min = max(0, int(np.floor(dst_tri[:, 1].min())))
+    x_max = min(ow - 1, int(np.ceil(dst_tri[:, 0].max())))
+    y_max = min(oh - 1, int(np.ceil(dst_tri[:, 1].max())))
+
+    if x_max <= x_min or y_max <= y_min:
+        return
+
+    # Pixel grid dalam bounding rect
+    ys, xs = np.mgrid[y_min : y_max + 1, x_min : x_max + 1].astype(np.float32)
+
+    # Barycentric coordinates di dst space
+    x0, y0 = dst_tri[0]
+    x1, y1 = dst_tri[1]
+    x2, y2 = dst_tri[2]
+
+    denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+    if abs(denom) < 1e-6:
+        return
+
+    w0 = ((y1 - y2) * (xs - x2) + (x2 - x1) * (ys - y2)) / denom
+    w1 = ((y2 - y0) * (xs - x2) + (x0 - x2) * (ys - y2)) / denom
+    w2 = 1.0 - w0 - w1
+
+    # Inside-triangle mask (semua bobot >= 0)
+    inside = (w0 >= -1e-4) & (w1 >= -1e-4) & (w2 >= -1e-4)
+    if not inside.any():
+        return
+
+    # Map ke source coordinates via barycentric interpolation
+    sx0, sy0 = src_tri[0]
+    sx1, sy1 = src_tri[1]
+    sx2, sy2 = src_tri[2]
+
+    src_x = w0 * sx0 + w1 * sx1 + w2 * sx2
+    src_y = w0 * sy0 + w1 * sy1 + w2 * sy2
+
+    # Bilinear sampling dari source
+    src_x = np.clip(src_x, 0, sw - 1.001)
+    src_y = np.clip(src_y, 0, sh - 1.001)
+
+    ix = np.floor(src_x).astype(np.int32)
+    iy = np.floor(src_y).astype(np.int32)
+    fx = (src_x - ix)[..., np.newaxis]
+    fy = (src_y - iy)[..., np.newaxis]
+
+    ix1 = np.minimum(ix + 1, sw - 1)
+    iy1 = np.minimum(iy + 1, sh - 1)
+
+    sampled = (
+        src_img[iy, ix].astype(np.float32) * (1 - fx) * (1 - fy)
+        + src_img[iy, ix1].astype(np.float32) * fx * (1 - fy)
+        + src_img[iy1, ix].astype(np.float32) * (1 - fx) * fy
+        + src_img[iy1, ix1].astype(np.float32) * fx * fy
+    ).clip(0, 255).astype(np.uint8)
+
+    # Write ke output
+    rows_in = ys[inside].astype(np.int32)
+    cols_in = xs[inside].astype(np.int32)
+    output[rows_in, cols_in] = sampled[inside]
+    output_mask[rows_in, cols_in] = 255
+
+
+# ─── Step 5: Texture Tiling ──────────────────────────────────────────────────
+
+def _step5_tile_texture(
+    fabric_img: Image.Image,
+    target_w: int,
+    target_h: int,
+    scale: float = 1.0,
+    offset_x: int = 0,
+    offset_y: int = 0,
+) -> np.ndarray:
+    """
+    Tile batik texture seamlessly ke ukuran target_w × target_h.
+    Jika texture lebih kecil dari garment → di-tile berulang.
+    Menjamin edge-wrapping consistency.
+
+    Returns:
+      tiled : uint8 ndarray (target_h, target_w, 3)
+    """
+    fw, fh = fabric_img.size
+    scaled_w = max(1, int(fw * scale))
+    scaled_h = max(1, int(fh * scale))
+    fabric_scaled = fabric_img.resize((scaled_w, scaled_h), Image.LANCZOS)
+
+    tiled = Image.new("RGB", (target_w, target_h))
+    for y in range(-(offset_y % scaled_h), target_h, scaled_h):
+        for x in range(-(offset_x % scaled_w), target_w, scaled_w):
+            tiled.paste(fabric_scaled, (x, y))
+
+    return np.array(tiled)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TPS ENGINE — Thin Plate Spline Warping  [VER-15 NEW]
+#
+#  Menggantikan Step 2→3→4 (mesh grid + affine per-triangle) dengan pipeline:
+#    T1. _tps_extract_control_points()  — kontur mask → sparse src/dst points
+#    T2. _tps_solve()                   — solve TPS kernel weight matrix W
+#    T3. _tps_build_dense_field()       — evaluate TPS → (map_x, map_y) per pixel
+#    T4. _tps_warp_texture()            — gabungkan parts, cv2.remap sekali
+#
+#  Keunggulan vs mesh affine:
+#    • C2-continuous — tidak ada seam antar cell
+#    • Deformasi mengikuti kontur organik baju, bukan grid rectangular
+#    • Single cv2.remap call vs ratusan warpAffine calls → lebih cepat
+#    • Per-part stiffness λ: collar rigid, sleeve fleksibel, torso normal
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def _tps_rbf(r2: np.ndarray) -> np.ndarray:
+    """
+    TPS radial basis function: U(r) = r² · log(r²)
+    r2 : squared distances (float64 ndarray)
+    Mengembalikan 0 di mana r2 == 0 (limit: r²log(r²) → 0 saat r→0).
+    """
+    with np.errstate(divide="ignore", invalid="ignore"):
+        val = np.where(r2 == 0.0, 0.0, r2 * np.log(r2 + 1e-12))
+    return val
+
+
+def _tps_solve(
+    src_pts: np.ndarray,
+    dst_pts: np.ndarray,
+    lmbda: float = 1.0,
+) -> "tuple[np.ndarray, np.ndarray] | None":
+    """
+    [FEAT-6] Solve TPS kernel weight matrix.
+
+    Formulasi klasik Bookstein 1989:
+      Sistem linear:  [K + λI  P ] [W]   [Y]
+                      [Pᵀ      0 ] [a] = [0]
+
+    di mana:
+      K_ij  = U(||p_i - p_j||²) — TPS RBF matrix (n×n)
+      P     = [1, x, y]          — polynomial term (n×3)
+      λ     = regularization (stiffness) — semakin besar semakin rigid
+      W     = TPS weights (n×2) — satu kolom per axis (x, y)
+      a     = affine coefficients (3×2)
+      Y     = dst_pts − src_pts  — target displacements
+
+    Returns:
+      (W, a) : tuple of float64 ndarrays, atau None jika solver gagal.
+      W shape : (n, 2)
+      a shape : (3, 2)
+    """
+    n = src_pts.shape[0]
+    if n < 4:
+        return None
+
+    # Build K matrix (TPS RBF pairwise)
+    dx = src_pts[:, 0:1] - src_pts[:, 0:1].T   # (n,n)
+    dy = src_pts[:, 1:2] - src_pts[:, 1:2].T
+    r2 = dx ** 2 + dy ** 2
+    K = _tps_rbf(r2).astype(np.float64)
+
+    # Build P matrix: [1, x, y]
+    P = np.hstack([np.ones((n, 1)), src_pts]).astype(np.float64)  # (n, 3)
+
+    # Build full system matrix L: (n+3) × (n+3)
+    L = np.zeros((n + 3, n + 3), dtype=np.float64)
+    L[:n, :n] = K + lmbda * np.eye(n)
+    L[:n, n:] = P
+    L[n:, :n] = P.T
+
+    # Right-hand side: displacements for x and y axes
+    # Y shape: (n+3, 2) — last 3 rows are zeros (polynomial constraints)
+    disp = (dst_pts - src_pts).astype(np.float64)
+    rhs = np.zeros((n + 3, 2), dtype=np.float64)
+    rhs[:n, :] = disp
+
+    try:
+        coeff = np.linalg.solve(L, rhs)   # (n+3, 2)
+    except np.linalg.LinAlgError:
+        logger.warning("[TPS] linalg.solve gagal (singular matrix) → fallback mesh")
+        return None
+
+    W = coeff[:n, :]    # (n, 2) — RBF weights
+    a = coeff[n:, :]    # (3, 2) — affine coefficients [bias, x, y]
+    return W, a
+
+
+def _tps_build_dense_field(
+    src_pts: np.ndarray,
+    W: np.ndarray,
+    a: np.ndarray,
+    shape: tuple,
+    chunk_rows: int = 64,
+) -> "tuple[np.ndarray, np.ndarray]":
+    """
+    [FEAT-7] Evaluasi TPS pada setiap pixel untuk menghasilkan displacement field.
+
+    Untuk setiap pixel (px, py) di canvas:
+      f(px,py) = a[0] + a[1]·px + a[2]·py + Σ_i W_i · U(||(px,py) − src_i||²)
+
+    Hasilnya adalah (dx, dy) displacement, bukan koordinat absolut.
+    map_x = px + dx,  map_y = py + dy
+
+    chunk_rows: proses per N baris untuk menghindari OOM (default 64 baris).
+    Pada gambar 1100px tinggi: 1100/64 ≈ 18 chunks, memory peak ~18MB per chunk.
+
+    Returns:
+      map_x : float32 ndarray (H, W) — source x coordinate untuk setiap dst pixel
+      map_y : float32 ndarray (H, W) — source y coordinate untuk setiap dst pixel
+    """
+    H, W_img = shape[:2]
+    map_x = np.zeros((H, W_img), dtype=np.float32)
+    map_y = np.zeros((H, W_img), dtype=np.float32)
+
+    # Pixel grid X coords (1, W) — broadcast dengan chunk rows
+    px_row = np.arange(W_img, dtype=np.float64)[np.newaxis, :]   # (1, W)
+
+    n = src_pts.shape[0]
+    src_x = src_pts[:, 0].astype(np.float64)  # (n,)
+    src_y = src_pts[:, 1].astype(np.float64)  # (n,)
+
+    for y_start in range(0, H, chunk_rows):
+        y_end = min(y_start + chunk_rows, H)
+        rows = y_end - y_start
+
+        # Pixel grid untuk chunk ini
+        py_chunk = np.arange(y_start, y_end, dtype=np.float64)[:, np.newaxis]   # (rows, 1)
+        px_chunk = np.broadcast_to(px_row, (rows, W_img))                        # (rows, W)
+
+        # Afine term: a[0] + a[1]*px + a[2]*py  — shape (rows, W, 2)
+        affine_dx = a[0, 0] + a[1, 0] * px_chunk + a[2, 0] * py_chunk   # (rows, W)
+        affine_dy = a[0, 1] + a[1, 1] * px_chunk + a[2, 1] * py_chunk
+
+        # RBF term: Σ_i W_i · U(r²_i)
+        # r²_i shape: (n, rows, W)
+        dx_c = px_chunk[np.newaxis, :, :] - src_x[:, np.newaxis, np.newaxis]
+        dy_c = py_chunk[np.newaxis, :, :] - src_y[:, np.newaxis, np.newaxis]
+        r2_c = dx_c ** 2 + dy_c ** 2                                      # (n, rows, W)
+        U_c  = _tps_rbf(r2_c)                                             # (n, rows, W)
+
+        # W[:, 0] = x-displacement weights, W[:, 1] = y-displacement weights
+        rbf_dx = np.einsum("i,irw->rw", W[:, 0], U_c)   # (rows, W)
+        rbf_dy = np.einsum("i,irw->rw", W[:, 1], U_c)
+
+        map_x[y_start:y_end, :] = (px_chunk + affine_dx + rbf_dx).astype(np.float32)
+        map_y[y_start:y_end, :] = (py_chunk + affine_dy + rbf_dy).astype(np.float32)
+
+    return map_x, map_y
+
+
+def _tps_extract_control_points(
+    part_mask: np.ndarray,
+    n_pts: int,
+    curvature_strength: float,
+    part_name: str,
+    bbox: tuple,
+) -> "tuple[np.ndarray, np.ndarray] | None":
+    """
+    [FEAT-5] Ekstrak kontur mask → sparse src/dst control points untuk TPS.
+
+    Langkah:
+      1. Temukan kontur luar mask via cv2.findContours atau marching-squares fallback
+      2. Sample N titik equidistant sepanjang kontur (avoid clustering)
+      3. Tambahkan anchor points di interior (center of mass + grid 3×3 di bbox)
+         agar TPS tidak "melayang" di area tanpa constraints
+      4. Hitung dst = src + per-part displacement:
+           • sleeve : sin-wave sepanjang kontur → efek silindris
+           • torso  : gaussian bulge ke tengah → efek body curvature
+           • collar : hampir nol → rigid
+
+    Returns (src_pts, dst_pts) float32 (n, 2), atau None jika kontur tidak ditemukan.
+    """
+    h_img, w_img = part_mask.shape
+    x_min, y_min, x_max, y_max = bbox
+    cx = (x_min + x_max) / 2.0
+    cy = (y_min + y_max) / 2.0
+    bw = max(1.0, x_max - x_min)
+    bh = max(1.0, y_max - y_min)
+
+    # ── 1. Temukan kontur ─────────────────────────────────────────────────────
+    contour_pts = None
+    if HAS_CV2:
+        binary = (part_mask > 127).astype(np.uint8)
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        if contours:
+            longest = max(contours, key=lambda c: len(c))
+            contour_pts = longest[:, 0, :].astype(np.float32)   # (L, 2) — [x, y]
+    else:
+        # Marching-squares fallback: ambil pixel boundary lewat gradient
+        binary = (part_mask > 127).astype(np.float32)
+        pad = np.pad(binary, 1, mode="constant")
+        gy = pad[2:, 1:-1] - pad[:-2, 1:-1]
+        gx = pad[1:-1, 2:] - pad[1:-1, :-2]
+        edge = (np.abs(gx) + np.abs(gy)) > 0.5
+        ys_e, xs_e = np.where(edge)
+        if len(xs_e) > 0:
+            contour_pts = np.column_stack([xs_e, ys_e]).astype(np.float32)
+
+    if contour_pts is None or len(contour_pts) < 8:
+        logger.debug(f"[TPS] {part_name}: kontur tidak cukup → skip")
+        return None
+
+    # ── 2. Sample equidistant sepanjang kontur ────────────────────────────────
+    L = len(contour_pts)
+    n_contour = min(n_pts, L)
+    indices = np.round(np.linspace(0, L - 1, n_contour)).astype(int)
+    sampled = contour_pts[indices]   # (n_contour, 2)
+
+    # ── 3. Interior anchor points (3×3 grid dalam bbox) ──────────────────────
+    gx_pts = np.linspace(x_min + bw * 0.15, x_max - bw * 0.15, 3)
+    gy_pts = np.linspace(y_min + bh * 0.15, y_max - bh * 0.15, 3)
+    grid_x, grid_y = np.meshgrid(gx_pts, gy_pts)
+    anchors = np.column_stack([grid_x.ravel(), grid_y.ravel()]).astype(np.float32)
+
+    # Filter anchors yang di dalam mask
+    ax_i = np.clip(anchors[:, 0].astype(int), 0, w_img - 1)
+    ay_i = np.clip(anchors[:, 1].astype(int), 0, h_img - 1)
+    inside = part_mask[ay_i, ax_i] > 127
+    anchors = anchors[inside]
+
+    src_pts = np.vstack([sampled, anchors]) if len(anchors) > 0 else sampled
+
+    # ── 4. Hitung dst per-part displacement ──────────────────────────────────
+    dst_pts = src_pts.copy()
+    cs = float(curvature_strength)
+
+    if part_name in ("sleeve_left", "sleeve_right"):
+        # Efek silindris: displacement mengikuti sin-wave sepanjang sumbu vertikal
+        # → pixel di atas dan bawah sleeve ditarik ke dalam, tengah ke luar
+        rel_y = (src_pts[:, 1] - cy) / (bh / 2.0 + 1e-6)   # -1..+1
+        rel_x = (src_pts[:, 0] - cx) / (bw / 2.0 + 1e-6)   # -1..+1
+        # Cylindrical: horizontal pull proportional to distance from center-x
+        bulge = np.cos(rel_y * np.pi * 0.8) * cs * bw * 0.04
+        dst_pts[:, 0] += rel_x * bulge
+        # Slight vertical compression at sleeve tip (tapering)
+        dst_pts[:, 1] += rel_y * cs * bh * 0.015
+
+    elif part_name == "torso":
+        # Body bulge: gaussian push outward (horizontal) tergantung jarak dari center
+        rel_y = (src_pts[:, 1] - cy) / (bh / 2.0 + 1e-6)
+        rel_x = (src_pts[:, 0] - cx) / (bw / 2.0 + 1e-6)
+        gauss = np.exp(-1.5 * rel_y ** 2)
+        dst_pts[:, 0] += rel_x * gauss * cs * bw * 0.025
+        # Slight vertical stretch (chest → waist tapering)
+        dst_pts[:, 1] += rel_y * cs * bh * 0.008
+
+    elif part_name == "collar":
+        # Hampir rigid: sangat kecil displacement
+        rel_y = (src_pts[:, 1] - y_min) / (bh * 0.12 + 1e-6)  # 0..1 dalam zona collar
+        dst_pts[:, 1] -= rel_y * cs * bh * 0.004   # slight upward pull di kerah
+
+    # anchor points TIDAK di-displace (mereka constraints interior rigid)
+    n_c = len(sampled)
+    dst_pts[n_c:] = src_pts[n_c:]
+
+    return src_pts.astype(np.float32), dst_pts.astype(np.float32)
+
+
+# Per-part TPS stiffness λ — semakin tinggi semakin rigid
+_TPS_STIFFNESS = {
+    "collar":       10.0,   # kerah: sangat rigid
+    "torso":         2.0,   # badan: normal
+    "sleeve_left":   0.5,   # lengan: fleksibel, efek silindris
+    "sleeve_right":  0.5,
+    "full":          2.0,
+}
+
+# Jumlah control points per part (lebih banyak = lebih akurat, lebih lambat)
+_TPS_N_PTS = {
+    "collar":       20,
+    "torso":        40,
+    "sleeve_left":  30,
+    "sleeve_right": 30,
+    "full":         40,
+}
+
+
+def _tps_warp_texture(
+    tiled_arr: np.ndarray,
+    mask_arr: np.ndarray,
+    part_masks: dict,
+    bbox: tuple,
+    curvature_strength: float = 1.0,
+    output_shape: tuple = None,
+) -> "tuple[np.ndarray, np.ndarray]":
+    """
+    [FEAT-8] Pipeline TPS lengkap: dari part_masks → (warped_texture, warp_mask).
+
+    Untuk setiap part (collar, sleeve_left, sleeve_right, torso):
+      1. Extract control points (T1)
+      2. Solve TPS (T2)
+      3. Build dense displacement field (T3)
+      4. Blend displacement field ke composite map via part mask weighting
+
+    Setelah semua parts diproses → cv2.remap sekali (T4).
+
+    Fallback:
+      • Jika TPS solver gagal untuk suatu part → gunakan identity warp untuk part itu
+      • Jika SEMUA parts gagal → raise ValueError (caller akan fallback ke mesh)
+
+    Returns:
+      (warped_texture, warp_mask) — uint8 ndarrays, interface identik dengan
+      _step4_mesh_warp_texture agar drop-in compatible.
+    """
+    if output_shape is None:
+        output_shape = tiled_arr.shape
+    H, W_img = output_shape[:2]
+
+    # Composite displacement field — weighted blend dari semua parts
+    comp_dx = np.zeros((H, W_img), dtype=np.float64)
+    comp_dy = np.zeros((H, W_img), dtype=np.float64)
+    comp_w  = np.zeros((H, W_img), dtype=np.float64)   # total weight per pixel
+
+    # Parts diproses dari yang paling spesifik ke general
+    # Urutan ini menentukan priority jika overlap
+    part_order = ["collar", "sleeve_left", "sleeve_right", "torso"]
+    any_success = False
+
+    for part_name in part_order:
+        pmask = part_masks.get(part_name)
+        if pmask is None:
+            continue
+        if np.count_nonzero(pmask) < 100:
+            continue
+
+        lmbda = _TPS_STIFFNESS.get(part_name, 2.0)
+        n_pts = _TPS_N_PTS.get(part_name, 30)
+
+        result = _tps_extract_control_points(
+            pmask, n_pts, curvature_strength, part_name, bbox
+        )
+        if result is None:
+            continue
+
+        src_pts, dst_pts = result
+
+        solved = _tps_solve(src_pts, dst_pts, lmbda=lmbda)
+        if solved is None:
+            logger.warning(f"[TPS] {part_name}: solver gagal → identity warp untuk part ini")
+            continue
+
+        W_mat, a_mat = solved
+        map_x_part, map_y_part = _tps_build_dense_field(src_pts, W_mat, a_mat, (H, W_img))
+
+        # Displacement field untuk part ini
+        dx_part = map_x_part - np.arange(W_img, dtype=np.float32)[np.newaxis, :]
+        dy_part = map_y_part - np.arange(H, dtype=np.float32)[:, np.newaxis]
+
+        # Weight = soft mask (blur edge sedikit untuk blending halus antar parts)
+        weight = (pmask.astype(np.float64) / 255.0)
+        if HAS_CV2:
+            weight = cv2.GaussianBlur(weight.astype(np.float32), (15, 15), 5).astype(np.float64)
+        else:
+            weight = np.array(
+                Image.fromarray((weight * 255).astype(np.uint8)).filter(
+                    ImageFilter.GaussianBlur(radius=7)
+                )
+            ).astype(np.float64) / 255.0
+
+        comp_dx += dx_part * weight
+        comp_dy += dy_part * weight
+        comp_w  += weight
+        any_success = True
+
+        logger.debug(
+            f"[TPS] {part_name}: n_pts={len(src_pts)}, λ={lmbda}, "
+            f"max_disp=({np.abs(dx_part).max():.1f}, {np.abs(dy_part).max():.1f})"
+        )
+
+    if not any_success:
+        raise ValueError("[TPS] Semua parts gagal — fallback ke mesh")
+
+    # Normalize composite displacement
+    safe_w = np.where(comp_w > 1e-6, comp_w, 1.0)
+    norm_dx = comp_dx / safe_w
+    norm_dy = comp_dy / safe_w
+
+    # Build final remap maps
+    base_x = np.arange(W_img, dtype=np.float32)[np.newaxis, :]
+    base_y = np.arange(H,     dtype=np.float32)[:, np.newaxis]
+
+    map_x_final = (base_x + norm_dx).astype(np.float32)
+    map_y_final = (base_y + norm_dy).astype(np.float32)
+
+    # Clip ke batas canvas
+    np.clip(map_x_final, 0, W_img - 1, out=map_x_final)
+    np.clip(map_y_final, 0, H   - 1, out=map_y_final)
+
+    # ── cv2.remap (T4) — single-pass warp ────────────────────────────────────
+    if HAS_CV2:
+        warped = cv2.remap(
+            tiled_arr,
+            map_x_final,
+            map_y_final,
+            interpolation=cv2.INTER_LANCZOS4,
+            borderMode=cv2.BORDER_REFLECT_101,
+        )
+    else:
+        # Pure numpy bilinear fallback
+        warped = _numpy_remap(tiled_arr, map_x_final, map_y_final)
+
+    # Warp mask = area garment yang ter-cover
+    garment_binary = (mask_arr > 127).astype(np.uint8) * 255
+    if output_shape[:2] != mask_arr.shape:
+        garment_binary = np.array(
+            Image.fromarray(garment_binary).resize(
+                (W_img, H), Image.NEAREST
+            )
+        )
+    warp_mask = garment_binary
+
+    return warped.astype(np.uint8), warp_mask
+
+
+def _numpy_remap(
+    src: np.ndarray,
+    map_x: np.ndarray,
+    map_y: np.ndarray,
+) -> np.ndarray:
+    """
+    Pure numpy bilinear remap — fallback jika cv2 tidak tersedia.
+    src   : (H, W, 3) uint8
+    map_x : (H, W) float32 — source x per dst pixel
+    map_y : (H, W) float32 — source y per dst pixel
+    """
+    H_s, W_s = src.shape[:2]
+    H_d, W_d = map_x.shape
+
+    x = np.clip(map_x, 0, W_s - 1.001)
+    y = np.clip(map_y, 0, H_s - 1.001)
+
+    ix = np.floor(x).astype(np.int32)
+    iy = np.floor(y).astype(np.int32)
+    fx = (x - ix)[..., np.newaxis]
+    fy = (y - iy)[..., np.newaxis]
+
+    ix1 = np.minimum(ix + 1, W_s - 1)
+    iy1 = np.minimum(iy + 1, H_s - 1)
+
+    out = (
+        src[iy,  ix ].astype(np.float32) * (1 - fx) * (1 - fy)
+        + src[iy,  ix1].astype(np.float32) *      fx  * (1 - fy)
+        + src[iy1, ix ].astype(np.float32) * (1 - fx) *      fy
+        + src[iy1, ix1].astype(np.float32) *      fx  *      fy
+    )
+    return out.clip(0, 255).astype(np.uint8)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  MASS-SPRING PHYSICS ENGINE  [VER-16 NEW]
+#
+#  Simulasi kain sebagai grid partikel yang dihubungkan spring.
+#  Posisi equilibrium partikel setelah simulasi digunakan sebagai control
+#  points untuk TPS warp — menggabungkan realisme fisika dengan kehalusan TPS.
+#
+#  Pipeline:
+#    P1. MassSpringMesh.build()     — inisialisasi partikel + spring topology
+#    P2. _mss_apply_forces()        — gravitasi + body forces + crease dari shading
+#    P3. MassSpringMesh.step()      — Verlet integration 1 timestep
+#    P4. loop P2–P3 × physics_steps — simulasi sampai equilibrium
+#    P5. _mss_to_tps_points()       — partikel displaced → TPS control points
+#    TPS. _tps_warp_texture()       — smooth interpolasi dari control points
+#
+#  Per-part spring stiffness (kain realistis):
+#    torso  : k_struct=0.90, k_shear=0.40, k_bend=0.20  — medium stiff
+#    sleeve : k_struct=0.60, k_shear=0.20, k_bend=0.08  — fleksibel (tabung)
+#    collar : k_struct=1.80, k_shear=0.90, k_bend=0.50  — rigid (kerah kaku)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Per-part spring parameters
+_MSS_SPRING_PARAMS = {
+    "torso":        {"k_struct": 0.90, "k_shear": 0.40, "k_bend": 0.20, "mass": 1.0},
+    "sleeve_left":  {"k_struct": 0.60, "k_shear": 0.20, "k_bend": 0.08, "mass": 0.8},
+    "sleeve_right": {"k_struct": 0.60, "k_shear": 0.20, "k_bend": 0.08, "mass": 0.8},
+    "collar":       {"k_struct": 1.80, "k_shear": 0.90, "k_bend": 0.50, "mass": 2.0},
+    "full":         {"k_struct": 0.90, "k_shear": 0.40, "k_bend": 0.20, "mass": 1.0},
+}
+
+
+class MassSpringMesh:
+    """
+    [FEAT-10] Grid partikel 2D dengan spring topology tiga tier.
+
+    Partikel disusun pada grid (rows+1) × (cols+1) yang overlap dengan bbox
+    garment. Hanya partikel yang jatuh di dalam mask garment yang aktif
+    (is_fixed=False untuk partikel tepi garment bagian atas sebagai anchor).
+
+    Spring types:
+      structural : i↔i+1 (horisontal) dan i↔i+cols+1 (vertikal)
+                   Rest length = jarak awal. Kekakuan k_struct.
+      shear      : diagonal (i,j)↔(i+1,j+1) dan (i,j+1)↔(i+1,j)
+                   k_shear. Mencegah shear deformasi.
+      bend       : i↔i+2 horisontal dan i↔i+2(cols+1) vertikal
+                   k_bend. Resistance terhadap lipatan tajam.
+
+    Attributes:
+      pos      : float32 (N, 2) — posisi saat ini [x, y]
+      pos_prev : float32 (N, 2) — posisi timestep sebelumnya (untuk Verlet)
+      vel      : float32 (N, 2) — kecepatan partikel
+      mass     : float32 (N,)   — massa per partikel
+      fixed    : bool   (N,)    — True = partikel dikunci (tidak bergerak)
+      springs  : list of (i, j, rest_len, k) — spring edges
+      active   : bool   (N,)    — True = partikel di dalam mask
+      rows, cols, N : grid dimensions
+    """
+
+    def __init__(
+        self,
+        bbox: tuple,
+        mask_arr: np.ndarray,
+        part_masks: dict,
+        grid_cols: int = 18,
+        grid_rows: int = 24,
+    ):
+        self.rows = grid_rows
+        self.cols = grid_cols
+        self.N = (grid_rows + 1) * (grid_cols + 1)
+        x_min, y_min, x_max, y_max = bbox
+        self.bbox = bbox
+
+        # ── Buat posisi awal partikel (grid regular) ──────────────────────────
+        xs = np.linspace(x_min, x_max, grid_cols + 1, dtype=np.float32)
+        ys = np.linspace(y_min, y_max, grid_rows + 1, dtype=np.float32)
+        gx, gy = np.meshgrid(xs, ys)
+        self.pos      = np.column_stack([gx.ravel(), gy.ravel()])   # (N, 2)
+        self.pos_prev = self.pos.copy()
+        self.vel      = np.zeros((self.N, 2), dtype=np.float32)
+
+        # ── Tentukan partikel aktif (di dalam mask) ────────────────────────────
+        h_m, w_m = mask_arr.shape
+        px = np.clip(self.pos[:, 0].astype(int), 0, w_m - 1)
+        py = np.clip(self.pos[:, 1].astype(int), 0, h_m - 1)
+        self.active = mask_arr[py, px] > 64   # (N,) bool
+
+        # ── Tentukan massa per partikel dari part_masks ────────────────────────
+        self.mass = np.ones(self.N, dtype=np.float32)
+        self._assign_part_mass(part_masks, mask_arr)
+
+        # ── Fixed constraints: baris paling atas garment = anchor ─────────────
+        # Partikel di baris 0 (paling atas) dan aktif dikunci
+        top_row_idx = np.arange(grid_cols + 1)
+        top_active  = self.active[top_row_idx]
+        self.fixed  = np.zeros(self.N, dtype=bool)
+        self.fixed[top_row_idx[top_active]] = True
+
+        # ── Build springs ──────────────────────────────────────────────────────
+        self.springs = []   # list of (i, j, rest_len, k)
+        self._build_springs(part_masks, mask_arr)
+
+    def _assign_part_mass(self, part_masks: dict, mask_arr: np.ndarray):
+        """Assign massa berbeda ke partikel berdasarkan part zone mereka."""
+        h_m, w_m = mask_arr.shape
+        px = np.clip(self.pos[:, 0].astype(int), 0, w_m - 1)
+        py = np.clip(self.pos[:, 1].astype(int), 0, h_m - 1)
+
+        part_order = ["collar", "sleeve_left", "sleeve_right", "torso"]
+        for part_name in part_order:
+            pm = part_masks.get(part_name)
+            if pm is None:
+                continue
+            ph, pw = pm.shape
+            ppx = np.clip(px, 0, pw - 1)
+            ppy = np.clip(py, 0, ph - 1)
+            in_part = pm[ppy, ppx] > 127
+            params = _MSS_SPRING_PARAMS.get(part_name, _MSS_SPRING_PARAMS["full"])
+            self.mass[in_part] = params["mass"]
+
+    def _get_spring_k(self, i: int, j: int, spring_type: str,
+                      part_masks: dict, mask_arr: np.ndarray) -> float:
+        """
+        Tentukan konstanta spring k berdasarkan part zone dari kedua partikel.
+        Ambil average k dari kedua ujung spring, dengan priority: collar > sleeve > torso.
+        """
+        h_m, w_m = mask_arr.shape
+
+        def _get_part(idx):
+            px = int(np.clip(self.pos[idx, 0], 0, w_m - 1))
+            py = int(np.clip(self.pos[idx, 1], 0, h_m - 1))
+            for pname in ("collar", "sleeve_left", "sleeve_right", "torso"):
+                pm = part_masks.get(pname)
+                if pm is not None:
+                    ph, pw = pm.shape
+                    ppx = min(px, pw - 1)
+                    ppy = min(py, ph - 1)
+                    if pm[ppy, ppx] > 127:
+                        return pname
+            return "full"
+
+        part_i = _get_part(i)
+        part_j = _get_part(j)
+
+        # Priority: collar menang jika salah satu adalah collar
+        if "collar" in (part_i, part_j):
+            chosen = "collar"
+        elif part_i.startswith("sleeve") or part_j.startswith("sleeve"):
+            chosen = "sleeve_left"
+        else:
+            chosen = part_i
+
+        params = _MSS_SPRING_PARAMS.get(chosen, _MSS_SPRING_PARAMS["full"])
+        return params[spring_type]
+
+    def _build_springs(self, part_masks: dict, mask_arr: np.ndarray):
+        """Build structural, shear, dan bend springs untuk seluruh grid."""
+        rows, cols = self.rows, self.cols
+
+        def idx(r, c):
+            return r * (cols + 1) + c
+
+        def rest(i, j):
+            return float(np.linalg.norm(self.pos[i] - self.pos[j]))
+
+        for r in range(rows + 1):
+            for c in range(cols + 1):
+                p = idx(r, c)
+                if not self.active[p]:
+                    continue
+
+                # Structural horizontal
+                if c + 1 <= cols:
+                    q = idx(r, c + 1)
+                    if self.active[q]:
+                        k = self._get_spring_k(p, q, "k_struct", part_masks, mask_arr)
+                        self.springs.append((p, q, rest(p, q), k))
+
+                # Structural vertical
+                if r + 1 <= rows:
+                    q = idx(r + 1, c)
+                    if self.active[q]:
+                        k = self._get_spring_k(p, q, "k_struct", part_masks, mask_arr)
+                        self.springs.append((p, q, rest(p, q), k))
+
+                # Shear diagonal ↘
+                if r + 1 <= rows and c + 1 <= cols:
+                    q = idx(r + 1, c + 1)
+                    if self.active[q]:
+                        k = self._get_spring_k(p, q, "k_shear", part_masks, mask_arr)
+                        self.springs.append((p, q, rest(p, q), k))
+
+                # Shear diagonal ↙
+                if r + 1 <= rows and c - 1 >= 0:
+                    q = idx(r + 1, c - 1)
+                    if self.active[q]:
+                        k = self._get_spring_k(p, q, "k_shear", part_masks, mask_arr)
+                        self.springs.append((p, q, rest(p, q), k))
+
+                # Bend horizontal (jangkauan 2)
+                if c + 2 <= cols:
+                    q = idx(r, c + 2)
+                    if self.active[q]:
+                        k = self._get_spring_k(p, q, "k_bend", part_masks, mask_arr)
+                        self.springs.append((p, q, rest(p, q), k))
+
+                # Bend vertical (jangkauan 2)
+                if r + 2 <= rows:
+                    q = idx(r + 2, c)
+                    if self.active[q]:
+                        k = self._get_spring_k(p, q, "k_bend", part_masks, mask_arr)
+                        self.springs.append((p, q, rest(p, q), k))
+
+        logger.debug(f"[MSS] Built {len(self.springs)} springs, "
+                     f"{self.active.sum()} active particles / {self.N} total")
+
+    def step(
+        self,
+        forces: np.ndarray,
+        dt: float = 0.016,
+        damping: float = 0.92,
+    ):
+        """
+        [FEAT-12] Satu langkah Verlet integration.
+
+        x(t+dt) = 2·x(t) - x(t-dt) + a·dt²
+        dengan damping:
+          vel = (pos - pos_prev) / dt * damping
+          pos_prev = pos
+          pos = pos + vel·dt + accel·dt²
+
+        Spring forces dihitung vektorisasi dari self.springs list.
+        Constraint: partikel fixed tidak bergerak; partikel inactive tetap diam.
+        """
+        # ── Hitung spring forces vektorisasi ──────────────────────────────────
+        if len(self.springs) > 0:
+            sp = np.array(self.springs, dtype=np.float32)   # (S, 4)
+            i_idx = sp[:, 0].astype(np.int32)
+            j_idx = sp[:, 1].astype(np.int32)
+            rest_lens = sp[:, 2]
+            ks = sp[:, 3]
+
+            # Vektor dari j ke i
+            diff = self.pos[i_idx] - self.pos[j_idx]        # (S, 2)
+            dists = np.linalg.norm(diff, axis=1) + 1e-8      # (S,)
+            # Magnitude force Hooke: F = k * (dist - rest)
+            stretch = dists - rest_lens                      # (S,) signed
+            f_mag = ks * stretch                             # (S,)
+            # Unit vektor dari i ke j (arah spring)
+            unit = diff / dists[:, np.newaxis]               # (S, 2)
+            # Force pada partikel i: -f_mag * unit (ke arah j jika stretched)
+            f_on_i = -f_mag[:, np.newaxis] * unit            # (S, 2)
+            f_on_j =  f_mag[:, np.newaxis] * unit            # reaction
+
+            spring_forces = np.zeros_like(self.pos)
+            np.add.at(spring_forces, i_idx, f_on_i)
+            np.add.at(spring_forces, j_idx, f_on_j)
+        else:
+            spring_forces = np.zeros_like(self.pos)
+
+        # ── Total acceleration ─────────────────────────────────────────────────
+        total_f = spring_forces + forces               # (N, 2)
+        mass_safe = np.maximum(self.mass[:, np.newaxis], 1e-4)
+        accel = total_f / mass_safe
+
+        # ── Verlet dengan velocity damping ────────────────────────────────────
+        vel = (self.pos - self.pos_prev) / (dt + 1e-8)
+        vel *= damping
+        pos_new = self.pos + vel * dt + accel * (dt * dt)
+
+        # ── Apply constraints ──────────────────────────────────────────────────
+        # Fixed particles: tidak bergerak
+        pos_new[self.fixed] = self.pos[self.fixed]
+        # Inactive particles: tidak bergerak
+        pos_new[~self.active] = self.pos[~self.active]
+
+        self.pos_prev = self.pos.copy()
+        self.pos = pos_new.astype(np.float32)
+
+
+def _mss_apply_forces(
+    mesh: MassSpringMesh,
+    shading: np.ndarray,
+    part_masks: dict,
+    bbox: tuple,
+    gravity_strength: float = 0.3,
+    curvature_strength: float = 1.0,
+) -> np.ndarray:
+    """
+    [FEAT-11] Hitung external forces untuk satu timestep.
+
+    Forces yang diaplikasikan:
+      1. Gravity       : F = (0, g·mass) — menarik semua partikel aktif ke bawah
+      2. Body bulge    : partikel torso → Gaussian push ke arah luar secara horizontal
+      3. Sleeve pull   : partikel sleeve → tarik ke arah silindris
+      4. Shading crease: Sobel gradient luminance → gaya ke arah lipatan kain
+      5. Collar tension: partikel collar → tarik ke atas (counter gravity)
+      6. Boundary damp : partikel dekat tepi mask → damping untuk stabilitas
+
+    Returns:
+      forces : float32 (N, 2) — net external force per partikel
+    """
+    N = mesh.N
+    forces = np.zeros((N, 2), dtype=np.float32)
+
+    x_min, y_min, x_max, y_max = bbox
+    bw = max(1.0, x_max - x_min)
+    bh = max(1.0, y_max - y_min)
+    cx = (x_min + x_max) / 2.0
+    cy = (y_min + y_max) / 2.0
+
+    px = mesh.pos[:, 0]
+    py = mesh.pos[:, 1]
+    active = mesh.active
+
+    # ── 1. Gravity ────────────────────────────────────────────────────────────
+    g = float(gravity_strength) * bh * 0.004
+    forces[active, 1] += g * mesh.mass[active]
+
+    # ── 2. Body bulge (torso) ─────────────────────────────────────────────────
+    torso_mask = part_masks.get("torso")
+    if torso_mask is not None:
+        h_m, w_m = torso_mask.shape
+        ppx = np.clip(px.astype(int), 0, w_m - 1)
+        ppy = np.clip(py.astype(int), 0, h_m - 1)
+        in_torso = active & (torso_mask[ppy, ppx] > 127)
+
+        rel_y = (py - cy) / (bh / 2.0 + 1e-6)
+        rel_x = (px - cx) / (bw / 2.0 + 1e-6)
+        gauss = np.exp(-1.5 * rel_y ** 2) * curvature_strength
+        body_fx = rel_x * gauss * bw * 0.008
+        forces[in_torso, 0] += body_fx[in_torso].astype(np.float32)
+
+    # ── 3. Sleeve cylinder pull ───────────────────────────────────────────────
+    for sleeve_name in ("sleeve_left", "sleeve_right"):
+        sleeve_mask = part_masks.get(sleeve_name)
+        if sleeve_mask is None:
+            continue
+        h_m, w_m = sleeve_mask.shape
+        ppx = np.clip(px.astype(int), 0, w_m - 1)
+        ppy = np.clip(py.astype(int), 0, h_m - 1)
+        in_sleeve = active & (sleeve_mask[ppy, ppx] > 127)
+
+        rel_y = (py - cy) / (bh / 2.0 + 1e-6)
+        rel_x = (px - cx) / (bw / 2.0 + 1e-6)
+        cyl = np.cos(np.clip(rel_y * np.pi * 0.8, -np.pi, np.pi)) * curvature_strength
+        sleeve_fx = rel_x * cyl * bw * 0.012
+        forces[in_sleeve, 0] += sleeve_fx[in_sleeve].astype(np.float32)
+
+    # ── 4. Shading crease force (luminance gradient → lipatan kain) ───────────
+    # Sobel pada shading → gaya mendorong partikel ke arah lipatan
+    sh_h, sh_w = shading.shape
+    kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype=np.float32)
+    ky = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype=np.float32)
+
+    def _sobel(arr, kernel):
+        ah, aw = arr.shape
+        padded = np.pad(arr, 1, mode="edge")
+        out = np.zeros_like(arr)
+        for ii in range(3):
+            for jj in range(3):
+                out += kernel[ii, jj] * padded[ii:ii + ah, jj:jj + aw]
+        return out
+
+    shading_255 = (shading * 255.0).astype(np.float32)
+    gx_sh = _sobel(shading_255, kx)
+    gy_sh = _sobel(shading_255, ky)
+    gmax = np.percentile(np.sqrt(gx_sh ** 2 + gy_sh ** 2), 99) + 1e-6
+    gx_sh /= gmax
+    gy_sh /= gmax
+
+    if active.any():
+        s_px = np.clip(px[active].astype(int), 0, sh_w - 1)
+        s_py = np.clip(py[active].astype(int), 0, sh_h - 1)
+        crease_scale = curvature_strength * 0.8
+        forces[active, 0] += (gx_sh[s_py, s_px] * crease_scale).astype(np.float32)
+        forces[active, 1] += (gy_sh[s_py, s_px] * crease_scale).astype(np.float32)
+
+    # ── 5. Collar tension (anti-gravity untuk kerah) ──────────────────────────
+    collar_mask = part_masks.get("collar")
+    if collar_mask is not None:
+        h_m, w_m = collar_mask.shape
+        ppx = np.clip(px.astype(int), 0, w_m - 1)
+        ppy = np.clip(py.astype(int), 0, h_m - 1)
+        in_collar = active & (collar_mask[ppy, ppx] > 127)
+        # Kerah tarik ke atas (negatif y) untuk counter gravity
+        forces[in_collar, 1] -= (g * mesh.mass[in_collar] * 1.5).astype(np.float32)
+
+    return forces
+
+
+def _mss_to_tps_points(
+    mesh: MassSpringMesh,
+    min_displacement: float = 0.5,
+    max_pts: int = 120,
+) -> "tuple[np.ndarray, np.ndarray]":
+    """
+    [FEAT-13] Konversi posisi equilibrium partikel → (src_pts, dst_pts).
+
+    Logika:
+      src_pts = posisi awal partikel (sebelum simulasi) = grid regular
+      dst_pts = posisi akhir partikel (setelah simulasi)
+
+    Filter:
+      • Hanya partikel aktif
+      • Hanya partikel dengan displacement ≥ min_displacement (0.5px default)
+        → menghilangkan noise dari partikel yang hampir tidak bergerak
+      • Maksimum max_pts titik — ambil yang displacement terbesar
+
+    Fallback:
+      Jika tidak ada partikel yang memenuhi threshold, turunkan threshold ×0.1.
+    """
+    # Hitung initial positions: pos sebelum simulasi = posisi grid awal
+    # Kita simpan posisi awal di __init__ sebagai pos_initial
+    pos_initial = mesh._pos_initial   # (N, 2)
+    pos_final   = mesh.pos            # (N, 2)
+
+    active_idx = np.where(mesh.active)[0]
+    disp = np.linalg.norm(pos_final[active_idx] - pos_initial[active_idx], axis=1)
+
+    # Filter berdasarkan displacement minimum
+    significant = disp >= min_displacement
+    if not significant.any():
+        # Turunkan threshold
+        significant = disp >= (min_displacement * 0.1)
+    if not significant.any():
+        # Ambil semua active particles
+        significant = np.ones(len(active_idx), dtype=bool)
+
+    sel_idx = active_idx[significant]
+    sel_disp = disp[significant]
+
+    # Limit ke max_pts — prioritaskan displacement terbesar
+    if len(sel_idx) > max_pts:
+        top_k = np.argsort(sel_disp)[-max_pts:]
+        sel_idx = sel_idx[top_k]
+
+    src_pts = pos_initial[sel_idx].astype(np.float32)
+    dst_pts = pos_final[sel_idx].astype(np.float32)
+
+    logger.debug(
+        f"[MSS→TPS] {len(sel_idx)} control points "
+        f"(disp range: {sel_disp.min():.1f}–{sel_disp.max():.1f}px)"
+        if len(sel_disp) > 0 else "[MSS→TPS] 0 control points"
+    )
+    return src_pts, dst_pts
+
+
+def _physics_warp_texture(
+    tiled_arr: np.ndarray,
+    mask_arr: np.ndarray,
+    shading: np.ndarray,
+    part_masks: dict,
+    bbox: tuple,
+    curvature_strength: float = 1.0,
+    gravity_strength: float = 0.3,
+    physics_steps: int = 80,
+    physics_dt: float = 0.016,
+    physics_damping: float = 0.92,
+    grid_cols: int = 18,
+    grid_rows: int = 24,
+    output_shape: tuple = None,
+) -> "tuple[np.ndarray, np.ndarray]":
+    """
+    [FEAT-14] Orchestrator pipeline physics → TPS warp.
+
+    Steps:
+      1. Build MassSpringMesh
+      2. Jalankan simulasi physics_steps langkah
+      3. Konversi ke TPS control points via _mss_to_tps_points()
+      4. Jalankan _tps_warp_texture dengan control points physics
+      5. Validasi: jika max displacement > 50% bbox → fallback ke TPS direct
+
+    Sanity check pada setiap 10 step: jika ada partikel yang melayang jauh
+    (>30% bbox) → clamp posisi ke dalam bbox + 10% padding.
+
+    Fallback: jika physics divergen → raise ValueError → caller fallback ke TPS.
+    """
+    if output_shape is None:
+        output_shape = tiled_arr.shape
+
+    x_min, y_min, x_max, y_max = bbox
+    bw = max(1.0, x_max - x_min)
+    bh = max(1.0, y_max - y_min)
+
+    # ── P1. Build mesh ────────────────────────────────────────────────────────
+    mesh = MassSpringMesh(
+        bbox=bbox,
+        mask_arr=mask_arr,
+        part_masks=part_masks,
+        grid_cols=grid_cols,
+        grid_rows=grid_rows,
+    )
+    # Simpan posisi awal untuk _mss_to_tps_points
+    mesh._pos_initial = mesh.pos.copy()
+
+    logger.debug(
+        f"[Physics] Start: {mesh.active.sum()} active particles, "
+        f"{len(mesh.springs)} springs, steps={physics_steps}"
+    )
+
+    # ── P2–P4. Simulasi Verlet ────────────────────────────────────────────────
+    clamp_pad = 0.15   # 15% padding di luar bbox untuk clamp
+    x_lo = x_min - bw * clamp_pad
+    x_hi = x_max + bw * clamp_pad
+    y_lo = y_min - bh * clamp_pad
+    y_hi = y_max + bh * clamp_pad
+
+    for step_i in range(physics_steps):
+        forces = _mss_apply_forces(
+            mesh, shading, part_masks, bbox,
+            gravity_strength=gravity_strength,
+            curvature_strength=curvature_strength,
+        )
+        mesh.step(forces, dt=physics_dt, damping=physics_damping)
+
+        # Setiap 10 step: sanity clamp
+        if (step_i + 1) % 10 == 0:
+            np.clip(mesh.pos[:, 0], x_lo, x_hi, out=mesh.pos[:, 0])
+            np.clip(mesh.pos[:, 1], y_lo, y_hi, out=mesh.pos[:, 1])
+
+    logger.debug(
+        f"[Physics] Done: max_disp="
+        f"{np.linalg.norm(mesh.pos - mesh._pos_initial, axis=1).max():.2f}px"
+    )
+
+    # ── Validasi: cek divergensi ──────────────────────────────────────────────
+    max_disp = float(np.linalg.norm(mesh.pos - mesh._pos_initial, axis=1).max())
+    max_allowed = 0.5 * max(bw, bh)
+    if max_disp > max_allowed:
+        raise ValueError(
+            f"[Physics] Simulasi divergen: max_disp={max_disp:.1f}px > "
+            f"allowed={max_allowed:.1f}px → fallback ke TPS"
+        )
+
+    # ── P5. Konversi ke TPS control points ───────────────────────────────────
+    src_pts, dst_pts = _mss_to_tps_points(mesh, min_displacement=0.3, max_pts=120)
+
+    if len(src_pts) < 6:
+        raise ValueError("[Physics] Terlalu sedikit control points → fallback ke TPS")
+
+    # ── TPS solve + remap menggunakan physics control points ──────────────────
+    # Gunakan λ rendah karena control points sudah "benar" dari physics
+    lmbda_physics = 1.0
+    solved = _tps_solve(src_pts, dst_pts, lmbda=lmbda_physics)
+    if solved is None:
+        raise ValueError("[Physics] TPS solver gagal pada physics points → fallback ke TPS")
+
+    W_mat, a_mat = solved
+    H, W_img = output_shape[:2]
+    map_x, map_y = _tps_build_dense_field(src_pts, W_mat, a_mat, (H, W_img))
+
+    np.clip(map_x, 0, W_img - 1, out=map_x)
+    np.clip(map_y, 0, H   - 1, out=map_y)
+
+    if HAS_CV2:
+        warped = cv2.remap(
+            tiled_arr,
+            map_x.astype(np.float32),
+            map_y.astype(np.float32),
+            interpolation=cv2.INTER_LANCZOS4,
+            borderMode=cv2.BORDER_REFLECT_101,
+        )
+    else:
+        warped = _numpy_remap(tiled_arr, map_x.astype(np.float32), map_y.astype(np.float32))
+
+    garment_binary = (mask_arr > 127).astype(np.uint8) * 255
+    if garment_binary.shape != (H, W_img):
+        garment_binary = np.array(
+            Image.fromarray(garment_binary).resize((W_img, H), Image.NEAREST)
+        )
+
+    return warped.astype(np.uint8), garment_binary
+
+
+# ─── Step 6: Preserve Shading ────────────────────────────────────────────────
+
+def _step6_preserve_shading(
+    warped_texture: np.ndarray,
+    shading: np.ndarray,
+    mask_arr: np.ndarray,
+    blend_strength: float = 0.45,
+    part_masks: "dict | None" = None,
+) -> np.ndarray:
+    """
+    Preserve shading dari garment asli ke warped texture.
+
+    [FIX BUG-3] Ganti multiply-blend dengan soft-light blend mode.
+    [FIX BUG-5] Normalisasi shading via recentering, bukan pembagian absolut.
+
+    [FEAT-3 VER-14] Per-part blend_strength:
+      • Torso    : blend_strength (dari parameter, default)
+      • Sleeve   : blend_strength × 1.3 → lipatan lengan lebih tajam
+      • Collar   : blend_strength × 0.4 → kerah flat, shading minimal
+    Blend strength map dihitung sebagai weight image (H, W) sebelum aplikasi,
+    sehingga transisi antar zone tetap smooth (tidak ada hard edge).
+
+    blend_strength : 0.0=tanpa shading, 1.0=full soft-light shading
+    """
+    h, w = warped_texture.shape[:2]
+
+    # Resize shading ke ukuran warped texture jika perlu
+    if shading.shape != (h, w):
+        shading_img = Image.fromarray((shading * 255).astype(np.uint8))
+        shading_img = shading_img.resize((w, h), Image.BILINEAR)
+        shading = np.array(shading_img).astype(np.float32) / 255.0
+
+    # [FIX BUG-5] Recenter shading relatif terhadap mean area garment
+    mask_2d = mask_arr[:h, :w] > 127
+    if mask_2d.any():
+        mean_val = float(np.mean(shading[mask_2d]))
+    else:
+        mean_val = 0.5
+    mean_val = max(mean_val, 0.01)
+
+    shading_recentered = (shading - mean_val) + 0.5
+    shading_recentered = np.clip(shading_recentered, 0.0, 1.0)
+
+    # Gaussian blur shading untuk transisi lipatan yang halus
+    shading_blur = np.array(
+        Image.fromarray((shading_recentered * 255).astype(np.uint8)).filter(
+            ImageFilter.GaussianBlur(radius=3)
+        )
+    ).astype(np.float32) / 255.0
+
+    texture_f = warped_texture.astype(np.float32) / 255.0
+    shading_3ch = shading_blur[..., np.newaxis]  # (H, W, 1) → broadcast ke RGB
+
+    # [FIX BUG-3] Soft-light blend mode
+    shading_centered = shading_3ch * 2.0 - 1.0
+    soft_light = texture_f + shading_centered * texture_f * (1.0 - texture_f)
+    soft_light = np.clip(soft_light, 0.0, 1.0)
+
+    # [FEAT-3] Buat per-part blend_strength weight map (H, W)
+    # Default: semua pixel pakai blend_strength base
+    bs_base = float(np.clip(blend_strength, 0.0, 1.0))
+    bs_map = np.full((h, w), bs_base, dtype=np.float32)
+
+    if part_masks is not None:
+        collar_arr       = part_masks.get("collar")
+        sleeve_left_arr  = part_masks.get("sleeve_left")
+        sleeve_right_arr = part_masks.get("sleeve_right")
+
+        # Resize part masks ke texture size jika berbeda
+        def _resize_part(arr):
+            if arr is None:
+                return None
+            if arr.shape != (h, w):
+                return np.array(
+                    Image.fromarray(arr).resize((w, h), Image.BILINEAR)
+                )
+            return arr
+
+        collar_arr       = _resize_part(collar_arr)
+        sleeve_left_arr  = _resize_part(sleeve_left_arr)
+        sleeve_right_arr = _resize_part(sleeve_right_arr)
+
+        # Apply per-part blend_strength ke map
+        # Collar   : × 0.4 (bisa sampai 0 jika bs sangat kecil)
+        # Sleeve   : × 1.3, clamped 1.0
+        if collar_arr is not None:
+            collar_zone = collar_arr > 127
+            bs_map[collar_zone] = np.clip(bs_base * 0.4, 0.0, 1.0)
+        if sleeve_left_arr is not None:
+            sl_zone = sleeve_left_arr > 127
+            bs_map[sl_zone] = np.clip(bs_base * 1.3, 0.0, 1.0)
+        if sleeve_right_arr is not None:
+            sr_zone = sleeve_right_arr > 127
+            bs_map[sr_zone] = np.clip(bs_base * 1.3, 0.0, 1.0)
+
+        # Smooth transitions antar zone dengan small gaussian
+        bs_map = np.array(
+            Image.fromarray((bs_map * 255).astype(np.uint8)).filter(
+                ImageFilter.GaussianBlur(radius=5)
+            )
+        ).astype(np.float32) / 255.0
+
+    # Interpolasi texture asli ↔ soft-light dengan per-pixel blend strength
+    bs_3ch = bs_map[..., np.newaxis]  # broadcast ke RGB
+    blended = texture_f * (1.0 - bs_3ch) + soft_light * bs_3ch
+    blended = np.clip(blended * 255, 0, 255).astype(np.uint8)
+
+    return blended
+
+
+# ─── Step 7: Final Compositing ───────────────────────────────────────────────
+
+def _step7_final_composite(
+    mockup_img: Image.Image,
+    warped_shaded: np.ndarray,
+    mask_arr: np.ndarray,
+    warp_mask: np.ndarray,
+    opacity: float = 1.0,
+    feather_radius: int = 3,
+) -> Image.Image:
+    """
+    Final compositing:
+      1. Combine warp_mask dengan garment mask
+      2. Buat alpha SOLID di dalam area baju, feather hanya di tepi
+      3. Alpha-composite warped texture on top of mockup
+
+    [FIX BUG-4] warp_mask di-dilate untuk menutup gap antar triangle.
+
+    [FIX BUG-6] Alpha mask sebelumnya di-blur secara penuh (GaussianBlur
+    seluruh area), menyebabkan background krem mockup "bleeding through"
+    ke tengah area baju → warna kain tampak pucat/transparan meski opacity=1.0.
+
+    Solusi: pisahkan alpha menjadi dua zona:
+      • Inner zone  (erode dari mask) → alpha solid 255, tidak ada bleeding
+      • Edge zone   (transition band) → alpha feathered untuk tepi halus
+    Hasil: area dalam baju benar-benar opaque, background tidak tembus.
+
+    Returns:
+      result : PIL Image (RGB)
+    """
+    mockup = mockup_img.convert("RGBA")
+    mw, mh = mockup.size
+
+    # --- Resize mask_arr dan warp_mask ke mockup size jika perlu ---
+    if mask_arr.shape != (mh, mw):
+        mask_arr = np.array(
+            Image.fromarray(mask_arr).resize((mw, mh), Image.BILINEAR)
+        )
+    if warp_mask.shape != (mh, mw):
+        warp_mask = np.array(
+            Image.fromarray(warp_mask).resize((mw, mh), Image.BILINEAR)
+        )
+
+    # [FIX BUG-4] Dilate warp_mask untuk menutup gap antar triangle
+    if HAS_SCIPY:
+        warp_mask_filled = binary_dilation(
+            warp_mask > 0, iterations=2
+        ).astype(np.uint8) * 255
+    else:
+        wm_img = Image.fromarray(warp_mask)
+        wm_img = wm_img.filter(ImageFilter.MaxFilter(size=5))
+        warp_mask_filled = np.array(wm_img)
+
+    # Intersection: garment mask DAN warp coverage
+    combined_mask = np.minimum(mask_arr, warp_mask_filled)
+
+    # [FIX BUG-6] Alpha solid di dalam, feather hanya di tepi
+    # Step A: erode combined_mask → zona "pasti dalam baju" → alpha 255
+    erode_size = max(1, feather_radius)
+    if HAS_SCIPY:
+        from scipy.ndimage import binary_erosion
+        inner = binary_erosion(
+            combined_mask > 128, iterations=erode_size
+        ).astype(np.uint8) * 255
+    else:
+        # Fallback: PIL MinFilter sebagai erode approximation
+        inner = np.array(
+            Image.fromarray((combined_mask > 128).astype(np.uint8) * 255).filter(
+                ImageFilter.MinFilter(size=max(3, erode_size * 2 + 1))
+            )
+        )
+
+    # Step B: feather combined_mask → zona tepi dengan transisi halus
+    if feather_radius > 0:
+        feathered_edge = np.array(
+            Image.fromarray(combined_mask).filter(
+                ImageFilter.GaussianBlur(radius=feather_radius)
+            )
+        )
+    else:
+        feathered_edge = combined_mask
+
+    # Step C: gabungkan — inner selalu solid, tepi smooth
+    final_alpha = np.maximum(inner, feathered_edge)
+
+    # Apply opacity
+    op = float(np.clip(opacity, 0.01, 1.0))
+    alpha_np = final_alpha.astype(np.float32) * op
+    alpha_img = Image.fromarray(alpha_np.astype(np.uint8), mode="L")
+
+    # --- Resize warped texture ke mockup size ---
+    warped_img = Image.fromarray(warped_shaded)
+    if warped_img.size != (mw, mh):
+        warped_img = warped_img.resize((mw, mh), Image.LANCZOS)
+
+    # --- Composite ---
+    warped_rgba = warped_img.convert("RGBA")
+    r, g, b_ch, _ = warped_rgba.split()
+    warped_rgba = Image.merge("RGBA", (r, g, b_ch, alpha_img))
+
+    result = Image.alpha_composite(mockup, warped_rgba)
+    return result.convert("RGB")
+
+
+# ─── Main Pipeline: Overlay Fabric on Mockup ─────────────────────────────────
+
+def _overlay_fabric_on_mockup(
+    mockup_img: Image.Image,
+    mask_img: Image.Image,
+    fabric_img: Image.Image,
+    scale: float = 1.0,
+    offset_x: int = 0,
+    offset_y: int = 0,
+    opacity: float = 1.0,
+    blend_strength: float = 0.25,
+    grid_cols: int = 20,
+    grid_rows: int = 30,
+    curvature_strength: float = 1.0,
+    feather_radius: int = 3,
+    mockup_dir: Path = None,
+    mockup_id: str = "",
+    side: str = "front",
+    warp_mode: str = "physics",
+    physics_steps: int = 80,
+    physics_dt: float = 0.016,
+    gravity_strength: float = 0.3,
+) -> Image.Image:
+    """
+    Pipeline utama: tempelkan batik fabric ke mockup.
+
+    [VER-16] warp_mode options:
+      "physics" (DEFAULT) — Mass-Spring simulation → equilibrium → TPS warp.
+                            Paling realistis: kain berjatuhan mengikuti gravitasi
+                            dan kontur badan, spring menentukan lipatan organik.
+                            Fallback ke "tps" jika simulasi divergen.
+      "tps"               — Thin Plate Spline direct (ver15).
+                            Fallback ke "mesh" jika solver gagal.
+      "mesh"              — Mesh affine per-triangle (ver14, paling cepat).
+
+    Params baru ver16:
+      physics_steps   : jumlah iterasi simulasi (default 80)
+      physics_dt      : timestep Verlet (default 0.016 ≈ 60fps)
+      gravity_strength: kekuatan gravitasi pada kain (default 0.3)
+    """
+    mw, mh = mockup_img.size
+
+    # ── Step 1: Extract Garment Region ────────────────────────────────────────
+    region   = _step1_extract_garment_region(mockup_img, mask_img)
+    bbox     = region["bbox"]
+    mask_arr = region["mask_arr"]
+    shading  = region["shading"]
+    logger.debug(f"Step 1: garment bbox={bbox}, mask={mask_arr.shape}")
+
+    # ── Step 0: Semantic Segmentation per Part ────────────────────────────────
+    part_masks = _segment_garment_parts(mask_arr, bbox)
+    logger.debug(
+        f"Step 0: torso={np.count_nonzero(part_masks['torso'])}px, "
+        f"sl={np.count_nonzero(part_masks['sleeve_left'])}px, "
+        f"sr={np.count_nonzero(part_masks['sleeve_right'])}px, "
+        f"collar={np.count_nonzero(part_masks['collar'])}px"
+    )
+
+    # ── Step 5: Tile Texture ──────────────────────────────────────────────────
+    tiled_arr = _step5_tile_texture(
+        fabric_img, mw, mh,
+        scale=scale, offset_x=offset_x, offset_y=offset_y,
+    )
+    logger.debug(f"Step 5: tiled={tiled_arr.shape}")
+
+    # ── Warp: Physics → TPS → Mesh (cascade fallback) ────────────────────────
+    effective_mode = warp_mode
+
+    if effective_mode == "physics":
+        try:
+            warped_texture, warp_mask = _physics_warp_texture(
+                tiled_arr, mask_arr, shading, part_masks, bbox,
+                curvature_strength=curvature_strength,
+                gravity_strength=gravity_strength,
+                physics_steps=physics_steps,
+                physics_dt=physics_dt,
+                physics_damping=0.92,
+                grid_cols=min(grid_cols, 18),    # physics grid lebih kasar
+                grid_rows=min(grid_rows, 24),
+                output_shape=(mh, mw, 3),
+            )
+            logger.debug(
+                f"Physics warp complete, mode=physics, "
+                f"coverage={np.count_nonzero(warp_mask)}/{warp_mask.size}px"
+            )
+        except Exception as e:
+            logger.warning(f"Physics gagal ({e}) → fallback ke TPS")
+            effective_mode = "tps"
+
+    if effective_mode == "tps":
+        try:
+            warped_texture, warp_mask = _tps_warp_texture(
+                tiled_arr, mask_arr, part_masks, bbox,
+                curvature_strength=curvature_strength,
+                output_shape=(mh, mw, 3),
+            )
+            logger.debug(
+                f"TPS warp complete, coverage="
+                f"{np.count_nonzero(warp_mask)}/{warp_mask.size}px"
+            )
+        except Exception as e:
+            logger.warning(f"TPS gagal ({e}) → fallback ke mesh affine")
+            effective_mode = "mesh"
+
+    if effective_mode == "mesh":
+        src_vertices, dst_vertices = _step2_generate_mesh_grid(bbox, grid_cols, grid_rows)
+        dst_vertices = _step3_define_deformation_points(
+            src_vertices=src_vertices, dst_vertices=dst_vertices,
+            mask_arr=mask_arr, shading=shading,
+            mockup_dir=(mockup_dir or Path(".")),
+            mockup_id=mockup_id, side=side,
+            grid_cols=grid_cols, grid_rows=grid_rows,
+            curvature_strength=curvature_strength,
+            part_masks=part_masks,
+        )
+        warped_texture, warp_mask = _step4_mesh_warp_texture(
+            tiled_arr, src_vertices, dst_vertices,
+            grid_cols, grid_rows, output_shape=(mh, mw, 3),
+        )
+        logger.debug(
+            f"Mesh warp complete, coverage="
+            f"{np.count_nonzero(warp_mask)}/{warp_mask.size}px"
+        )
+
+    # ── Step 6: Preserve Shading ──────────────────────────────────────────────
+    warped_shaded = _step6_preserve_shading(
+        warped_texture, shading, mask_arr,
+        blend_strength=blend_strength,
+        part_masks=part_masks,
+    )
+    logger.debug(f"Step 6: shading done (effective_mode={effective_mode})")
+
+    # ── Step 7: Final Compositing ─────────────────────────────────────────────
+    result = _step7_final_composite(
+        mockup_img, warped_shaded, mask_arr, warp_mask,
+        opacity=opacity, feather_radius=feather_radius,
+    )
+    logger.debug("Step 7: composite done")
+    return result
+
+
+# ─── Placeholder / Fallback Helpers ──────────────────────────────────────────
+
+def _get_or_create_placeholder(mockup_dir: Path, filename: str, size=(800, 1100)) -> Image.Image:
+    """
+    Load file mockup; jika belum ada, buat placeholder abu-abu.
+    Placeholder berguna di tahap development sebelum file mockup sungguhan tersedia.
+    """
+    p = mockup_dir / filename
+    if p.exists():
+        return Image.open(p).convert("RGBA")
+
+    # Buat placeholder: background abu-abu muda + text
+    from PIL import ImageDraw
+    img = Image.new("RGBA", size, (220, 220, 220, 255))
+    draw = ImageDraw.Draw(img)
+    name = filename.replace("_", " ").replace(".png", "")
+    draw.rectangle([size[0]//4, size[1]//6, 3*size[0]//4, 5*size[1]//6], outline=(150,150,150,255), width=3)
+    draw.text((size[0]//2 - 60, size[1]//2), f"[Mockup]\n{name}", fill=(100,100,100,255))
+    logger.warning(f"Mockup file tidak ditemukan: {p}. Menggunakan placeholder.")
+    return img
+
+
+def _get_or_create_mask_placeholder(mockup_dir: Path, mask_filename: str, mockup_size: tuple) -> Image.Image:
+    """
+    Load mask mockup; jika belum ada, buat mask kotak tengah sebagai fallback.
+    """
+    p = mockup_dir / mask_filename
+    if p.exists():
+        return Image.open(p).convert("L")
+
+    # Fallback: kotak tengah 60% (area baju kasar)
+    w, h = mockup_size
+    from PIL import ImageDraw
+    mask = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rectangle([int(w*0.20), int(h*0.10), int(w*0.80), int(h*0.90)], fill=255)
+    logger.warning(f"Mask file tidak ditemukan: {p}. Menggunakan fallback mask.")
+    return mask
+
+
+# ─── GET /mockups ─────────────────────────────────────────────────────────────
+
+@stage3_bp.route("/mockups", methods=["GET"])
+def list_mockups():
+    """List semua mockup baju yang tersedia."""
+    data = []
+    cfg = current_app.config
+    mockup_dir = Path(cfg["MOCKUP_DIR"])
+    for m in MOCKUP_REGISTRY.values():
+        entry = {k: v for k, v in m.items() if not k.endswith("_file")}
+        entry["front_preview"] = (
+            f"/api/v1/files/mockups/{m['front_file']}"
+            if (mockup_dir / m["front_file"]).exists() else None
+        )
+        data.append(entry)
+    return jsonify({"mockups": data})
+
+
+# ─── POST /apply ──────────────────────────────────────────────────────────────
+
+@stage3_bp.route("/apply", methods=["POST"])
+def apply():
+    """
+    Body JSON:
+      fabric_id             : str   (wajib)
+      mockup_id             : str   (wajib)
+      scale                 : float (default 1.0)
+      offset_x, offset_y    : int   (default 0)
+      opacity               : float (default 1.0)
+      blend_strength        : float (default 0.25)
+      grid_cols, grid_rows  : int   (default 20, 30)
+      curvature_strength    : float (default 1.0)
+      feather_radius        : int   (default 3)
+      side                  : str   (default "both") — front | back | both
+      warp_mode             : str   (default "physics")
+                                "physics" — [VER-16] Mass-Spring → TPS (paling realistis)
+                                "tps"     — Thin Plate Spline direct (ver15)
+                                "mesh"    — affine per-triangle (ver14, tercepat)
+      physics_steps         : int   (default 80)  — iterasi simulasi kain
+      physics_dt            : float (default 0.016) — timestep Verlet
+      gravity_strength      : float (default 0.3) — kekuatan gravitasi pada kain
+    """
+    data = request.get_json(force=True, silent=True) or {}
+
+    fabric_id = data.get("fabric_id", "").strip()
+    mockup_id = data.get("mockup_id", "").strip()
+    if not fabric_id:
+        return jsonify({"error": "fabric_id wajib diisi"}), 400
+    if not mockup_id:
+        return jsonify({"error": "mockup_id wajib diisi"}), 400
+
+    fabric = Fabric.query.get(fabric_id)
+    if not fabric:
+        return jsonify({"error": f"Fabric '{fabric_id}' tidak ditemukan"}), 404
+    if mockup_id not in MOCKUP_REGISTRY:
+        return jsonify({
+            "error": f"Mockup '{mockup_id}' tidak ditemukan. "
+                     f"Tersedia: {list(MOCKUP_REGISTRY.keys())}"
+        }), 404
+
+    # ── Parse parameters ──────────────────────────────────────────────────────
+    scale              = float(data.get("scale", 1.0))
+    offset_x           = int(data.get("offset_x", 0))
+    offset_y           = int(data.get("offset_y", 0))
+    opacity            = float(data.get("opacity", 1.0))
+    blend_strength     = float(data.get("blend_strength", 0.25))
+    grid_cols          = int(data.get("grid_cols", 20))
+    grid_rows          = int(data.get("grid_rows", 30))
+    curvature_strength = float(data.get("curvature_strength", 1.0))
+    feather_radius     = int(data.get("feather_radius", 3))
+    side               = data.get("side", "both")
+    warp_mode          = data.get("warp_mode", "physics")      # [VER-16]
+    physics_steps      = int(data.get("physics_steps", 80))    # [VER-16]
+    physics_dt         = float(data.get("physics_dt", 0.016))  # [VER-16]
+    gravity_strength   = float(data.get("gravity_strength", 0.3))  # [VER-16]
+
+    if warp_mode not in ("physics", "tps", "mesh"):
+        return jsonify({"error": "warp_mode harus 'physics', 'tps', atau 'mesh'"}), 400
+    if not (10 <= physics_steps <= 300):
+        return jsonify({"error": "physics_steps harus antara 10–300"}), 400
+    if not (0.004 <= physics_dt <= 0.05):
+        return jsonify({"error": "physics_dt harus antara 0.004–0.050"}), 400
+
+    cfg = current_app.config
+    fabric_dir  = Path(cfg["FABRIC_DIR"])
+    result_dir  = Path(cfg["RESULT_DIR"])
+    mockup_dir  = Path(cfg["MOCKUP_DIR"])
+
+    # Load fabric image
+    try:
+        fabric_img = Image.open(fabric_dir / fabric.filename).convert("RGB")
+    except Exception as e:
+        return jsonify({"error": f"Gagal baca fabric: {str(e)}"}), 500
+
+    mockup_info = MOCKUP_REGISTRY[mockup_id]
+    result_id   = str(uuid.uuid4())
+    front_file  = None
+    back_file   = None
+
+    # ── Front ─────────────────────────────────────────────────────────────────
+    if side in ("front", "both"):
+        mockup_front = _get_or_create_placeholder(mockup_dir, mockup_info["front_file"])
+        mask_front   = _get_or_create_mask_placeholder(
+            mockup_dir, mockup_info["front_mask_file"], mockup_front.size
+        )
+        result_front = _overlay_fabric_on_mockup(
+            mockup_front, mask_front, fabric_img,
+            scale=scale, offset_x=offset_x, offset_y=offset_y,
+            opacity=opacity, blend_strength=blend_strength,
+            grid_cols=grid_cols, grid_rows=grid_rows,
+            curvature_strength=curvature_strength,
+            feather_radius=feather_radius,
+            mockup_dir=mockup_dir, mockup_id=mockup_id, side="front",
+            warp_mode=warp_mode,
+            physics_steps=physics_steps,
+            physics_dt=physics_dt,
+            gravity_strength=gravity_strength,
+        )
+        front_file = f"{result_id}_front.jpg"
+        result_front.save(result_dir / front_file, "JPEG", quality=92)
+
+    # ── Back ──────────────────────────────────────────────────────────────────
+    if side in ("back", "both") and mockup_info.get("has_back"):
+        mockup_back = _get_or_create_placeholder(mockup_dir, mockup_info["back_file"])
+        mask_back   = _get_or_create_mask_placeholder(
+            mockup_dir, mockup_info["back_mask_file"], mockup_back.size
+        )
+        result_back = _overlay_fabric_on_mockup(
+            mockup_back, mask_back, fabric_img,
+            scale=scale, offset_x=offset_x, offset_y=offset_y,
+            opacity=opacity, blend_strength=blend_strength,
+            grid_cols=grid_cols, grid_rows=grid_rows,
+            curvature_strength=curvature_strength,
+            feather_radius=feather_radius,
+            mockup_dir=mockup_dir, mockup_id=mockup_id, side="back",
+            warp_mode=warp_mode,
+            physics_steps=physics_steps,
+            physics_dt=physics_dt,
+            gravity_strength=gravity_strength,
+        )
+        back_file = f"{result_id}_back.jpg"
+        result_back.save(result_dir / back_file, "JPEG", quality=92)
+
+    result = MockupResult(
+        id=result_id,
+        fabric_id=fabric_id,
+        mockup_id=mockup_id,
+        front_file=front_file,
+        back_file=back_file,
+        scale=scale,
+        offset_x=offset_x,
+        offset_y=offset_y,
+        opacity=opacity,
+    )
+    db.session.add(result)
+    db.session.commit()
+
+    logger.info(
+        f"MockupResult {result_id}: {mockup_id} warp={warp_mode} scale={scale} "
+        f"grid={grid_rows}x{grid_cols} curvature={curvature_strength} "
+        f"physics_steps={physics_steps} gravity={gravity_strength}"
+    )
+    return jsonify(result.to_dict()), 201
+
+
+# ─── POST /segment ─────────────────────────────────────────────────────────────
+
+@stage3_bp.route("/segment", methods=["POST"])
+def segment_debug():
+    """
+    [FEAT-4 VER-14] Debug endpoint: kembalikan informasi segmentasi per-part
+    tanpa menjalankan full pipeline overlay.
+
+    Body JSON:
+      mockup_id : str  (wajib)
+      side      : str  (default "front") — front | back
+
+    Response JSON:
+      {
+        "mockup_id": "...",
+        "side": "front",
+        "bbox": [x_min, y_min, x_max, y_max],
+        "mask_size": [width, height],
+        "parts": {
+          "torso":        {"pixel_count": N, "coverage_pct": X.X},
+          "sleeve_left":  {"pixel_count": N, "coverage_pct": X.X},
+          "sleeve_right": {"pixel_count": N, "coverage_pct": X.X},
+          "collar":       {"pixel_count": N, "coverage_pct": X.X},
+          "full":         {"pixel_count": N, "coverage_pct": 100.0}
+        },
+        "deformation_params": {
+          "torso":        {"curvature_scale": 1.0,  "edge_scale": 1.0,  "blend_scale": 1.0},
+          "sleeve_left":  {"curvature_scale": 1.6,  "edge_scale": 2.2,  "blend_scale": 1.3},
+          "sleeve_right": {"curvature_scale": 1.6,  "edge_scale": 2.2,  "blend_scale": 1.3},
+          "collar":       {"curvature_scale": 0.15, "edge_scale": 0.10, "blend_scale": 0.4}
+        }
+      }
+
+    Berguna untuk validasi zona segmentasi sebelum menjalankan /apply.
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    mockup_id = data.get("mockup_id", "").strip()
+    side = data.get("side", "front")
+
+    if not mockup_id:
+        return jsonify({"error": "mockup_id wajib diisi"}), 400
+    if mockup_id not in MOCKUP_REGISTRY:
+        return jsonify({
+            "error": f"Mockup '{mockup_id}' tidak ditemukan. "
+                     f"Tersedia: {list(MOCKUP_REGISTRY.keys())}"
+        }), 404
+
+    cfg = current_app.config
+    mockup_dir = Path(cfg["MOCKUP_DIR"])
+    mockup_info = MOCKUP_REGISTRY[mockup_id]
+
+    # Load mockup + mask
+    if side == "back" and mockup_info.get("has_back"):
+        mockup_img = _get_or_create_placeholder(mockup_dir, mockup_info["back_file"])
+        mask_img   = _get_or_create_mask_placeholder(
+            mockup_dir, mockup_info["back_mask_file"], mockup_img.size
+        )
+    else:
+        mockup_img = _get_or_create_placeholder(mockup_dir, mockup_info["front_file"])
+        mask_img   = _get_or_create_mask_placeholder(
+            mockup_dir, mockup_info["front_mask_file"], mockup_img.size
+        )
+
+    region = _step1_extract_garment_region(mockup_img, mask_img)
+    bbox     = region["bbox"]
+    mask_arr = region["mask_arr"]
+
+    parts = _segment_garment_parts(mask_arr, bbox)
+    total_px = max(1, int(np.count_nonzero(parts["full"])))
+
+    parts_info = {}
+    for name, arr in parts.items():
+        px = int(np.count_nonzero(arr))
+        parts_info[name] = {
+            "pixel_count":   px,
+            "coverage_pct": round(px / total_px * 100, 2),
+        }
+
+    return jsonify({
+        "mockup_id": mockup_id,
+        "side":      side,
+        "bbox":      list(bbox),
+        "mask_size": [int(mask_arr.shape[1]), int(mask_arr.shape[0])],
+        "parts":     parts_info,
+        "deformation_params": {
+            "torso":        {"curvature_scale": 1.0,  "edge_scale": 1.0,  "blend_scale": 1.0},
+            "sleeve_left":  {"curvature_scale": 1.6,  "edge_scale": 2.2,  "blend_scale": 1.3},
+            "sleeve_right": {"curvature_scale": 1.6,  "edge_scale": 2.2,  "blend_scale": 1.3},
+            "collar":       {"curvature_scale": 0.15, "edge_scale": 0.10, "blend_scale": 0.4},
+        },
+    })
+
+
+# ─── POST /apply-flux ────────────────────────────────────────────────────────
+#
+# Endpoint stage 3 menggunakan FLUX.1-Kontext-dev.
+# Input  : fabric_id (kain dari stage 2 — sudah disusun selang-seling) + prompt teks
+# Pipeline:
+#   1. Load gambar kain (Fabric) dari FABRIC_DIR
+#   2. Resize kain ke ≤ FLUX_MAX_PX (default 1024) — FLUX tidak suka gambar raksasa
+#   3. Kirim ke FLUX.1-Kontext-dev via HuggingFace InferenceClient
+#   4. Simpan hasil ke RESULT_DIR, catat ke DB sebagai MockupResult
+#   5. Kembalikan URL hasil
+#
+# Berbeda dengan /apply (physics + TPS mesh warp), endpoint ini
+# sepenuhnya cloud-based dan tidak memerlukan OpenCV/scipy.
+
+_FLUX_MODEL     = "black-forest-labs/FLUX.1-Kontext-dev"
+_FLUX_PROVIDER  = "replicate"          # default: lewat HuggingFace router
+_FLUX_MAX_PX    = 1024              # maksimum dimensi terpanjang yang aman untuk FLUX
+_FAL_MODEL_ID   = "replicate/flux-kontext/dev"  # model ID native fal-ai (untuk fal-client SDK)
+
+
+def _resize_for_flux(img: Image.Image, max_px: int = _FLUX_MAX_PX) -> Image.Image:
+    """
+    Resize gambar agar dimensi terpanjangnya ≤ max_px.
+    FLUX.1-Kontext-dev paling stabil di sekitar 512–1024px.
+    Gambar kain dari stage2 bisa sangat besar (mis. 5120×5120 px) sehingga
+    perlu dikecilkan sebelum dikirim ke API.
+
+    Rasio aspek dipertahankan. Jika gambar sudah cukup kecil, dikembalikan apa adanya.
+    """
+    w, h = img.size
+    longest = max(w, h)
+    if longest <= max_px:
+        return img
+    scale = max_px / longest
+    new_w = max(1, int(w * scale))
+    new_h = max(1, int(h * scale))
+    logger.debug(f"[Flux] Resize motif {w}x{h} → {new_w}x{new_h} (max_px={max_px})")
+    return img.resize((new_w, new_h), Image.LANCZOS)
+
+
+def _img_to_bytes(img: Image.Image, fmt: str = "PNG") -> bytes:
+    """Konversi PIL Image ke bytes siap kirim ke InferenceClient."""
+    buf = io.BytesIO()
+    img.save(buf, format=fmt)
+    return buf.getvalue()
+
+
+@stage3_bp.route("/apply-flux", methods=["POST"])
+def apply_flux():
+    """
+    Hasilkan gambar baju bermoif batik menggunakan FLUX.1-Kontext-dev
+    via HuggingFace Inference API (provider: replicate).
+
+    Endpoint ini menggantikan pipeline mesh/TPS dengan pendekatan cloud AI:
+    cukup berikan gambar kain (dari stage 2) + prompt, FLUX akan menghasilkan
+    gambar baju yang sudah tertempel motif batik secara realistis.
+
+    Membutuhkan environment variable HF_TOKEN dengan akses ke:
+      - model   : black-forest-labs/FLUX.1-Kontext-dev
+      - provider: replicate (aktifkan di huggingface.co/settings/inference-providers)
+
+    ─── Body JSON ────────────────────────────────────────────────────────────
+    Field wajib:
+      fabric_id : str  — ID kain dari stage 2 (POST /api/v1/stage2/compose)
+                         Kain adalah hasil susunan dua motif selang-seling (Fabric).
+
+    Field opsional:
+      prompt    : str   — instruksi editing (default: prompt baju batik standar)
+      max_px    : int   — maksimum resolusi input ke FLUX (default: 1024)
+                          Naikkan ke 2048 jika butuh detail lebih (lebih lambat)
+      style     : str   — gaya baju: "kemeja" | "batik" | "casual" (default: "kemeja")
+                          Mempengaruhi default prompt jika prompt tidak diisi
+      gender    : str   — "pria" | "wanita" (default: "pria")
+      sleeve    : str   — "panjang" | "pendek" (default: "panjang")
+      backend   : str   — "hf" (default, lewat HuggingFace) | "fal" (fal-client SDK)
+
+    ─── Alur Data ────────────────────────────────────────────────────────────
+    Stage 1 (generate motif) → Stage 2 (compose fabric) → Stage 3 /apply-flux
+
+    ─── Contoh Request (minimal) ─────────────────────────────────────────────
+    POST /api/v1/stage3/apply-flux
+    Content-Type: application/json
+    {
+      "fabric_id": "<uuid-dari-stage2-compose>"
+    }
+
+    ─── Contoh Request (lengkap) ─────────────────────────────────────────────
+    POST /api/v1/stage3/apply-flux
+    Content-Type: application/json
+    {
+      "fabric_id": "<uuid-dari-stage2-compose>",
+      "prompt": "Realistic front-view studio photo of a male mannequin wearing a batik shirt using the uploaded fabric as seamless material. Preserve fabric colors and pattern faithfully. Natural folds, clean white background, photorealistic.",
+      "max_px": 1024,
+      "style": "kemeja",
+      "gender": "pria",
+      "sleeve": "panjang"
+    }
+
+    ─── Response (201 Created) ───────────────────────────────────────────────
+    {
+      "result_id"     : "<uuid>",
+      "fabric_id"     : "<uuid>",
+      "front_url"     : "/api/v1/files/results/<uuid>_flux_front.jpg",
+      "prompt_used"   : "...",
+      "input_size"    : [w, h],
+      "original_size" : [w_asli, h_asli],
+      "flux_model"    : "black-forest-labs/FLUX.1-Kontext-dev",
+      "backend_used"  : "hf"
+    }
+
+    ─── Error Responses ─────────────────────────────────────────────────────
+    400  fabric_id kosong
+    404  fabric tidak ditemukan di DB
+    500  HF_TOKEN tidak ditemukan | file kain tidak ada | FLUX API error
+    """
+    # ── Lazy import huggingface_hub ───────────────────────────────────────────
+    # Import di sini agar server tidak crash jika library belum terinstall
+    try:
+        from huggingface_hub import InferenceClient
+    except ImportError:
+        return jsonify({
+            "error": "huggingface_hub tidak terinstall. "
+                     "Jalankan: pip install huggingface_hub"
+        }), 500
+
+    # ── Validasi token — dukung HF_TOKEN dan FAL_KEY ─────────────────────────
+    hf_token  = os.environ.get("HF_TOKEN", "").strip()
+    fal_key   = os.environ.get("FAL_KEY", "").strip()
+
+    # Tentukan backend yang akan dipakai:
+    #   "hf"  = HuggingFace InferenceClient (butuh HF_TOKEN + billing aktif di fal-ai)
+    #   "fal" = fal-client SDK langsung (butuh FAL_KEY, punya free credits sendiri)
+    backend = data.get("backend", "").strip().lower() if "data" in dir() else ""
+    # Re-parse data jika belum (bisa dipanggil sebelum parse block)
+    _d = request.get_json(force=True, silent=True) or {}
+    backend = _d.get("backend", "").strip().lower()
+
+    if backend == "fal":
+        if not fal_key:
+            return jsonify({
+                "error": "FAL_KEY tidak ditemukan. Set: $env:FAL_KEY = 'xxxxxxxx:xxxxxxxx'",
+                "hint":  "Daftar di fal.ai/dashboard → API Keys → New Key. Ada free credits untuk akun baru.",
+            }), 500
+    else:
+        # Default: pakai HuggingFace router
+        backend = "hf"
+        if not hf_token:
+            return jsonify({
+                "error": "HF_TOKEN tidak ditemukan. Set: $env:HF_TOKEN = 'hf_xxxx...'"
+            }), 500
+
+    # ── Parse request body ────────────────────────────────────────────────────
+    data       = _d   # sudah di-parse di atas
+    fabric_id  = data.get("fabric_id", "").strip()
+    max_px     = int(data.get("max_px", _FLUX_MAX_PX))
+    style      = data.get("style", "kemeja")     # kemeja | batik | casual
+    gender     = data.get("gender", "pria")      # pria | wanita
+    sleeve     = data.get("sleeve", "panjang")   # panjang | pendek
+
+    if not fabric_id:
+        return jsonify({"error": "fabric_id wajib diisi"}), 400
+
+    # ── Load kain dari DB (stage 2) ───────────────────────────────────────────
+    # Fabric = hasil stage 2: dua motif yang sudah disusun menjadi kain
+    fabric = Fabric.query.get(fabric_id)
+    if not fabric:
+        return jsonify({"error": f"Fabric '{fabric_id}' tidak ditemukan. "
+                                  "Pastikan sudah menjalankan POST /api/v1/stage2/compose terlebih dahulu."}), 404
+
+    cfg        = current_app.config
+    fabric_dir = Path(cfg["FABRIC_DIR"])
+    result_dir = Path(cfg["RESULT_DIR"])
+    fabric_path = fabric_dir / fabric.filename
+
+    if not fabric_path.exists():
+        return jsonify({"error": f"File kain tidak ditemukan: {fabric.filename}"}), 500
+
+    # ── Step 1: Load gambar kain ──────────────────────────────────────────────
+    try:
+        fabric_img = Image.open(fabric_path).convert("RGB")
+    except Exception as e:
+        return jsonify({"error": f"Gagal buka gambar kain: {str(e)}"}), 500
+
+    orig_w, orig_h = fabric_img.size
+    logger.info(f"[Flux] Fabric '{fabric_id}' ukuran asli: {orig_w}x{orig_h}px")
+
+    # ── Step 2: Resize ke ukuran aman untuk FLUX ──────────────────────────────
+    max_px = max(256, min(max_px, 2048))   # clamp 256–2048
+    fabric_resized = _resize_for_flux(fabric_img, max_px=max_px)
+    resized_w, resized_h = fabric_resized.size
+    logger.info(f"[Flux] Setelah resize: {resized_w}x{resized_h}px (dari {orig_w}x{orig_h}px)")
+
+    # ── Step 3: Susun prompt ──────────────────────────────────────────────────
+    # Peta gaya → deskripsi baju untuk prompt
+    _STYLE_MAP = {
+        "kemeja": "long-sleeve batik shirt" if sleeve == "panjang" else "short-sleeve batik shirt",
+        "batik":  "traditional batik garment",
+        "casual": "casual batik top",
+    }
+    _GENDER_MAP = {"pria": "male", "wanita": "female"}
+    garment_desc = _STYLE_MAP.get(style, "long-sleeve batik shirt")
+    gender_desc  = _GENDER_MAP.get(gender, "male")
+
+    default_prompt = (
+        f"Realistic front-view studio photo of a {gender_desc} mannequin "
+        f"wearing a {garment_desc} using the uploaded motif as seamless fabric. "
+        "Preserve motif colors and pattern details faithfully. "
+        "Apply repeating batik pattern with realistic cotton texture, "
+        "natural fabric folds, clean white background, photorealistic fashion lighting."
+    )
+    prompt = data.get("prompt", "").strip() or default_prompt
+
+    logger.info(f"[Flux] Prompt: {prompt[:120]}...")
+
+    # ── Step 4: Kirim ke FLUX ─────────────────────────────────────────────────
+    fabric_bytes = _img_to_bytes(fabric_resized, fmt="PNG")
+    result_pil   = None
+
+    if backend == "fal":
+        # ── Backend B: fal-client SDK langsung (FAL_KEY) ─────────────────────
+        # Tidak lewat HuggingFace router → tidak butuh billing HF aktif.
+        # Daftar free credits: https://fal.ai/dashboard
+        try:
+            import fal_client
+        except ImportError:
+            return jsonify({
+                "error": "fal-client tidak terinstall. Jalankan: pip install fal-client",
+            }), 500
+
+        try:
+            os.environ["FAL_KEY"] = fal_key   # fal_client membaca dari env
+            motif_b64 = "data:image/png;base64," + base64.b64encode(fabric_bytes).decode()
+
+            def _on_queue_update(update):
+                if hasattr(update, "logs"):
+                    for log in update.logs:
+                        logger.debug(f"[Flux/fal] {log.get('message', '')}")
+
+            fal_result = fal_client.subscribe(
+                _FAL_MODEL_ID,
+                arguments={
+                    "image_url":     motif_b64,
+                    "prompt":        prompt,
+                    "num_images":    1,
+                    "output_format": "jpeg",
+                },
+                with_logs=True,
+                on_queue_update=_on_queue_update,
+            )
+
+            # Ambil URL gambar hasil dari response fal-client
+            images = fal_result.get("images", [])
+            if not images:
+                raise ValueError("fal-client: tidak ada gambar di response")
+
+            img_url = images[0].get("url", "")
+            if not img_url:
+                raise ValueError("fal-client: URL gambar kosong")
+
+            # Download gambar dari URL hasil
+            import urllib.request
+            with urllib.request.urlopen(img_url) as resp:
+                result_pil = Image.open(io.BytesIO(resp.read())).convert("RGB")
+
+            logger.info(f"[Flux/fal] Selesai via fal-client: {img_url[:80]}...")
+
+        except Exception as e:
+            logger.error(f"[Flux/fal] fal-client error: {e}")
+            return jsonify({
+                "error": f"fal-client gagal: {str(e)}",
+                "hint":  "Cek FAL_KEY Anda di https://fal.ai/dashboard → API Keys",
+            }), 500
+
+    else:
+        # ── Backend A: HuggingFace InferenceClient (default) ─────────────────
+        try:
+            client = InferenceClient(
+                provider=_FLUX_PROVIDER,
+                api_key=hf_token,
+            )
+            result_pil = client.image_to_image(
+                fabric_bytes,
+                prompt=prompt,
+                model=_FLUX_MODEL,
+            )
+        except Exception as e:
+            err_str = str(e)
+            logger.error(f"[Flux/hf] FLUX API error: {err_str}")
+
+            # Deteksi 403 Forbidden (org tidak ditemukan / token tidak punya akses)
+            if "403" in err_str or "Forbidden" in err_str:
+                return jsonify({
+                    "error": "403 Forbidden — token tidak punya akses ke provider atau model.",
+                    "detail": err_str[:300],
+                    "solusi": [
+                        "Kemungkinan penyebab:",
+                        "  1. HF_TOKEN belum punya akses ke model FLUX.1-Kontext-dev",
+                        "     → Accept license di: huggingface.co/black-forest-labs/FLUX.1-Kontext-dev",
+                        "  2. Token tidak punya permission 'Inference' (bukan Write/Read token)",
+                        "     → Buat token baru di huggingface.co/settings/tokens dengan scope 'Inference'",
+                        "  3. Jika pakai X-HF-Bill-To: pastikan nama organisasi HF sudah benar",
+                    ],
+                }), 403
+
+            # Deteksi 402 Payment Required secara spesifik
+            if "402" in err_str or "Payment Required" in err_str or "pay-as-you-go" in err_str.lower():
+                return jsonify({
+                    "error": "402 Payment Required — Pay-as-you-go belum aktif di HuggingFace untuk provider fal-ai.",
+                    "solusi": [
+                        "OPSI A — Aktifkan billing HuggingFace:",
+                        "  1. Buka https://huggingface.co/settings/billing",
+                        "  2. Klik 'Enable Pay-as-you-go' → masukkan kartu kredit",
+                        "  3. Buka https://huggingface.co/settings/inference-providers → aktifkan fal-ai",
+                        "  4. Coba request lagi dengan backend default (hapus field 'backend')",
+                        "",
+                        "OPSI B — Gunakan fal-client SDK langsung (ada free credits):",
+                        "  1. Daftar di https://fal.ai/dashboard",
+                        "  2. Buat API key baru",
+                        "  3. Set env: $env:FAL_KEY = 'xxxxxxxx:xxxxxxxx'",
+                        "  4. Install: pip install fal-client",
+                        "  5. Tambahkan field ke request JSON: \"backend\": \"fal\"",
+                    ],
+                }), 402
+
+            return jsonify({
+                "error": f"FLUX API gagal: {err_str}",
+                "hint": (
+                    "Pastikan: (1) HF_TOKEN valid, (2) sudah accept license di "
+                    "huggingface.co/black-forest-labs/FLUX.1-Kontext-dev, "
+                    "(3) akun fal.ai punya kredit aktif di https://huggingface.co/settings/billing"
+                ),
+            }), 500
+
+    # ── Step 5: Simpan hasil ──────────────────────────────────────────────────
+    result_id   = str(uuid.uuid4())
+    output_name = f"{result_id}_flux_front.jpg"
+    output_path = result_dir / output_name
+
+    try:
+        result_pil.convert("RGB").save(output_path, "JPEG", quality=92)
+    except Exception as e:
+        return jsonify({"error": f"Gagal simpan hasil: {str(e)}"}), 500
+
+    # ── Step 6: Catat ke DB sebagai MockupResult ──────────────────────────────
+    try:
+        db_result = MockupResult(
+            id=result_id,
+            fabric_id=fabric_id,
+            mockup_id="flux",
+            front_file=output_name,
+            back_file=None,
+            scale=1.0,
+            offset_x=0,
+            offset_y=0,
+            opacity=1.0,
+        )
+        db.session.add(db_result)
+        db.session.commit()
+    except Exception as e:
+        logger.warning(f"[Flux] DB commit gagal (file tetap tersimpan): {e}")
+
+    logger.info(
+        f"[Flux] Selesai: result_id={result_id}, backend={backend}, fabric={fabric_id}, "
+        f"input={resized_w}x{resized_h}px"
+    )
+
+    return jsonify({
+        "result_id":     result_id,
+        "fabric_id":     fabric_id,
+        "front_url":     f"/api/v1/files/results/{output_name}",
+        "prompt_used":   prompt,
+        "input_size":    [resized_w, resized_h],
+        "original_size": [orig_w, orig_h],
+        "flux_model":    _FLUX_MODEL,
+        "backend_used":  backend,
+    }), 201
+
+
+# ─── GET /results ──────────────────────────────────────────────────────────────
+
+@stage3_bp.route("/results", methods=["GET"])
+def list_results():
+    results = MockupResult.query.order_by(MockupResult.created_at.desc()).limit(50).all()
+    return jsonify({"results": [r.to_dict() for r in results]})
+
+
+@stage3_bp.route("/results/<result_id>", methods=["GET"])
+def get_result(result_id):
+    result = MockupResult.query.get_or_404(result_id)
+    return jsonify(result.to_dict())
