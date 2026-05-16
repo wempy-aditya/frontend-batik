@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const API_PROXY_BASE = "/api/batik-ai-studio";
 const API_V1_PREFIX = "/api/v1";
@@ -11,7 +11,7 @@ const STEPS = [
   { id: 1, title: "Stage 1", subtitle: "Generate motifs" },
   { id: 2, title: "Stage 2", subtitle: "Compose fabric" },
   { id: 3, title: "Stage 3", subtitle: "Fabric summary" },
-  { id: 4, title: "Stage 4", subtitle: "Apply FLUX" },
+  { id: 4, title: "Stage 4", subtitle: "Render garment" },
 ];
 
 const SCENARIO_OPTIONS = [
@@ -21,8 +21,9 @@ const SCENARIO_OPTIONS = [
 
 const STYLE_OPTIONS = [
   { value: "kemeja", label: "Kemeja" },
-  { value: "batik", label: "Batik" },
   { value: "casual", label: "Casual" },
+//   { value: "outer", label: "Outer" },
+  { value: "dress", label: "Dress" },
 ];
 
 const GENDER_OPTIONS = [
@@ -59,6 +60,29 @@ function isEven(value) {
   return Number.isFinite(value) && value % 2 === 0;
 }
 
+function buildDefaultPrompt(styleValue, genderValue, sleeveValue) {
+  const styleMap = {
+    kemeja:
+      sleeveValue === "panjang"
+        ? "long-sleeve batik shirt"
+        : "short-sleeve batik shirt",
+    casual: "casual batik top",
+    // outer: "batik outerwear",
+    dress: "batik dress",
+  };
+  const genderMap = { pria: "male", wanita: "female" };
+  const garmentDesc = styleMap[styleValue] || "long-sleeve batik shirt";
+  const genderDesc = genderMap[genderValue] || "male";
+
+  return (
+    `Realistic front-view studio photo of a ${genderDesc} mannequin ` +
+    `wearing a ${garmentDesc} using the uploaded motif as seamless fabric. ` +
+    "Preserve motif colors and pattern details faithfully. " +
+    "Apply repeating batik pattern with realistic cotton texture, " +
+    "natural fabric folds, clean white background, photorealistic fashion lighting."
+  );
+}
+
 export default function BatikAIStudioPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [prompt, setPrompt] = useState("");
@@ -81,6 +105,8 @@ export default function BatikAIStudioPage() {
   const [resultPrompt, setResultPrompt] = useState("");
   const [resultData, setResultData] = useState(null);
   const [showFluxPrompt, setShowFluxPrompt] = useState(false);
+  const lastDefaultPromptRef = useRef("");
+  const lastPromptParamsRef = useRef({ style: "", gender: "", sleeve: "" });
 
   const [isStage1Loading, setIsStage1Loading] = useState(false);
   const [isStage2Loading, setIsStage2Loading] = useState(false);
@@ -103,8 +129,35 @@ export default function BatikAIStudioPage() {
 
   const stepIndex = STEP_ORDER.indexOf(currentStep);
 
-  const canComposeFabric = selectedMotifs.length === 2;
+  const canComposeFabric = selectedMotifs.length >= 1;
   const hasFabric = Boolean(fabricData?.id);
+
+  useEffect(() => {
+    const prevParams = lastPromptParamsRef.current;
+    const hasChanged =
+      prevParams.style !== style ||
+      prevParams.gender !== gender ||
+      prevParams.sleeve !== sleeve;
+
+    if (!hasChanged) {
+      return;
+    }
+
+    lastPromptParamsRef.current = { style, gender, sleeve };
+
+    if (!showFluxPrompt) {
+      return;
+    }
+
+    const nextDefault = buildDefaultPrompt(style, gender, sleeve);
+    const trimmedCurrent = resultPrompt.trim();
+    const trimmedLastDefault = lastDefaultPromptRef.current.trim();
+
+    if (!trimmedCurrent || trimmedCurrent === trimmedLastDefault) {
+      setResultPrompt(nextDefault);
+      lastDefaultPromptRef.current = nextDefault;
+    }
+  }, [style, gender, sleeve, showFluxPrompt, resultPrompt]);
 
   useEffect(() => {
     let isMounted = true;
@@ -248,7 +301,7 @@ export default function BatikAIStudioPage() {
         return prev.filter((item) => item.id !== motif.id);
       }
       if (prev.length >= 2) {
-        addConsoleMessage("error", "Select exactly two motifs.");
+        addConsoleMessage("error", "You can select up to two motifs.");
         return prev;
       }
       return [...prev, motif];
@@ -257,7 +310,7 @@ export default function BatikAIStudioPage() {
 
   const handleComposeFabric = async () => {
     if (!canComposeFabric) {
-      addConsoleMessage("error", "Select exactly two motifs before composing.");
+      addConsoleMessage("error", "Select at least one motif before composing.");
       return;
     }
 
@@ -270,9 +323,16 @@ export default function BatikAIStudioPage() {
     addConsoleMessage("info", "Stage 2: composing fabric...");
 
     try {
+      if (selectedMotifs.length === 1) {
+        addConsoleMessage("info", "Using the same motif for A and B.");
+      }
+
+      const motifA = selectedMotifs[0].id;
+      const motifB = selectedMotifs[1]?.id || selectedMotifs[0].id;
+
       const data = await apiPost("/stage2/compose", {
-        motif_a_id: selectedMotifs[0].id,
-        motif_b_id: selectedMotifs[1].id,
+        motif_a_id: motifA,
+        motif_b_id: motifB,
         grid_rows: fabricParams.grid_rows,
         grid_cols: fabricParams.grid_cols,
         output_width_cm: fabricParams.output_width_cm,
@@ -294,12 +354,12 @@ export default function BatikAIStudioPage() {
 
   const handleApplyFlux = async () => {
     if (!fabricData?.id) {
-      addConsoleMessage("error", "Compose fabric first before applying FLUX.");
+      addConsoleMessage("error", "Compose fabric first before rendering.");
       return;
     }
 
     setIsStage3Loading(true);
-    addConsoleMessage("info", "Stage 4: applying FLUX to fabric...");
+    addConsoleMessage("info", "Stage 4: rendering garment...");
 
     try {
       const data = await apiPost("/stage3/apply-flux", {
@@ -407,7 +467,7 @@ export default function BatikAIStudioPage() {
 
             <p className="text-lg md:text-2xl text-gray-300 leading-relaxed mb-8">
               Stage-by-stage workflow for motif generation, fabric composition,
-              and FLUX rendering. This page follows the Batik AI Studio
+              and final rendering. This page follows the Batik AI Studio
               documentation flow from Stage 1 to Stage 3.
             </p>
 
@@ -419,7 +479,7 @@ export default function BatikAIStudioPage() {
                 Checkerboard fabric
               </div>
               <div className="px-4 py-2 rounded-full bg-white/10 border border-white/20">
-                FLUX Kontext output
+                Final garment output
               </div>
             </div>
           </div>
@@ -464,7 +524,7 @@ export default function BatikAIStudioPage() {
               ))}
             </div>
             {/* <div className="mt-4 text-xs text-gray-500">
-              Stage 3 (Select Garment) is skipped for FLUX-only workflow.
+              Stage 3 (Select Garment) is skipped in this workflow.
             </div> */}
           </div>
 
@@ -558,7 +618,7 @@ export default function BatikAIStudioPage() {
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-700">Motif Results</h3>
                       <span className="text-xs text-gray-400">
-                        Selected {selectedMotifs.length} / 2
+                        Selected {selectedMotifs.length}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
@@ -729,7 +789,7 @@ export default function BatikAIStudioPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {selectedMotifs.length === 0 && (
                         <div className="col-span-2 text-sm text-gray-400 bg-gray-50 rounded-xl p-4 text-center">
-                          Select two motifs in Stage 1.
+                          Select one or two motifs in Stage 1.
                         </div>
                       )}
                       {selectedMotifs.map((motif) => (
@@ -840,7 +900,7 @@ export default function BatikAIStudioPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800">Stage 4</h2>
-                    <p className="text-gray-500">Apply FLUX Kontext to render garment.</p>
+                    <p className="text-gray-500">Render garment from composed fabric.</p>
                   </div>
                 </div>
 
@@ -853,10 +913,27 @@ export default function BatikAIStudioPage() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => setShowFluxPrompt((prev) => !prev)}
+                          onClick={() =>
+                            setShowFluxPrompt((prev) => {
+                              const next = !prev;
+                              const nextDefault = buildDefaultPrompt(style, gender, sleeve);
+
+                              if (next) {
+                                if (!resultPrompt.trim()) {
+                                  setResultPrompt(nextDefault);
+                                  lastDefaultPromptRef.current = nextDefault;
+                                }
+                              } else {
+                                setResultPrompt(nextDefault);
+                                lastDefaultPromptRef.current = nextDefault;
+                              }
+
+                              return next;
+                            })
+                          }
                           className="rounded-full border border-orange-200 px-3 py-1 text-xs font-semibold text-orange-700 transition hover:bg-orange-50"
                         >
-                          {showFluxPrompt ? "Hide Prompt" : "Add Prompt"}
+                          {showFluxPrompt ? "Cancel" : "Modify Prompt"}
                         </button>
                       </div>
                       {showFluxPrompt ? (
@@ -865,11 +942,11 @@ export default function BatikAIStudioPage() {
                           onChange={(event) => setResultPrompt(event.target.value)}
                           rows={3}
                           className="w-full mt-2 rounded-xl border border-gray-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                          placeholder="Optional style prompt for FLUX"
+                          placeholder="Optional style prompt"
                         />
                       ) : (
                         <div className="mt-2 text-xs text-gray-400">
-                          Prompt is optional. Click Add Prompt to include it.
+                          Prompt is optional. Click Modify Prompt to edit it.
                         </div>
                       )}
                     </div>
@@ -928,7 +1005,7 @@ export default function BatikAIStudioPage() {
                     </button>
 
                     <div className="text-xs text-gray-400">
-                      Mode: FLUX Kontext. Output max size: 1024 px.
+                      Mode: Garment render. Output max size: 1024 px.
                     </div>
                   </div>
 
@@ -938,12 +1015,12 @@ export default function BatikAIStudioPage() {
                         <div className="relative group">
                           <img
                             src={resolveFileUrl(resultData.front_url)}
-                            alt="FLUX result"
+                            alt="Render result"
                             className="w-full h-60 object-contain bg-white rounded-xl"
                           />
                           <button
                             type="button"
-                            onClick={() => openPreview("FLUX Result", resolveFileUrl(resultData.front_url))}
+                            onClick={() => openPreview("Render Result", resolveFileUrl(resultData.front_url))}
                             className="absolute top-3 right-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-white"
                           >
                             <span>Zoom</span>
@@ -971,7 +1048,7 @@ export default function BatikAIStudioPage() {
                       </div>
                     ) : (
                       <div className="h-60 rounded-xl bg-white border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm">
-                        Generate FLUX result to preview.
+                        Generate result to preview.
                       </div>
                     )}
                   </div>
