@@ -401,8 +401,8 @@ export default function ParangBatikPage() {
                   onClick={generateImage}
                   disabled={isGenerating || !prompt.trim()}
                   className={`w-full py-5 px-6 text-lg font-bold rounded-xl transition-all duration-300 transform ${isGenerating || !prompt.trim()
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:scale-105 hover:shadow-2xl shadow-lg"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:scale-105 hover:shadow-2xl shadow-lg"
                     }`}
                 >
                   {isGenerating ? (
@@ -605,50 +605,7 @@ export default function ParangBatikPage() {
             </div>
           </div>
 
-          {/* Tips Section */}
-          <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              ⚡ Parang Creation Tips
-            </h2>
-            <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
-              Master the art of creating royal Parang batik patterns with AI precision
-            </p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">👑</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  Royal Symbolism
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Parang motifs represent power, authority, and protection. Each variation carries specific cultural meanings and historical significance.
-                </p>
-              </div>
-              <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">📐</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  Diagonal Precision
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  The diagonal blade-like patterns should flow consistently. Describe the angle, width, and spacing for best results.
-                </p>
-              </div>
-              <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">🎨</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  Traditional Colors
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Classic Parang uses deep indigo, brown, and cream. Experiment with traditional color combinations for authentic results.
-                </p>
-              </div>
-            </div>
-          </div>
+
         </div>
       </section>
     </div>

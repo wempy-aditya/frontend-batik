@@ -633,54 +633,6 @@ export default function AdvancedBatikPage() {
             </div>
           </div>
 
-          {/* Tips Section */}
-          <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              ⚡ Advanced Creation Tips
-            </h2>
-            <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
-              Master the art of AI-driven batik creation with these professional
-              techniques
-            </p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">🎯</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  Scenario Selection
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Each scenario offers different artistic interpretations.
-                  Experiment to find your preferred style.
-                </p>
-              </div>
-              <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">⚙️</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  Parameter Tuning
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Higher guidance scale = more prompt adherence. More steps =
-                  better quality but longer processing.
-                </p>
-              </div>
-              <div className="text-center p-6 bg-white rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">🎨</span>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">
-                  Detailed Prompts
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Include specific cultural references, color descriptions, and
-                  symbolic meanings for best results.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
     </div>

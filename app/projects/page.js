@@ -520,21 +520,13 @@ export default function ProjectsPage() {
               {displayProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="group relative"
+                  className="group relative cursor-pointer"
                   onMouseEnter={() => setHoveredProject(project.id)}
                   onMouseLeave={() => setHoveredProject(null)}
+                  onClick={() => router.push(`/projects/${project.id}`)}
                 >
                   {/* Project Card */}
                   <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full flex flex-col">
-                    {/* Gradient Background on Hover */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
-                    ></div>
-
-                    {/* Animated Border Glow */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-r ${project.thumbnail} rounded-3xl opacity-0 group-hover:opacity-20 blur-sm transition-all duration-500 scale-105`}
-                    ></div>
 
                     {/* Thumbnail/Hero Image */}
                     <div className="relative h-48 overflow-hidden">
@@ -550,7 +542,7 @@ export default function ProjectsPage() {
                         />
                       ) : null}
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 transition-all duration-700 group-hover:scale-110`}
+                        className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 transition-all duration-700 group-hover:scale-110"
                         style={{
                           display: project.thumbnail_url ? "none" : "block",
                         }}
@@ -559,14 +551,16 @@ export default function ProjectsPage() {
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-all duration-500"></div>
                       </div>
 
-                      {/* Floating Particles */}
-                      <div className="absolute inset-0 opacity-30">
-                        <div className="absolute top-4 right-8 w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                        <div className="absolute top-12 right-16 w-1 h-1 bg-white rounded-full animate-bounce"></div>
-                        <div className="absolute top-8 right-4 w-1.5 h-1.5 bg-white rounded-full animate-bounce"></div>
+                      {/* Hover overlay arrow */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                          <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
                       </div>
 
-                      {/* Status & Complexity Badges */}
+                      {/* Status Badge */}
                       <div className="absolute top-4 left-4 flex gap-2">
                         <span
                           className={`px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(
@@ -579,7 +573,8 @@ export default function ProjectsPage() {
                             : "Published"}
                         </span>
                       </div>
-                      <div className="absolute top-4 right-4">
+                      {/* Complexity + Live Demo badge */}
+                      <div className="absolute top-4 right-4 flex flex-col gap-1.5 items-end">
                         <span
                           className={`px-3 py-1 text-xs font-medium rounded-full ${getComplexityColor(
                             project.complexity,
@@ -590,6 +585,12 @@ export default function ProjectsPage() {
                               project.complexity.slice(1)
                             : "Medium"}
                         </span>
+                        {project.demo_url && project.demo_url.length > 0 && (
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs font-bold rounded-full bg-green-500 text-white shadow-lg">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            Live Demo
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -597,37 +598,39 @@ export default function ProjectsPage() {
                     <div className="relative z-10 p-6 space-y-4 flex-1 flex flex-col">
                       {/* Title & Description */}
                       <div className="flex-grow">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors duration-300">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-amber-700 transition-colors duration-300">
                           {project.title}
                         </h3>
-                        <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                        <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-700 transition-colors duration-300 line-clamp-3">
                           {project.description}
                         </p>
                       </div>
 
                       {/* Technologies */}
-                      <div>
-                        <h4 className="text-xs font-semibold text-gray-900 mb-2">
-                          Technologies:
-                        </h4>
-                        <div className="flex flex-wrap gap-1">
-                          {project.technologies
-                            .slice(0, 3)
-                            .map((tech, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-md border border-amber-200"
-                              >
-                                {tech}
+                      {project.technologies && project.technologies.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                            Technologies
+                          </h4>
+                          <div className="flex flex-wrap gap-1">
+                            {project.technologies
+                              .slice(0, 3)
+                              .map((tech, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 rounded-md border border-amber-200"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            {project.technologies.length > 3 && (
+                              <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded-md">
+                                +{project.technologies.length - 3} more
                               </span>
-                            ))}
-                          {project.technologies.length > 3 && (
-                            <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-100 rounded-md">
-                              +{project.technologies.length - 3} more
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Tags */}
                       {project.tags && project.tags.length > 0 && (
@@ -637,7 +640,7 @@ export default function ProjectsPage() {
                               key={index}
                               className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-md"
                             >
-                              {tag}
+                              #{tag}
                             </span>
                           ))}
                           {project.tags.length > 3 && (
@@ -650,19 +653,11 @@ export default function ProjectsPage() {
 
                       {/* Action Button - Sticky Bottom */}
                       <div className="mt-auto pt-4">
-                        <div
-                          onClick={() => {
-                            console.log(
-                              `Navigating to project ${project.id} details`,
-                            );
-                            window.location.href = `/projects/${project.id}`;
-                          }}
-                          className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
-                        >
+                        <div className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 group-hover:from-amber-400 group-hover:to-orange-400 group-hover:shadow-lg">
                           <div className="flex items-center justify-center gap-2">
                             <span>View Details</span>
                             <svg
-                              className="w-4 h-4 transition-transform duration-300"
+                              className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
