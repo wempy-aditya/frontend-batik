@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 // ── Accordion Row Component ──
@@ -29,13 +29,186 @@ function AccordionRow({ icon, iconColor, label, badge, children, isLast }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}`}
-      >
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${open ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"}`}>
         <div className="px-6 pb-5 pt-1">
           {children}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Demo Modal Component ──
+function DemoModal({ isOpen, onClose, project, activeDemoIndex, setActiveDemoIndex, getDemoLabel, iframeLoading, setIframeLoading, iframeError, setIframeError, demoRefreshKey, setDemoRefreshKey }) {
+  const activeDemoUrl = project?.demo_url?.[activeDemoIndex] ?? null;
+
+  const handleDemoChange = (index) => {
+    setActiveDemoIndex(index);
+    setIframeLoading(true);
+    setIframeError(false);
+    setDemoRefreshKey(Date.now().toString());
+  };
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === "Escape") onClose(); };
+    if (isOpen) document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [isOpen, onClose]);
+
+  // Prevent body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ animation: "fadeIn 0.2s ease-out" }}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal window */}
+      <div
+        className="relative w-full max-w-7xl flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+        style={{
+          height: "90vh",
+          animation: "slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      >
+        {/* Browser-style title bar */}
+        <div className="flex items-center gap-3 px-5 py-3 bg-gray-900 border-b border-gray-700 flex-shrink-0">
+          {/* Traffic lights */}
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="w-3.5 h-3.5 rounded-full bg-red-500 hover:bg-red-400 transition-colors flex items-center justify-center group"
+              title="Tutup"
+            >
+              <svg className="w-2 h-2 text-red-900 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="w-3.5 h-3.5 rounded-full bg-yellow-400"></div>
+            <div className="w-3.5 h-3.5 rounded-full bg-green-500"></div>
+          </div>
+
+          {/* Multi-demo tabs */}
+          {project.demo_url.length > 1 && (
+            <div className="flex gap-1.5">
+              {project.demo_url.map((url, index) => (
+                <button key={index} onClick={() => handleDemoChange(index)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                    activeDemoIndex === index
+                      ? "bg-amber-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  {getDemoLabel(url, index)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Address bar */}
+          <div className="flex-1 min-w-0">
+            <div className="bg-gray-700 rounded-lg px-3 py-1.5 text-xs text-gray-400 truncate font-mono flex items-center gap-2">
+              <svg className="w-3 h-3 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span className="truncate">{activeDemoUrl}</span>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <a href={activeDemoUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-white transition-all">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Buka
+            </a>
+            <button onClick={onClose}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-300 transition-all">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Tutup
+            </button>
+          </div>
+        </div>
+
+        {/* Iframe content */}
+        <div className="flex-1 relative bg-white overflow-hidden">
+          {iframeError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-orange-50 p-8 text-center">
+              <div className="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center mb-6">
+                <svg className="w-10 h-10 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-black text-gray-800 mb-3">Preview Tidak Tersedia</h3>
+              <p className="text-gray-500 text-sm mb-6 max-w-md leading-relaxed">
+                Demo ini tidak dapat di-embed karena pembatasan keamanan (X-Frame-Options atau CSP). Silakan buka langsung di tab baru.
+              </p>
+              <a href={activeDemoUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Buka Demo di Tab Baru
+              </a>
+            </div>
+          ) : (
+            <>
+              {iframeLoading && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50">
+                  <div className="relative w-16 h-16 mb-5">
+                    <div className="absolute inset-0 rounded-full border-4 border-amber-200"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-amber-500 border-t-transparent animate-spin"></div>
+                  </div>
+                  <p className="text-gray-700 text-base font-bold">Memuat demo...</p>
+                  <p className="text-gray-400 text-xs mt-1">Mohon tunggu sebentar</p>
+                </div>
+              )}
+              <iframe
+                key={`${activeDemoUrl}-${demoRefreshKey}`}
+                src={activeDemoUrl ? `${activeDemoUrl}${activeDemoUrl.includes("?") ? "&" : "?"}t=${demoRefreshKey}` : ""}
+                title={`Demo - ${project.title}`}
+                className="w-full h-full"
+                style={{ border: "none", display: "block" }}
+                onLoad={() => { setIframeLoading(false); setIframeError(false); }}
+                onError={() => { setIframeLoading(false); setIframeError(true); }}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
+                allow="camera; microphone; fullscreen; autoplay"
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -52,6 +225,7 @@ export default function ProjectDetailPage() {
   const [iframeLoading, setIframeLoading] = useState(true);
   const [iframeError, setIframeError] = useState(false);
   const [demoRefreshKey, setDemoRefreshKey] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     setDemoRefreshKey(Date.now().toString());
@@ -109,12 +283,16 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const handleDemoChange = (index) => {
-    setActiveDemoIndex(index);
+  const openModal = useCallback(() => {
     setIframeLoading(true);
     setIframeError(false);
     setDemoRefreshKey(Date.now().toString());
-  };
+    setModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+  }, []);
 
   if (loading) {
     return (
@@ -140,7 +318,7 @@ export default function ProjectDetailPage() {
             </svg>
           </div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Project Not Found</h2>
-          <p className="text-gray-500 mb-6 text-sm">The project you're looking for doesn't exist.</p>
+          <p className="text-gray-500 mb-6 text-sm">The project you&#39;re looking for doesn&#39;t exist.</p>
           <button
             onClick={() => router.push("/projects")}
             className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
@@ -155,7 +333,6 @@ export default function ProjectDetailPage() {
   const hasDemos = project.demo_url && Array.isArray(project.demo_url) && project.demo_url.length > 0;
   const activeDemoUrl = hasDemos ? project.demo_url[activeDemoIndex] : null;
 
-  // Build accordion sections — only show if has data
   const sections = [
     {
       key: "overview",
@@ -325,6 +502,24 @@ export default function ProjectDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
 
+      {/* ── DEMO MODAL ── */}
+      {hasDemos && (
+        <DemoModal
+          isOpen={modalOpen}
+          onClose={closeModal}
+          project={project}
+          activeDemoIndex={activeDemoIndex}
+          setActiveDemoIndex={setActiveDemoIndex}
+          getDemoLabel={getDemoLabel}
+          iframeLoading={iframeLoading}
+          setIframeLoading={setIframeLoading}
+          iframeError={iframeError}
+          setIframeError={setIframeError}
+          demoRefreshKey={demoRefreshKey}
+          setDemoRefreshKey={setDemoRefreshKey}
+        />
+      )}
+
       {/* ── HERO ── */}
       <section className="relative py-20 pt-32 bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -352,20 +547,39 @@ export default function ProjectDetailPage() {
           </div>
 
           <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 items-start">
-            {/* Thumbnail */}
+            {/* Thumbnail — clickable to open demo */}
             <div className="lg:w-2/5 flex-shrink-0">
-              <div className="relative h-64 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+              <div
+                className={`relative h-64 rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10 ${hasDemos ? "cursor-pointer group" : ""}`}
+                onClick={hasDemos ? openModal : undefined}
+              >
                 {project.thumbnail_url ? (
                   <img src={project.thumbnail_url} alt={project.title}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => { e.target.style.display = "none"; e.target.nextElementSibling.style.display = "flex"; }} />
                 ) : null}
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center"
                   style={{ display: project.thumbnail_url ? "none" : "flex" }}>
                   <span className="text-white text-7xl font-black opacity-30">{project.title?.charAt(0)}</span>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+
+                {/* Play overlay (only if has demo) */}
+                {hasDemos && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/60 flex items-center justify-center mb-3 transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                      <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-sm font-bold bg-black/30 backdrop-blur-sm px-4 py-1.5 rounded-full">
+                      Preview Demo
+                    </span>
+                  </div>
+                )}
               </div>
+
+
             </div>
 
             {/* Info */}
@@ -373,7 +587,7 @@ export default function ProjectDetailPage() {
               <h1 className="text-4xl md:text-5xl font-black mb-4 text-white leading-tight">{project.title}</h1>
               <p className="text-lg text-gray-300 leading-relaxed mb-5">{project.description}</p>
               {project.tags && project.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-6">
                   {project.tags.map((tag, idx) => (
                     <span key={idx} className="px-3 py-1 bg-white/10 text-amber-200 rounded-full text-sm border border-white/10">
                       #{tag}
@@ -381,6 +595,31 @@ export default function ProjectDetailPage() {
                   ))}
                 </div>
               )}
+
+
+
+              <div className="flex flex-wrap gap-3">
+                {hasDemos && (
+                  <button
+                    onClick={openModal}
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                    Buka Preview
+                  </button>
+                )}
+                {hasDemos && (
+                  <a href={activeDemoUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all duration-300">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Buka Langsung
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -390,7 +629,6 @@ export default function ProjectDetailPage() {
       <section className="py-12">
         <div className="container mx-auto px-6 lg:px-8 max-w-5xl space-y-6">
 
-          {/* ── SINGLE ACCORDION CARD ── */}
           {sections.length > 0 && (
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               {sections.map((s, i) => (
@@ -408,83 +646,42 @@ export default function ProjectDetailPage() {
             </div>
           )}
 
-          {/* ── DEMO SECTION ── */}
-          {hasDemos ? (
-            <div>
-              {project.demo_url.length > 1 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.demo_url.map((url, index) => (
-                    <button key={index} onClick={() => handleDemoChange(index)}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border-2 ${
-                        activeDemoIndex === index
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-md"
-                          : "bg-white text-gray-600 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
-                      }`}
-                    >
-                      <svg className={`w-4 h-4 flex-shrink-0 ${activeDemoIndex === index ? "text-white" : "text-amber-500"}`}
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <span className="truncate max-w-[200px]">{getDemoLabel(url, index)}</span>
-                    </button>
-                  ))}
+          {/* No demo card */}
+          {!hasDemos && (
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm">
+              <div className="p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-5 shadow-inner">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                 </div>
-              )}
-              <div className="rounded-3xl overflow-hidden border-2 border-gray-200 shadow-xl bg-white relative">
-                {iframeError ? (
-                  <div className="flex flex-col items-center justify-center h-[500px] bg-gradient-to-br from-gray-50 to-orange-50 p-8 text-center">
-                    <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-                      <svg className="w-7 h-7 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                <h3 className="text-lg font-bold text-gray-700 mb-2">Demo Belum Tersedia</h3>
+                <p className="text-gray-400 text-sm leading-relaxed max-w-xs mx-auto mb-6">
+                  Proyek ini belum memiliki demo langsung. Silakan hubungi kami untuk informasi lebih lanjut.
+                </p>
+                <ul className="text-left space-y-3 max-w-sm mx-auto">
+                  <li className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                    </div>
-                    <h3 className="text-base font-bold text-gray-800 mb-2">Preview Unavailable</h3>
-                    <p className="text-gray-500 text-sm mb-5 max-w-sm">This demo can't be embedded due to security restrictions.</p>
-                    <a href={activeDemoUrl} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </span>
+                    <span className="text-xs text-amber-700 leading-relaxed">Demo sedang dalam pengembangan atau tidak tersedia secara publik.</span>
+                  </li>
+                  <li className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mt-0.5">
+                      <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      Open in New Tab
-                    </a>
-                  </div>
-                ) : (
-                  <>
-                    {iframeLoading && (
-                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50">
-                        <div className="relative w-12 h-12 mb-3">
-                          <div className="absolute inset-0 rounded-full border-4 border-amber-200"></div>
-                          <div className="absolute inset-0 rounded-full border-4 border-amber-500 border-t-transparent animate-spin"></div>
-                        </div>
-                        <p className="text-gray-500 text-sm font-medium">Loading demo...</p>
-                      </div>
-                    )}
-                    <iframe 
-                      key={`${activeDemoUrl}-${demoRefreshKey}`} 
-                      src={activeDemoUrl ? `${activeDemoUrl}${activeDemoUrl.includes('?') ? '&' : '?'}t=${demoRefreshKey}` : ''} 
-                      title={`Demo - ${project.title}`}
-                      className="w-full" style={{ height: "720px", border: "none", display: "block" }}
-                      onLoad={() => { setIframeLoading(false); setIframeError(false); }}
-                      onError={() => { setIframeLoading(false); setIframeError(true); }}
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
-                      allow="camera; microphone; fullscreen; autoplay" />
-                  </>
-                )}
+                    </span>
+                    <span className="text-xs text-blue-700 leading-relaxed">Hubungi tim kami untuk akses atau pertanyaan lebih lanjut.</span>
+                  </li>
+                </ul>
               </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl border-2 border-dashed border-gray-200 p-12 text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-base font-bold text-gray-600 mb-1">Demo Not Available</h3>
-              <p className="text-gray-400 text-sm">No live demo provided for this project yet.</p>
             </div>
           )}
 
-          {/* ── CTA ── */}
+          {/* CTA */}
           <div className="bg-gradient-to-br from-stone-900 via-amber-900 to-stone-900 rounded-3xl p-10 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0 bg-repeat" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}></div>
