@@ -469,7 +469,7 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500">
             <p>Indonesian Batik Research Platform</p>
-            <p className="mt-1">© 2025 All rights reserved</p>
+            <p className="mt-1">© 2026 All rights reserved</p>
           </div>
         </div>
 
