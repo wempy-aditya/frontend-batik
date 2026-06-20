@@ -264,32 +264,35 @@ export default function AboutPage() {
       {/* ── CTA Section ── */}
       <section className="py-10 md:py-20 relative">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl md:rounded-3xl p-7 md:p-12 text-center">
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
-              Join Our Mission
-            </h2>
-            <p className="text-base md:text-xl text-white/90 max-w-2xl mx-auto mb-6 md:mb-8 leading-relaxed">
-              Be part of the batik research community. Whether you&apos;re a
-              researcher, designer, or cultural enthusiast, there&apos;s a place for
-              you in our community.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
-              <button
-                onClick={() => router.push("/contact")}
-                className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white text-amber-900 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-sm md:text-base"
-              >
-                Get In Touch
-              </button>
-              <button
-                onClick={() => router.push("/projects")}
-                className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 text-sm md:text-base"
-              >
-                View Projects
-              </button>
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl md:rounded-3xl p-7 md:p-12 text-center">
+              <h2 className="text-2xl md:text-4xl font-bold text-white mb-3 md:mb-6">
+                Join Our Mission
+              </h2>
+              <p className="text-base md:text-xl text-white/90 max-w-2xl mx-auto mb-6 md:mb-8 leading-relaxed">
+                Be part of the batik research community. Whether you&apos;re a
+                researcher, designer, or cultural enthusiast, there&apos;s a place for
+                you in our community.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
+                <button
+                  onClick={() => router.push("/contact")}
+                  className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white text-amber-900 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-sm md:text-base"
+                >
+                  Get In Touch
+                </button>
+                <button
+                  onClick={() => router.push("/projects")}
+                  className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 text-sm md:text-base"
+                >
+                  View Projects
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
 
     </div>
   );
