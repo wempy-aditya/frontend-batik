@@ -58,7 +58,7 @@ export default function BatikRetrievalPage() {
         <div className="relative container mx-auto px-4 text-center">
           <div className="inline-block mb-6 px-6 py-2 bg-orange-500/20 backdrop-blur-sm rounded-full border border-orange-400/30">
             <span className="text-orange-200 text-sm font-medium">
-              🔍 Batik Pattern Retrieval
+               Batik Pattern Retrieval
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
@@ -79,7 +79,7 @@ export default function BatikRetrievalPage() {
           {/* Instructions */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">📋</span>
+              <span className="text-4xl"></span>
               How It Works
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -122,7 +122,7 @@ export default function BatikRetrievalPage() {
           {/* Random Patches */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">🎨</span>
+              <span className="text-4xl"></span>
               Select a Patch to Find Similar Patterns
             </h2>
             <p className="text-gray-600 mb-6">
@@ -132,7 +132,7 @@ export default function BatikRetrievalPage() {
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-medium">⚠️ {error}</p>
+                <p className="text-red-800 font-medium"> {error}</p>
               </div>
             )}
 
@@ -166,7 +166,7 @@ export default function BatikRetrievalPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center">
-                            <div className="text-white text-4xl mb-2">🔍</div>
+                            <div className="text-white text-4xl mb-2"></div>
                             <p className="text-white font-bold text-sm">Find Similar</p>
                           </div>
                         </div>
@@ -191,7 +191,7 @@ export default function BatikRetrievalPage() {
             {patches.length > 0 && (
               <div className="mt-8 p-6 bg-orange-50 rounded-xl border border-orange-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">ℹ️</span>
+                  <span className="text-2xl"></span>
                   <h3 className="font-bold text-orange-900">About Random Patches</h3>
                 </div>
                 <p className="text-orange-800 text-sm leading-relaxed">

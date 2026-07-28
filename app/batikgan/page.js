@@ -116,7 +116,7 @@ export default function BatikGANPage() {
         <div className="relative container mx-auto px-4 text-center">
           <div className="inline-block mb-6 px-6 py-2 bg-teal-500/20 backdrop-blur-sm rounded-full border border-teal-400/30">
             <span className="text-teal-200 text-sm font-medium">
-              🤖 BatikGAN CL/SL Generator
+               BatikGAN CL/SL Generator
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
@@ -137,7 +137,7 @@ export default function BatikGANPage() {
           {/* Model Selection */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-teal-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">🧠</span>
+              <span className="text-4xl"></span>
               Select GAN Models
             </h2>
             <p className="text-gray-600 mb-6">
@@ -168,7 +168,7 @@ export default function BatikGANPage() {
                     </span>
                   </div>
                   {selectedModels.includes(model.value) && (
-                    <span className="absolute top-3 right-3 text-teal-500 text-xl">✓</span>
+                    <span className="absolute top-3 right-3 text-teal-500 text-xl"></span>
                   )}
                 </label>
               ))}
@@ -185,7 +185,7 @@ export default function BatikGANPage() {
           {/* Patch Selection */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-teal-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">🎨</span>
+              <span className="text-4xl"></span>
               Select Patch Images
             </h2>
             <p className="text-gray-600 mb-6">
@@ -195,7 +195,7 @@ export default function BatikGANPage() {
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-medium">⚠️ {error}</p>
+                <p className="text-red-800 font-medium"> {error}</p>
               </div>
             )}
 
@@ -268,7 +268,7 @@ export default function BatikGANPage() {
                       {/* Checkmark */}
                       {isSelected && (
                         <div className="absolute top-2 right-2 bg-white text-teal-600 w-6 h-6 rounded-full flex items-center justify-center shadow-lg">
-                          ✓
+                          
                         </div>
                       )}
                       
@@ -297,7 +297,7 @@ export default function BatikGANPage() {
               }`}
             >
               {selectedPatches.length === MAX_PATCHES && selectedModels.length > 0
-                ? `🚀 Generate Batik with ${selectedModels.length} Model${selectedModels.length > 1 ? "s" : ""}`
+                ? ` Generate Batik with ${selectedModels.length} Model${selectedModels.length > 1 ? "s" : ""}`
                 : selectedPatches.length !== MAX_PATCHES
                 ? `Select ${MAX_PATCHES - selectedPatches.length} more patch${MAX_PATCHES - selectedPatches.length > 1 ? "es" : ""}`
                 : "Select at least one model"}

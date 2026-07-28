@@ -263,7 +263,7 @@ const CitationExportModal = ({ publication, isOpen, onClose }) => {
                 </span>
                 {useApiCitation && (
                   <span className="ml-auto text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                    ✓ Official Citation
+                     Official Citation
                   </span>
                 )}
               </div>

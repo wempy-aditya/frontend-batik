@@ -5,7 +5,7 @@ const IPADAPTER_API_URL = "https://ip-adapter.wempyaw.com/";
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },
-  { value: "scenario2", label: "Scenario 2 ⭐", description: "Extended dataset (recommended)" },
+  { value: "scenario2", label: "Scenario 2 ", description: "Extended dataset (recommended)" },
   { value: "scenario2_1", label: "Scenario 2.1", description: "Sub-variant 2.1" },
   { value: "scenario2_2", label: "Scenario 2.2", description: "Sub-variant 2.2" },
   { value: "scenario2_3", label: "Scenario 2.3", description: "Sub-variant 2.3" },
@@ -36,7 +36,7 @@ const EXAMPLE_PROMPTS = [
 const USE_CASES = [
   {
     id: "style-transfer",
-    icon: "🎨",
+    icon: "",
     label: "Style Transfer",
     desc: "Change colors while keeping style/concept",
     promptHint: "batik in [NEW_COLORS], traditional style",
@@ -44,7 +44,7 @@ const USE_CASES = [
   },
   {
     id: "artistic",
-    icon: "🖌️",
+    icon: "",
     label: "Artistic Reinterpretation",
     desc: "Modern take on traditional motif",
     promptHint: "modern minimalist batik with [DESCRIPTION]",
@@ -52,7 +52,7 @@ const USE_CASES = [
   },
   {
     id: "blend",
-    icon: "🔀",
+    icon: "",
     label: "Concept Blending",
     desc: "Combine features from up to 3 images",
     promptHint: "batik combining [MOTIF_A] and [MOTIF_B] concepts",
@@ -108,7 +108,7 @@ function DropZone({ label, accept, file, preview, onFile, onClear, icon, hint, n
               <span className="text-white text-xs font-medium">Click to replace</span>
             </div>
             <div className="p-1.5 text-center text-xs text-green-700 font-medium truncate px-3">
-              ✅ {file?.name}
+               {file?.name}
             </div>
           </div>
         ) : (
@@ -124,7 +124,7 @@ function DropZone({ label, accept, file, preview, onFile, onClear, icon, hint, n
           onClick={(e) => { e.stopPropagation(); onClear(); }}
           className="mt-1.5 w-full text-xs text-red-400 hover:text-red-600 transition-colors"
         >
-          ✕ Remove
+           Remove
         </button>
       )}
     </div>
@@ -366,9 +366,9 @@ export default function IPAdapterPage() {
 
             <div className="flex flex-wrap justify-center gap-4">
               {[
-                { icon: "🧠", text: "Semantic Style Matching" },
-                { icon: "🔀", text: "Multi-Image Blending" },
-                { icon: "🎨", text: "Creative Freedom" },
+                { icon: "", text: "Semantic Style Matching" },
+                { icon: "", text: "Multi-Image Blending" },
+                { icon: "", text: "Creative Freedom" },
               ].map((f) => (
                 <div key={f.text} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <span>{f.icon}</span>
@@ -402,9 +402,9 @@ export default function IPAdapterPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center text-xs">
             {[
               { label: "Control Type", cn: "Pixel / Spatial", ipa: "Latent / Semantic" },
-              { label: "Structure", cn: "✅ Exact", ipa: "⚠️ Conceptual" },
-              { label: "Style Transfer", cn: "⚠️ Limited", ipa: "✅ Excellent" },
-              { label: "Creative Freedom", cn: "❌ Rigid", ipa: "✅ Flexible" },
+              { label: "Structure", cn: " Exact", ipa: " Conceptual" },
+              { label: "Style Transfer", cn: " Limited", ipa: " Excellent" },
+              { label: "Creative Freedom", cn: " Rigid", ipa: " Flexible" },
             ].map((row) => (
               <div key={row.label} className="p-3 bg-gray-50 rounded-xl border border-gray-200">
                 <p className="font-bold text-gray-600 mb-2">{row.label}</p>
@@ -423,7 +423,7 @@ export default function IPAdapterPage() {
           {/* Use Case Quick Presets */}
           <div className="mb-8 bg-white rounded-3xl shadow-xl p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <span>⚡</span> Quick Use Case Presets
+              <span></span> Quick Use Case Presets
             </h3>
             <div className="grid md:grid-cols-3 gap-4">
               {USE_CASES.map((uc) => (
@@ -474,7 +474,7 @@ export default function IPAdapterPage() {
                       preview={preview1}
                       onFile={(f) => handleImage(f, setImage1, setPreview1)}
                       onClear={() => clearImage(setImage1, setPreview1)}
-                      icon="🖼️"
+                      icon=""
                       hint="Primary reference"
                     />
                     {image1 && (
@@ -502,7 +502,7 @@ export default function IPAdapterPage() {
                       preview={preview2}
                       onFile={(f) => handleImage(f, setImage2, setPreview2)}
                       onClear={() => clearImage(setImage2, setPreview2)}
-                      icon="🔀"
+                      icon=""
                       hint="For dual-motif blend"
                       optional
                     />
@@ -531,7 +531,7 @@ export default function IPAdapterPage() {
                       preview={preview3}
                       onFile={(f) => handleImage(f, setImage3, setPreview3)}
                       onClear={() => clearImage(setImage3, setPreview3)}
-                      icon="✨"
+                      icon=""
                       hint="For triple-motif blend"
                       optional
                     />
@@ -550,7 +550,7 @@ export default function IPAdapterPage() {
 
                 {imageCount >= 2 && (
                   <div className="mt-5 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700">
-                    <strong>🔀 Multi-image mode:</strong> {imageCount} images loaded. API will blend their semantic features. Note: multi-image uses a simplified blending approach — for precise structural blending, consider using ControlNet instead.
+                    <strong> Multi-image mode:</strong> {imageCount} images loaded. API will blend their semantic features. Note: multi-image uses a simplified blending approach — for precise structural blending, consider using ControlNet instead.
                   </div>
                 )}
               </div>
@@ -586,7 +586,7 @@ export default function IPAdapterPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 text-sm leading-relaxed"
                   />
                   <p className="text-xs text-gray-400 mt-1.5">
-                    💡 Tip: Describe the new colors/style you want. The images handle the concept/style, prompt handles the transformation direction.
+                     Tip: Describe the new colors/style you want. The images handle the concept/style, prompt handles the transformation direction.
                   </p>
                 </div>
 
@@ -728,15 +728,15 @@ export default function IPAdapterPage() {
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                       </svg>
-                      <span>🎨 Run IP-Adapter Blend ({imageCount} image{imageCount !== 1 ? "s" : ""})</span>
+                      <span> Run IP-Adapter Blend ({imageCount} image{imageCount !== 1 ? "s" : ""})</span>
                     </div>
                   )}
                 </button>
 
                 {(!image1 || !prompt.trim()) && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {!image1 && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Upload at least Image 1</span>}
-                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Enter a prompt</span>}
+                    {!image1 && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Upload at least Image 1</span>}
+                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Enter a prompt</span>}
                   </div>
                 )}
               </div>
@@ -772,7 +772,7 @@ export default function IPAdapterPage() {
                       <svg className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <p className="text-amber-800 font-bold text-base mb-1">🧠 Blending styles...</p>
+                      <p className="text-amber-800 font-bold text-base mb-1"> Blending styles...</p>
                       <p className="text-amber-600 text-sm">{imageCount} image{imageCount !== 1 ? "s" : ""} · scale {scale1} · {steps} steps</p>
                     </div>
                   </div>
@@ -845,44 +845,44 @@ export default function IPAdapterPage() {
 
           {/* Tips Section */}
           <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">🧠 IP-Adapter Tips</h2>
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3"> IP-Adapter Tips</h2>
             <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">
               Get the best semantic style blending results
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: "⚖️",
+                  icon: "",
                   color: "from-amber-500 to-orange-500",
                   title: "Scale = Influence Strength",
                   desc: "Scale 0.6 is the balanced default. Lower (0.3) = more creative freedom. Higher (0.9) = closely follows input style/concept.",
                 },
                 {
-                  icon: "🔀",
+                  icon: "",
                   color: "from-orange-500 to-red-500",
                   title: "Blend Multiple Motifs",
                   desc: "Upload 2–3 images with equal scales (0.5/0.5) to semantically blend different batik motif concepts into one output.",
                 },
                 {
-                  icon: "🎯",
+                  icon: "",
                   color: "from-yellow-500 to-amber-500",
                   title: "Prompt = Transformation Direction",
                   desc: "Images define the style/concept, prompt defines where to take it. Use prompt to specify the new colors or theme.",
                 },
                 {
-                  icon: "🔁",
+                  icon: "",
                   color: "from-green-500 to-emerald-500",
                   title: "Too Similar? Lower the Scale",
                   desc: "If output looks too identical to input, lower scale to 0.4. If output is too different from the reference, raise scale to 0.8.",
                 },
                 {
-                  icon: "🚀",
+                  icon: "",
                   color: "from-blue-500 to-indigo-500",
                   title: "Higher CFG for Color Changes",
                   desc: "Set guidance_scale to 9.0 if the output colors aren't changing enough. Add old colors to negative prompt too.",
                 },
                 {
-                  icon: "🆚",
+                  icon: "",
                   color: "from-purple-500 to-pink-500",
                   title: "IP-Adapter vs ControlNet",
                   desc: "Use ControlNet for exact structure preservation. Use IP-Adapter for creative style transfer — more freedom, less structural rigidity.",

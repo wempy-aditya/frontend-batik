@@ -437,7 +437,7 @@ export default function ParangBatikPage() {
                           d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      <span>⚡ Generate Parang Batik</span>
+                      <span> Generate Parang Batik</span>
                     </div>
                   )}
                 </button>
@@ -505,7 +505,7 @@ export default function ParangBatikPage() {
                         />
                       </svg>
                       <div className="text-orange-800 font-bold text-lg mb-2">
-                        ⚡ Crafting Royal Pattern
+                         Crafting Royal Pattern
                       </div>
                       <div className="text-orange-700 text-sm">
                         Using {selectedScenario} with {steps} steps...
@@ -593,7 +593,7 @@ export default function ParangBatikPage() {
                         />
                       </svg>
                       <div className="text-gray-700 font-bold text-lg mb-2">
-                        ⚡ Ready for Royal Creation
+                         Ready for Royal Creation
                       </div>
                       <div className="text-gray-600 text-sm">
                         Configure parameters and generate Parang pattern

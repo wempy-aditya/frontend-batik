@@ -7,7 +7,7 @@ const CONTROLNET_TYPES = [
   {
     id: "canny",
     label: "Canny Edge",
-    icon: "✏️",
+    icon: "",
     badge: "Recommended",
     badgeColor: "bg-amber-500",
     description: "Extracts sharp edge lines. Best for geometric motifs (Kawung, Parang). No extra library needed.",
@@ -18,7 +18,7 @@ const CONTROLNET_TYPES = [
   {
     id: "softedge",
     label: "Soft Edge (HED)",
-    icon: "🌊",
+    icon: "",
     badge: "Flexible",
     badgeColor: "bg-blue-500",
     description: "Smoother, more organic edges using HED algorithm. More creative freedom while keeping structure.",
@@ -29,7 +29,7 @@ const CONTROLNET_TYPES = [
   {
     id: "depth",
     label: "Depth Map (MiDaS)",
-    icon: "🏔️",
+    icon: "",
     badge: "Perspective",
     badgeColor: "bg-purple-500",
     description: "Estimates depth/perspective using MiDaS. Best for batik photographed at an angle.",
@@ -41,7 +41,7 @@ const CONTROLNET_TYPES = [
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },
-  { value: "scenario2", label: "Scenario 2 ⭐", description: "Extended dataset (recommended)" },
+  { value: "scenario2", label: "Scenario 2 ", description: "Extended dataset (recommended)" },
   { value: "scenario2_1", label: "Scenario 2.1", description: "Sub-variant 2.1" },
   { value: "scenario2_2", label: "Scenario 2.2", description: "Sub-variant 2.2" },
   { value: "scenario2_3", label: "Scenario 2.3", description: "Sub-variant 2.3" },
@@ -108,7 +108,7 @@ function DropZone({ label, accept, file, preview, onFile, icon, hint }) {
             <span className="text-white text-sm font-medium">Click to replace</span>
           </div>
           <div className="p-2 text-center text-xs text-green-700 font-medium truncate px-3">
-            ✅ {file?.name}
+             {file?.name}
           </div>
         </div>
       ) : (
@@ -291,9 +291,9 @@ export default function ControlNetPage() {
 
             <div className="flex flex-wrap justify-center gap-4">
               {[
-                { icon: "🏗️", text: "Preserves Motif Structure" },
-                { icon: "🎨", text: "Change Colors & Style" },
-                { icon: "🖼️", text: "Whole-Image Editing" },
+                { icon: "", text: "Preserves Motif Structure" },
+                { icon: "", text: "Change Colors & Style" },
+                { icon: "", text: "Whole-Image Editing" },
               ].map((f) => (
                 <div key={f.text} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <span>{f.icon}</span>
@@ -331,7 +331,7 @@ export default function ControlNetPage() {
           <p className="text-center text-sm text-gray-500 mb-4 font-semibold">ControlNet vs Other Methods</p>
           <div className="grid grid-cols-3 gap-3 text-center text-xs">
             <div className="p-3 bg-amber-50 border-2 border-amber-400 rounded-xl">
-              <p className="font-bold text-amber-700 mb-1">ControlNet ⭐</p>
+              <p className="font-bold text-amber-700 mb-1">ControlNet </p>
               <p className="text-gray-600">Preserves structure · Edits whole image · Best for color/style change</p>
             </div>
             <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
@@ -369,7 +369,7 @@ export default function ControlNetPage() {
                   file={imageFile}
                   preview={imagePreview}
                   onFile={handleImage}
-                  icon="🖼️"
+                  icon=""
                   hint="JPG, PNG, or WEBP · Recommended: 512×512"
                 />
               </div>
@@ -411,7 +411,7 @@ export default function ControlNetPage() {
                     <p className="text-sm font-semibold text-amber-800 mb-2">{selectedTypeInfo.icon} {selectedTypeInfo.label} — Details</p>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs font-semibold text-green-700 mb-1">✅ Pros</p>
+                        <p className="text-xs font-semibold text-green-700 mb-1"> Pros</p>
                         <ul className="space-y-0.5">
                           {selectedTypeInfo.pros.map((p) => (
                             <li key={p} className="text-xs text-gray-600">• {p}</li>
@@ -419,7 +419,7 @@ export default function ControlNetPage() {
                         </ul>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-red-600 mb-1">⚠️ Cons</p>
+                        <p className="text-xs font-semibold text-red-600 mb-1"> Cons</p>
                         <ul className="space-y-0.5">
                           {selectedTypeInfo.cons.map((c) => (
                             <li key={c} className="text-xs text-gray-600">• {c}</li>
@@ -434,7 +434,7 @@ export default function ControlNetPage() {
                 {controlnetType === "canny" && (
                   <div className="mt-5 p-4 bg-gray-50 rounded-2xl border border-gray-200">
                     <p className="text-sm font-semibold text-gray-700 mb-4">
-                      ✏️ Canny Edge Thresholds
+                       Canny Edge Thresholds
                       <span className="text-xs font-normal text-gray-400 ml-2">(controls edge density)</span>
                     </p>
                     <div className="grid grid-cols-2 gap-6">
@@ -520,7 +520,7 @@ export default function ControlNetPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 text-sm leading-relaxed"
                   />
                   <p className="text-xs text-gray-400 mt-1.5">
-                    💡 Tip: Mention the color you want to <strong>remove</strong> in the negative prompt too, e.g. "navy" if replacing navy background.
+                     Tip: Mention the color you want to <strong>remove</strong> in the negative prompt too, e.g. "navy" if replacing navy background.
                   </p>
                 </div>
 
@@ -670,7 +670,7 @@ export default function ControlNetPage() {
                       className="w-4 h-4 accent-amber-600 rounded"
                     />
                     <div>
-                      <p className="text-sm font-semibold text-gray-700">🔍 Debug: Return Edge Map instead of result</p>
+                      <p className="text-sm font-semibold text-gray-700"> Debug: Return Edge Map instead of result</p>
                       <p className="text-xs text-gray-400">Enable to inspect the edge/structure map the AI uses as guidance</p>
                     </div>
                   </label>
@@ -695,7 +695,7 @@ export default function ControlNetPage() {
                     </div>
                   ) : returnEdge ? (
                     <div className="flex items-center justify-center gap-3">
-                      <span>🔍</span>
+                      <span></span>
                       <span>Get Edge Map (Debug)</span>
                     </div>
                   ) : (
@@ -703,15 +703,15 @@ export default function ControlNetPage() {
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
                       </svg>
-                      <span>🎨 Run ControlNet Edit</span>
+                      <span> Run ControlNet Edit</span>
                     </div>
                   )}
                 </button>
 
                 {(!imageFile || !prompt.trim()) && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {!imageFile && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Upload batik image</span>}
-                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Enter a prompt</span>}
+                    {!imageFile && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Upload batik image</span>}
+                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Enter a prompt</span>}
                   </div>
                 )}
               </div>
@@ -747,7 +747,7 @@ export default function ControlNetPage() {
                       <svg className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <p className="text-amber-800 font-bold text-base mb-1">🏗️ Applying ControlNet...</p>
+                      <p className="text-amber-800 font-bold text-base mb-1"> Applying ControlNet...</p>
                       <p className="text-amber-600 text-sm">{controlnetType} · scale {controlnetScale} · {steps} steps</p>
                     </div>
                   </div>
@@ -757,7 +757,7 @@ export default function ControlNetPage() {
                 {debugEdge && !isProcessing && (
                   <div className="space-y-4 mb-4">
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-700 font-medium">
-                      🔍 This is the <strong>edge map</strong> the AI uses as structural guidance — not the final result.
+                       This is the <strong>edge map</strong> the AI uses as structural guidance — not the final result.
                     </div>
                     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow">
                       <img src={debugEdge} alt="Edge Map Debug" className="w-full h-auto object-contain bg-gray-50" />
@@ -845,44 +845,44 @@ export default function ControlNetPage() {
 
           {/* Tips Section */}
           <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">🏗️ ControlNet Tips</h2>
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3"> ControlNet Tips</h2>
             <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">
               Get the best results with structure-preserving edits
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: "🎨",
+                  icon: "",
                   color: "from-amber-500 to-orange-500",
                   title: "Mention Colors to Remove",
                   desc: 'Add the original color to negative prompt, e.g. "navy, dark blue" when changing navy background. This forces the AI away from the original.',
                 },
                 {
-                  icon: "⚖️",
+                  icon: "",
                   color: "from-orange-500 to-red-500",
                   title: "Balance Structure vs Creativity",
                   desc: "ControlNet Scale 1.0 = follow structure strictly. Lower to 0.7–0.8 for more creative freedom. Higher than 1.5 may cause artifacts.",
                 },
                 {
-                  icon: "✏️",
+                  icon: "",
                   color: "from-yellow-500 to-amber-500",
                   title: "Start with Canny",
                   desc: "Canny edge is the most stable and doesn't require extra libraries. Start here, then try SoftEdge for more organic results.",
                 },
                 {
-                  icon: "🔍",
+                  icon: "",
                   color: "from-blue-500 to-indigo-500",
                   title: "Use Debug Mode",
                   desc: 'Enable "Return Edge Map" to see exactly what structural guidance the AI is using. Use this to tune canny thresholds.',
                 },
                 {
-                  icon: "🔁",
+                  icon: "",
                   color: "from-green-500 to-emerald-500",
                   title: "Save Your Seed",
                   desc: "Copy the seed from successful results. Re-use it with slightly different prompts to explore variations consistently.",
                 },
                 {
-                  icon: "📐",
+                  icon: "",
                   color: "from-purple-500 to-pink-500",
                   title: "Canny Threshold Tuning",
                   desc: "Lower thresholds (50/150) = more edge detail. Higher (150/250) = only major outlines. Match to your motif complexity.",

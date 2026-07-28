@@ -358,7 +358,7 @@ export default function ClassifyBatikPage() {
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>🔍 Classify Batik</span>
+                      <span> Classify Batik</span>
                     </div>
                   )}
                 </button>
@@ -451,7 +451,7 @@ export default function ClassifyBatikPage() {
                               <td className="py-3 text-sm font-medium text-gray-900">
                                 {className}
                                 {className === result.predicted_class && (
-                                  <span className="ml-2 text-blue-600">✓</span>
+                                  <span className="ml-2 text-blue-600"></span>
                                 )}
                               </td>
                               <td className="py-3 text-right">
@@ -480,7 +480,7 @@ export default function ClassifyBatikPage() {
           {/* Info Section */}
           <div className="mt-16 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-12">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              🔍 About Batik Classification
+               About Batik Classification
             </h2>
             <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
               Our AI models can recognize 16 traditional Indonesian batik patterns with high accuracy

@@ -4,9 +4,9 @@ import { useState, useRef, useCallback } from "react";
 const INPAINTING_API_URL = "https://inpainting.wempyaw.com";
 
 const MASK_PRESETS = [
-  { id: "full", label: "Full Image", icon: "⬛", description: "Edit entire image" },
-  { id: "center50", label: "Center 50%", icon: "🔲", description: "Center square area" },
-  { id: "center30", label: "Center 30%", icon: "◼", description: "Small center area" },
+  { id: "full", label: "Full Image", icon: "", description: "Edit entire image" },
+  { id: "center50", label: "Center 50%", icon: "", description: "Center square area" },
+  { id: "center30", label: "Center 30%", icon: "", description: "Small center area" },
   { id: "half_left", label: "Half Left", icon: "◧", description: "Left half" },
   { id: "half_right", label: "Half Right", icon: "◨", description: "Right half" },
   { id: "half_top", label: "Half Top", icon: "⬒", description: "Top half" },
@@ -15,11 +15,11 @@ const MASK_PRESETS = [
   { id: "quadrant_tr", label: "Top-Right", icon: "◥", description: "Top-right quadrant" },
   { id: "quadrant_bl", label: "Bottom-Left", icon: "◣", description: "Bottom-left quadrant" },
   { id: "quadrant_br", label: "Bottom-Right", icon: "◢", description: "Bottom-right quadrant" },
-  { id: "ellipse_center", label: "Ellipse", icon: "⭕", description: "Ellipse center area" },
-  { id: "ring", label: "Ring / Donut", icon: "🔵", description: "Ring around center" },
-  { id: "cross", label: "Cross / Plus", icon: "➕", description: "Cross shape center" },
-  { id: "border", label: "Border Frame", icon: "🔳", description: "Image border frame" },
-  { id: "four_corners", label: "Four Corners", icon: "🔸", description: "All four corners" },
+  { id: "ellipse_center", label: "Ellipse", icon: "", description: "Ellipse center area" },
+  { id: "ring", label: "Ring / Donut", icon: "", description: "Ring around center" },
+  { id: "cross", label: "Cross / Plus", icon: "", description: "Cross shape center" },
+  { id: "border", label: "Border Frame", icon: "", description: "Image border frame" },
+  { id: "four_corners", label: "Four Corners", icon: "", description: "All four corners" },
 ];
 
 const SCENARIO_OPTIONS = [
@@ -32,7 +32,7 @@ const SCENARIO_OPTIONS = [
   { value: "scenario2_5", label: "Scenario 2.5", description: "Sub-variant 2.5" },
   { value: "scenario3_1", label: "Scenario 3.1", description: "Extended scenario 3" },
   { value: "scenario3_2", label: "Scenario 3.2", description: "Extended scenario 3.2" },
-  { value: "scenario4_1", label: "Scenario 4.1 ⭐", description: "Latest dataset (recommended)" },
+  { value: "scenario4_1", label: "Scenario 4.1 ", description: "Latest dataset (recommended)" },
   { value: "scenario4_1_1", label: "Scenario 4.1.1", description: "Alias for scenario4_1" },
 ];
 
@@ -194,7 +194,7 @@ function DropZone({ label, accept, file, preview, onFile, icon, hint }) {
             <span className="text-white text-sm font-medium">Click to replace</span>
           </div>
           <div className="p-2 text-center text-xs text-green-700 font-medium truncate px-3">
-            ✅ {file?.name}
+             {file?.name}
           </div>
         </div>
       ) : (
@@ -393,9 +393,9 @@ export default function InpaintingPage() {
 
             <div className="flex flex-wrap justify-center gap-4">
               {[
-                { icon: "🎯", text: "Mask-Based Precision" },
-                { icon: "🎨", text: "Area-Specific Editing" },
-                { icon: "🛡️", text: "Preserve Original Style" },
+                { icon: "", text: "Mask-Based Precision" },
+                { icon: "", text: "Area-Specific Editing" },
+                { icon: "", text: "Preserve Original Style" },
               ].map((f) => (
                 <div key={f.text} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <span>{f.icon}</span>
@@ -455,7 +455,7 @@ export default function InpaintingPage() {
                   file={originalImage}
                   preview={originalPreview}
                   onFile={handleOriginalImage}
-                  icon="🖼️"
+                  icon=""
                   hint="JPG, PNG, or WEBP · Max 10MB recommended"
                 />
               </div>
@@ -468,9 +468,9 @@ export default function InpaintingPage() {
                 </h2>
                 <p className="text-gray-500 text-sm mb-1">
                   <span className="font-semibold text-white bg-white/0 inline-block">
-                    🔲 <span className="bg-white text-black px-1 rounded">White</span> = area to <strong>edit</strong>
+                     <span className="bg-white text-black px-1 rounded">White</span> = area to <strong>edit</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
-                    ⬛ <span className="bg-black text-white px-1 rounded">Black</span> = area to <strong>preserve</strong>
+                     <span className="bg-black text-white px-1 rounded">Black</span> = area to <strong>preserve</strong>
                   </span>
                 </p>
                 <p className="text-gray-400 text-xs mb-6">Use a preset shape, or upload your own custom mask PNG.</p>
@@ -485,7 +485,7 @@ export default function InpaintingPage() {
                         : "bg-gray-100 text-gray-600 hover:bg-amber-50"
                     }`}
                   >
-                    🔲 Use Preset Shape
+                     Use Preset Shape
                   </button>
                   <button
                     onClick={() => setMaskMode("upload")}
@@ -495,7 +495,7 @@ export default function InpaintingPage() {
                         : "bg-gray-100 text-gray-600 hover:bg-amber-50"
                     }`}
                   >
-                    📁 Upload Custom Mask
+                     Upload Custom Mask
                   </button>
                 </div>
 
@@ -532,7 +532,7 @@ export default function InpaintingPage() {
                       </button>
                       {maskPreview && maskMode === "preset" && (
                         <div className="flex items-center gap-2 text-sm text-green-700 font-medium">
-                          <span>✅ Mask ready</span>
+                          <span> Mask ready</span>
                         </div>
                       )}
                     </div>
@@ -551,7 +551,7 @@ export default function InpaintingPage() {
                     file={maskFile}
                     preview={maskPreview}
                     onFile={handleMaskFile}
-                    icon="🎭"
+                    icon=""
                     hint="PNG grayscale · White = edit area · Black = preserve"
                   />
                 )}
@@ -586,7 +586,7 @@ export default function InpaintingPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 text-sm leading-relaxed"
                   />
                   <p className="text-xs text-gray-400 mt-1.5">
-                    💡 Tip: Include words like <em>"batik style, flat 2D illustration, traditional pattern"</em> for better results.
+                     Tip: Include words like <em>"batik style, flat 2D illustration, traditional pattern"</em> for better results.
                   </p>
                 </div>
 
@@ -729,7 +729,7 @@ export default function InpaintingPage() {
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
-                      <span>🎨 Run Inpainting</span>
+                      <span> Run Inpainting</span>
                     </div>
                   )}
                 </button>
@@ -737,9 +737,9 @@ export default function InpaintingPage() {
                 {/* Validation hints */}
                 {(!originalImage || !maskFile || !prompt.trim()) && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {!originalImage && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Upload original image</span>}
-                    {!maskFile && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Set mask area</span>}
-                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Enter a prompt</span>}
+                    {!originalImage && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Upload original image</span>}
+                    {!maskFile && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Set mask area</span>}
+                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Enter a prompt</span>}
                   </div>
                 )}
               </div>
@@ -775,7 +775,7 @@ export default function InpaintingPage() {
                       <svg className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <p className="text-amber-800 font-bold text-base mb-1">🎨 Editing your batik...</p>
+                      <p className="text-amber-800 font-bold text-base mb-1"> Editing your batik...</p>
                       <p className="text-amber-600 text-sm">{scenario} · {steps} steps</p>
                     </div>
                   </div>
@@ -853,44 +853,44 @@ export default function InpaintingPage() {
 
           {/* Tips Section */}
           <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">🎨 Inpainting Tips</h2>
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3"> Inpainting Tips</h2>
             <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">
               Get the best results with these techniques
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: "🎯",
+                  icon: "",
                   color: "from-amber-500 to-orange-500",
                   title: "White = Edit Area",
                   desc: "The white area of your mask is where the AI generates new content. Black areas are preserved exactly.",
                 },
                 {
-                  icon: "🔥",
+                  icon: "",
                   color: "from-orange-500 to-red-500",
                   title: "Use High Guidance Scale",
                   desc: "Set guidance scale to 8.5–10 for strong prompt adherence. This is the main control for how much the area changes.",
                 },
                 {
-                  icon: "✍️",
+                  icon: "",
                   color: "from-yellow-500 to-amber-500",
                   title: "Describe Batik Style",
                   desc: 'Include keywords like "batik style, flat 2D illustration, traditional pattern" for authentic batik output.',
                 },
                 {
-                  icon: "🛡️",
+                  icon: "",
                   color: "from-green-500 to-emerald-500",
                   title: "Negative Prompt Matters",
                   desc: 'Add "realistic, photo, 3d render" to negative prompt to avoid photorealistic outputs.',
                 },
                 {
-                  icon: "📐",
+                  icon: "",
                   color: "from-blue-500 to-indigo-500",
                   title: "Bigger Mask = Better Detail",
                   desc: "Larger mask areas allow the AI to generate more detailed patterns. Very small masks (<64px) may produce poor results.",
                 },
                 {
-                  icon: "🔄",
+                  icon: "",
                   color: "from-purple-500 to-pink-500",
                   title: "Use Seed for Consistency",
                   desc: "Save the seed from a result you like to reproduce similar outputs with tweaked prompts.",

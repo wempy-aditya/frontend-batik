@@ -78,7 +78,7 @@ export default function BatikGANGalleryPage() {
         <div className="relative container mx-auto px-4 text-center">
           <div className="inline-block mb-6 px-6 py-2 bg-teal-500/20 backdrop-blur-sm rounded-full border border-teal-400/30">
             <span className="text-teal-200 text-sm font-medium">
-              🖼️ BatikGAN Collection
+               BatikGAN Collection
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
@@ -94,7 +94,7 @@ export default function BatikGANGalleryPage() {
             onClick={() => router.push("/batikgan")}
             className="px-8 py-4 bg-white text-teal-600 rounded-xl font-bold text-lg hover:bg-teal-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
-            🎨 Create New Batik
+             Create New Batik
           </button>
         </div>
       </section>
@@ -136,7 +136,7 @@ export default function BatikGANGalleryPage() {
             </div>
           ) : galleryImages.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-xl p-16 text-center border border-teal-100">
-              <span className="text-8xl mb-6 block">🎨</span>
+              <span className="text-8xl mb-6 block"></span>
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 No images in gallery yet
               </h3>
@@ -170,7 +170,7 @@ export default function BatikGANGalleryPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <p className="text-white font-semibold text-sm mb-1">
-                          🔍 View Full Image
+                           View Full Image
                         </p>
                         {image.size_kb && (
                           <p className="text-teal-200 text-xs">
@@ -216,7 +216,7 @@ export default function BatikGANGalleryPage() {
                 onClick={closeModal}
                 className="text-white hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-colors"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -248,7 +248,7 @@ export default function BatikGANGalleryPage() {
                 download={selectedImage.filename || `batik-${Date.now()}.png`}
                 className="px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
               >
-                📥 Download
+                 Download
               </a>
             </div>
           </div>

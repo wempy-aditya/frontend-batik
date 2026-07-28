@@ -465,7 +465,7 @@ export default function AdvancedBatikPage() {
                           d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      <span>⚡ Generate Advanced Batik</span>
+                      <span> Generate Advanced Batik</span>
                     </div>
                   )}
                 </button>
@@ -533,7 +533,7 @@ export default function AdvancedBatikPage() {
                         />
                       </svg>
                       <div className="text-amber-800 font-bold text-lg mb-2">
-                        ⚡ Advanced Processing
+                         Advanced Processing
                       </div>
                       <div className="text-amber-700 text-sm">
                         Using {selectedScenario} with {steps} steps...
@@ -621,7 +621,7 @@ export default function AdvancedBatikPage() {
                         />
                       </svg>
                       <div className="text-gray-700 font-bold text-lg mb-2">
-                        ⚡ Ready for Advanced Creation
+                         Ready for Advanced Creation
                       </div>
                       <div className="text-gray-600 text-sm">
                         Configure parameters and generate

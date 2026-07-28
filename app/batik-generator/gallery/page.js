@@ -78,7 +78,7 @@ export default function BatikGalleryPage() {
         <div className="relative container mx-auto px-4 text-center">
           <div className="inline-block mb-6 px-6 py-2 bg-purple-500/20 backdrop-blur-sm rounded-full border border-purple-400/30">
             <span className="text-purple-200 text-sm font-medium">
-              🖼️ AI-Generated Collection
+               AI-Generated Collection
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
@@ -94,7 +94,7 @@ export default function BatikGalleryPage() {
             onClick={() => router.push("/batik-generator")}
             className="px-8 py-4 bg-white text-purple-600 rounded-xl font-bold text-lg hover:bg-purple-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
-            🎨 Create Your Own Batik
+             Create Your Own Batik
           </button>
         </div>
       </section>
@@ -113,7 +113,7 @@ export default function BatikGalleryPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                🌸 Nitik Gallery
+                 Nitik Gallery
                 {nitikGallery.length > 0 && (
                   <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-sm">
                     {nitikGallery.length}
@@ -128,7 +128,7 @@ export default function BatikGalleryPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                🎭 ITB Gallery
+                 ITB Gallery
                 {itbGallery.length > 0 && (
                   <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-sm">
                     {itbGallery.length}
@@ -146,7 +146,7 @@ export default function BatikGalleryPage() {
             </div>
           ) : currentGallery.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-xl p-16 text-center border border-purple-100">
-              <span className="text-8xl mb-6 block">🎨</span>
+              <span className="text-8xl mb-6 block"></span>
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 No images in {activeDataset === "nitik" ? "Nitik" : "ITB"} gallery yet
               </h3>
@@ -180,7 +180,7 @@ export default function BatikGalleryPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <p className="text-white font-semibold text-sm">
-                          🔍 View Full Image
+                           View Full Image
                         </p>
                         {image.created_at && (
                           <p className="text-purple-200 text-xs mt-1">
@@ -219,7 +219,7 @@ export default function BatikGalleryPage() {
                 onClick={closeModal}
                 className="text-white hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-colors"
               >
-                ✕
+                
               </button>
             </div>
 
@@ -246,7 +246,7 @@ export default function BatikGalleryPage() {
                 download={selectedImage.filename}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
               >
-                📥 Download
+                 Download
               </a>
             </div>
           </div>

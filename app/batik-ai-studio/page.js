@@ -849,7 +849,7 @@ export default function BatikAIStudioPage() {
                           className="absolute top-3 right-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-white"
                         >
                           <span>Zoom</span>
-                          <span aria-hidden="true">🔍</span>
+                          <span aria-hidden="true"></span>
                         </button>
                       </div>
                     ) : (
@@ -1024,7 +1024,7 @@ export default function BatikAIStudioPage() {
                             className="absolute top-3 right-3 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition hover:bg-white"
                           >
                             <span>Zoom</span>
-                            <span aria-hidden="true">🔍</span>
+                            <span aria-hidden="true"></span>
                           </button>
                         </div>
                         <div className="flex flex-wrap gap-3">
