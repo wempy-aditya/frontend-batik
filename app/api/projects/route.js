@@ -14,7 +14,7 @@ export async function GET(request) {
     const offset = searchParams.get("offset") || "0";
     const limit = searchParams.get("limit") || "20";
 
-    const response = await fetch(`${API_BASE_URL}/projects/?offset=${offset}&limit=${limit}`, {
+    const response = await fetch(`${API_BASE_URL}/projects/?skip=${offset}&limit=${limit}`, {
       method: "GET",
       headers: {
         Authorization: token,

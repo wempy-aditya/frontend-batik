@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
+    const authHeader = request.headers.get("authorization");
 
     // Try to fetch by ID first (if UUID format)
     let response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/projects/${id}`, {
       headers: {
         "Content-Type": "application/json",
+        ...(authHeader ? { Authorization: authHeader } : {}),
       },
       cache: "no-store",
     });
@@ -17,6 +19,7 @@ export async function GET(request, { params }) {
       response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/public/projects/slug/${id}`, {
         headers: {
           "Content-Type": "application/json",
+          ...(authHeader ? { Authorization: authHeader } : {}),
         },
         cache: "no-store",
       });

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
-
+import { useAuth } from "@/components/AuthProvider";
 import { useParams, useRouter } from "next/navigation";
 
 // ── Accordion Row Component ──
@@ -305,6 +305,7 @@ function DemoModal({ isOpen, onClose, project, activeDemoIndex, setActiveDemoInd
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { token } = useAuth();
   const id = params.id;
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -324,7 +325,8 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await fetch(`/api/projects/public/${id}`);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await fetch(`/api/projects/public/${id}`, { headers });
         if (response.ok) {
           const data = await response.json();
           setProject(data);
@@ -336,7 +338,7 @@ export default function ProjectDetailPage() {
       }
     };
     if (id) fetchProject();
-  }, [id]);
+  }, [id, token]);
 
   useEffect(() => {
     const fetchContributors = async () => {
