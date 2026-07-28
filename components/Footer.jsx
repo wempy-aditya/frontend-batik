@@ -173,7 +173,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-gray-400 text-xs md:text-sm text-center md:text-left">
-              © 2025 RISPRO. All rights reserved.
+               2025 RISPRO. All rights reserved.
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs md:text-sm">
               <a

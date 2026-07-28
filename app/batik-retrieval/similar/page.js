@@ -134,7 +134,7 @@ function SimilarPatchesContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">⚠️ Error</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4"> Error</h2>
           <p className="text-gray-700 mb-6">{error}</p>
           <button
             onClick={() => router.push("/batik-retrieval")}
@@ -167,7 +167,7 @@ function SimilarPatchesContent() {
           {/* Query Patch */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center flex items-center justify-center gap-3">
-              <span className="text-4xl">🔍</span>
+              <span className="text-4xl"></span>
               Your Query Patch
             </h2>
             <div className="flex justify-center">
@@ -191,7 +191,7 @@ function SimilarPatchesContent() {
           {/* Model Selection */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">🤖</span>
+              <span className="text-4xl"></span>
               Select GAN Models
             </h2>
             <p className="text-gray-600 mb-6">
@@ -222,7 +222,7 @@ function SimilarPatchesContent() {
                     </span>
                   </div>
                   {selectedModels.includes(model.value) && (
-                    <span className="absolute top-3 right-3 text-orange-500 text-xl">✓</span>
+                    <span className="absolute top-3 right-3 text-orange-500 text-xl"></span>
                   )}
                 </label>
               ))}
@@ -239,7 +239,7 @@ function SimilarPatchesContent() {
           {/* Similar Patches */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">📊</span>
+              <span className="text-4xl"></span>
               Similar Patches (Bray-Curtis Distance)
             </h2>
             <p className="text-gray-600 mb-6">
@@ -249,7 +249,7 @@ function SimilarPatchesContent() {
             {/* Error Message */}
             {error && queryIndex && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-medium">⚠️ {error}</p>
+                <p className="text-red-800 font-medium"> {error}</p>
               </div>
             )}
 
@@ -257,7 +257,7 @@ function SimilarPatchesContent() {
             {selectedPatch && (
               <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
                 <p className="text-orange-800 font-medium">
-                  ✓ Selected patch: {selectedPatch}
+                   Selected patch: {selectedPatch}
                 </p>
               </div>
             )}
@@ -298,7 +298,7 @@ function SimilarPatchesContent() {
                         {/* Checkmark */}
                         {isSelected && (
                           <div className="absolute top-2 right-2 bg-orange-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
-                            ✓
+                            
                           </div>
                         )}
                         
@@ -319,7 +319,7 @@ function SimilarPatchesContent() {
             {similarPatches.length > 0 && (
               <div className="mt-8 p-6 bg-orange-50 rounded-xl border border-orange-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">ℹ️</span>
+                  <span className="text-2xl"></span>
                   <h3 className="font-bold text-orange-900">About Bray-Curtis Distance</h3>
                 </div>
                 <p className="text-orange-800 text-sm leading-relaxed">
@@ -349,7 +349,7 @@ function SimilarPatchesContent() {
               }`}
             >
               {selectedPatch && selectedModels.length > 0
-                ? `🚀 Generate Batik`
+                ? ` Generate Batik`
                 : !selectedPatch
                 ? "Select a similar patch"
                 : "Select at least one model"}

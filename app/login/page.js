@@ -469,7 +469,7 @@ export default function LoginPage() {
           {/* Footer */}
           <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-gray-500">
             <p>Indonesian Batik Research Platform</p>
-            <p className="mt-1">© 2025 All rights reserved</p>
+            <p className="mt-1"> 2025 All rights reserved</p>
           </div>
         </div>
 
@@ -478,7 +478,7 @@ export default function LoginPage() {
           <div className="text-center text-xs sm:text-sm text-amber-700">
             {activeTab === 'login' ? (
               <>
-                <p className="font-semibold mb-1">🔑 Belum punya akun?</p>
+                <p className="font-semibold mb-1"> Belum punya akun?</p>
                 <p>
                   <button onClick={() => switchTab('register')} className="underline font-semibold hover:text-amber-900">
                     Daftar di sini
@@ -488,7 +488,7 @@ export default function LoginPage() {
               </>
             ) : (
               <>
-                <p className="font-semibold mb-1">🔑 Sudah punya akun?</p>
+                <p className="font-semibold mb-1"> Sudah punya akun?</p>
                 <p>
                   <button onClick={() => switchTab('login')} className="underline font-semibold hover:text-amber-900">
                     Login di sini

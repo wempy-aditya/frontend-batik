@@ -5,7 +5,7 @@ const MULTI_CONTROLNET_API_URL = "https://multi-controlnet.wempyaw.com";
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },
-  { value: "scenario2", label: "Scenario 2 ⭐", description: "Extended dataset (recommended)" },
+  { value: "scenario2", label: "Scenario 2 ", description: "Extended dataset (recommended)" },
   { value: "scenario2_1", label: "Scenario 2.1", description: "Sub-variant 2.1" },
   { value: "scenario2_2", label: "Scenario 2.2", description: "Sub-variant 2.2" },
   { value: "scenario2_3", label: "Scenario 2.3", description: "Sub-variant 2.3" },
@@ -82,7 +82,7 @@ function DropZone({ label, accept, file, preview, onFile, onClear, icon, hint, r
               <span className="text-white text-xs font-medium">Click to replace</span>
             </div>
             <div className="p-1.5 text-center text-xs text-green-700 font-medium truncate px-3">
-              ✅ {file?.name}
+               {file?.name}
             </div>
           </div>
         ) : (
@@ -98,7 +98,7 @@ function DropZone({ label, accept, file, preview, onFile, onClear, icon, hint, r
           onClick={(e) => { e.stopPropagation(); onClear(); }}
           className="mt-1.5 w-full text-xs text-red-400 hover:text-red-600 transition-colors"
         >
-          ✕ Remove
+           Remove
         </button>
       )}
     </div>
@@ -337,13 +337,13 @@ export default function MultiControlNetPage() {
             {/* Flow diagram */}
             <div className="flex flex-wrap justify-center items-center gap-2 text-sm text-gray-400 mb-8">
               {[
-                { icon: "🖼️", label: "Motif A" },
+                { icon: "", label: "Motif A" },
                 { arrow: true },
-                { icon: "✏️", label: "Canny Edges" },
+                { icon: "", label: "Canny Edges" },
                 { arrow: true },
-                { icon: "🔀", label: "Combine" },
+                { icon: "", label: "Combine" },
                 { arrow: true },
-                { icon: "✨", label: "Blended Batik" },
+                { icon: "", label: "Blended Batik" },
               ].map((item, i) =>
                 item.arrow ? (
                   <span key={i} className="text-amber-400 text-lg">→</span>
@@ -358,9 +358,9 @@ export default function MultiControlNetPage() {
 
             <div className="flex flex-wrap justify-center gap-4">
               {[
-                { icon: "✅", text: "Seamless Blending" },
-                { icon: "⚖️", text: "Adjustable Weights" },
-                { icon: "🔗", text: "2 Input Images" },
+                { icon: "", text: "Seamless Blending" },
+                { icon: "", text: "Adjustable Weights" },
+                { icon: "", text: "2 Input Images" },
               ].map((f) => (
                 <div key={f.text} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
                   <span>{f.icon}</span>
@@ -404,10 +404,10 @@ export default function MultiControlNetPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {[
-                  { name: "Single ControlNet", struct: "✅ Excellent", blend: "❌ No", spatial: "❌ No", seamless: "N/A" },
-                  { name: "Multi-ControlNet ⭐", struct: "✅ Good", blend: "✅ Yes", spatial: "❌ No", seamless: "✅ Yes", highlight: true },
-                  { name: "Inpainting", struct: "⚠️ Moderate", blend: "✅ Yes", spatial: "✅ Yes", seamless: "❌ Visible" },
-                  { name: "Pure T2I", struct: "❌ No", blend: "⚠️ Unpredictable", spatial: "❌ No", seamless: "N/A" },
+                  { name: "Single ControlNet", struct: " Excellent", blend: " No", spatial: " No", seamless: "N/A" },
+                  { name: "Multi-ControlNet ", struct: " Good", blend: " Yes", spatial: " No", seamless: " Yes", highlight: true },
+                  { name: "Inpainting", struct: " Moderate", blend: " Yes", spatial: " Yes", seamless: " Visible" },
+                  { name: "Pure T2I", struct: " No", blend: " Unpredictable", spatial: " No", seamless: "N/A" },
                 ].map((row) => (
                   <tr key={row.name} className={row.highlight ? "bg-amber-50 font-semibold" : ""}>
                     <td className={`p-2.5 text-left font-medium ${row.highlight ? "text-amber-800" : "text-gray-700"}`}>{row.name}</td>
@@ -472,7 +472,7 @@ export default function MultiControlNetPage() {
                       preview={preview1}
                       onFile={(f) => handleImage(f, setImage1, setPreview1)}
                       onClear={() => clearImage(setImage1, setPreview1)}
-                      icon="🖼️"
+                      icon=""
                       hint="Primary motif image"
                     />
                     {image1 && (
@@ -501,7 +501,7 @@ export default function MultiControlNetPage() {
                       preview={preview2}
                       onFile={(f) => handleImage(f, setImage2, setPreview2)}
                       onClear={() => clearImage(setImage2, setPreview2)}
-                      icon="🔀"
+                      icon=""
                       hint="Secondary motif to blend"
                     />
                     {image2 && (
@@ -520,7 +520,7 @@ export default function MultiControlNetPage() {
                 {/* Weight balance hint */}
                 {image1 && image2 && (
                   <div className="mt-5 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                    <p className="text-xs text-amber-800 font-semibold mb-1">⚖️ Current Blend Ratio</p>
+                    <p className="text-xs text-amber-800 font-semibold mb-1"> Current Blend Ratio</p>
                     <div className="flex items-center overflow-hidden rounded-full">
                       <div
                         className="h-3 bg-amber-500 transition-all"
@@ -571,7 +571,7 @@ export default function MultiControlNetPage() {
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-amber-500 focus:outline-none resize-none text-gray-700 placeholder-gray-400 text-sm leading-relaxed"
                   />
                   <p className="text-xs text-gray-400 mt-1.5">
-                    💡 Tip: Name the specific batik motifs (Kawung, Parang, Mega Mendung) and describe desired color/style.
+                     Tip: Name the specific batik motifs (Kawung, Parang, Mega Mendung) and describe desired color/style.
                   </p>
                 </div>
 
@@ -607,7 +607,7 @@ export default function MultiControlNetPage() {
                 {/* Canny thresholds */}
                 <div className="mb-8 p-5 bg-gray-50 rounded-2xl border border-gray-200">
                   <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                    <span>✏️</span> Canny Edge Thresholds
+                    <span></span> Canny Edge Thresholds
                     <span className="text-xs text-gray-400 font-normal">(applied to all motif images)</span>
                   </h3>
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -776,16 +776,16 @@ export default function MultiControlNetPage() {
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      <span>🔀 Blend Motifs ({imageCount} image{imageCount !== 1 ? "s" : ""})</span>
+                      <span> Blend Motifs ({imageCount} image{imageCount !== 1 ? "s" : ""})</span>
                     </div>
                   )}
                 </button>
 
                 {(!image1 || !image2 || !prompt.trim()) && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {!image1 && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Upload Motif A (Image 1)</span>}
-                    {!image2 && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Upload Motif B (Image 2)</span>}
-                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100">⚠ Enter a prompt</span>}
+                    {!image1 && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Upload Motif A (Image 1)</span>}
+                    {!image2 && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Upload Motif B (Image 2)</span>}
+                    {!prompt.trim() && <span className="text-xs bg-red-50 text-red-500 px-3 py-1 rounded-full border border-red-100"> Enter a prompt</span>}
                   </div>
                 )}
               </div>
@@ -821,7 +821,7 @@ export default function MultiControlNetPage() {
                       <svg className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      <p className="text-amber-800 font-bold text-base mb-1">🔀 Fusing motifs...</p>
+                      <p className="text-amber-800 font-bold text-base mb-1"> Fusing motifs...</p>
                       <p className="text-amber-600 text-sm">2 motifs · weights {scale1}/{scale2}</p>
                     </div>
                   </div>
@@ -860,7 +860,7 @@ export default function MultiControlNetPage() {
                     {/* Edge map debug */}
                     {edgeMapImage && (
                       <div className="mt-2">
-                        <p className="text-xs font-semibold text-gray-500 mb-1.5">🔍 Edge Maps (Debug)</p>
+                        <p className="text-xs font-semibold text-gray-500 mb-1.5"> Edge Maps (Debug)</p>
                         <img src={edgeMapImage} alt="Edge Maps" className="w-full rounded-xl border border-gray-200" />
                       </div>
                     )}
@@ -902,44 +902,44 @@ export default function MultiControlNetPage() {
 
           {/* Tips Section */}
           <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3">🔀 Multi-ControlNet Tips</h2>
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-3"> Multi-ControlNet Tips</h2>
             <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">
               Get the best motif blending results with these guidelines
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  icon: "⚖️",
+                  icon: "",
                   color: "from-amber-500 to-orange-500",
                   title: "Start with 50/50 Weights",
                   desc: "Begin with equal weights (0.5/0.5) to get a balanced blend. Then adjust to favor one motif. Weights don't need to sum to 1.0.",
                 },
                 {
-                  icon: "🎯",
+                  icon: "",
                   color: "from-orange-500 to-red-500",
                   title: "One Motif Dominates?",
                   desc: "If one motif overpowers the result, decrease its scale and increase the weaker one. Try 0.4/0.6 instead of 0.7/0.3.",
                 },
                 {
-                  icon: "🌪️",
+                  icon: "",
                   color: "from-yellow-500 to-amber-500",
                   title: "Messy / Chaotic Result?",
                   desc: "Reduce both scales (e.g. 0.3/0.3) and increase guidance_scale to 10.0. This lets the prompt guide more strongly.",
                 },
                 {
-                  icon: "✏️",
+                  icon: "",
                   color: "from-green-500 to-emerald-500",
                   title: "Adjust Canny Thresholds",
                   desc: "If edges are too noisy (messy blend), use high thresholds (150/250). Too sparse (lost detail), use low thresholds (50/100).",
                 },
                 {
-                  icon: "💬",
+                  icon: "",
                   color: "from-blue-500 to-indigo-500",
                   title: "Name Your Motifs in the Prompt",
                   desc: "Saying 'combining Kawung and Parang' helps the model understand the intent. Add 'traditional Indonesian batik style' for quality.",
                 },
                 {
-                  icon: "🔁",
+                  icon: "",
                   color: "from-purple-500 to-pink-500",
                   title: "Not Blending at All?",
                   desc: "Ensure both scales > 0. Try increasing steps to 50 and use guidance_scale 8.0. Check that both images are valid batik patterns.",

@@ -139,7 +139,7 @@ export default function BatikGeneratorPage() {
         <div className="relative container mx-auto px-4 text-center">
           <div className="inline-block mb-6 px-6 py-2 bg-purple-500/20 backdrop-blur-sm rounded-full border border-purple-400/30">
             <span className="text-purple-200 text-sm font-medium">
-              ✨ AI-Powered Batik Generator
+               AI-Powered Batik Generator
             </span>
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
@@ -160,14 +160,14 @@ export default function BatikGeneratorPage() {
           {/* Info Box */}
           <div className="mb-12 bg-gradient-to-r from-purple-50 to-fuchsia-50 rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
             <div className="flex items-start gap-4">
-              <span className="text-5xl">ℹ️</span>
+              <span className="text-5xl"></span>
               <div>
                 <h3 className="text-2xl font-bold text-purple-900 mb-3">How It Works</h3>
                 <div className="space-y-2 text-gray-700">
-                  <p><strong>📊 Datasets:</strong> Choose from <strong>Nitik</strong> (120 patches) or <strong>ITB</strong> (138 patches) traditional batik patterns</p>
-                  <p><strong>🤖 AI Models:</strong> Three GAN models - <strong>BatikGAN-SL</strong> (68.86 MB), <strong>BatikGAN-CL</strong> (68.86 MB), and <strong>BatikRVGAN</strong> (147.89 MB)</p>
-                  <p><strong>🎨 Process:</strong> Select 2 patches (Patch A + Patch B), choose models, and generate unique batik patterns</p>
-                  <p><strong>💾 Random Selection:</strong> Each page load shows 18 random patches from the selected dataset for variety</p>
+                  <p><strong> Datasets:</strong> Choose from <strong>Nitik</strong> (120 patches) or <strong>ITB</strong> (138 patches) traditional batik patterns</p>
+                  <p><strong> AI Models:</strong> Three GAN models - <strong>BatikGAN-SL</strong> (68.86 MB), <strong>BatikGAN-CL</strong> (68.86 MB), and <strong>BatikRVGAN</strong> (147.89 MB)</p>
+                  <p><strong> Process:</strong> Select 2 patches (Patch A + Patch B), choose models, and generate unique batik patterns</p>
+                  <p><strong> Random Selection:</strong> Each page load shows 18 random patches from the selected dataset for variety</p>
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function BatikGeneratorPage() {
           {/* Model Selection */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-purple-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">🤖</span>
+              <span className="text-4xl"></span>
               Select AI Models
             </h2>
             <p className="text-gray-600 mb-6">
@@ -202,7 +202,7 @@ export default function BatikGeneratorPage() {
                     {model.label}
                   </span>
                   {selectedModels.includes(model.value) && (
-                    <span className="absolute top-3 right-3 text-purple-500">✓</span>
+                    <span className="absolute top-3 right-3 text-purple-500"></span>
                   )}
                 </label>
               ))}
@@ -219,7 +219,7 @@ export default function BatikGeneratorPage() {
           {/* Patch Selection */}
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-purple-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-              <span className="text-4xl">🎨</span>
+              <span className="text-4xl"></span>
               Select Patch Images
             </h2>
             <p className="text-gray-600 mb-6">
@@ -239,7 +239,7 @@ export default function BatikGeneratorPage() {
                     : "text-gray-500 border-transparent hover:text-purple-500"
                 }`}
               >
-                🌸 Nitik Patches
+                 Nitik Patches
               </button>
               <button
                 onClick={() => {
@@ -252,14 +252,14 @@ export default function BatikGeneratorPage() {
                     : "text-gray-500 border-transparent hover:text-purple-500"
                 }`}
               >
-                🎭 ITB Patches
+                 ITB Patches
               </button>
             </div>
 
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-medium">⚠️ {error}</p>
+                <p className="text-red-800 font-medium"> {error}</p>
               </div>
             )}
 
@@ -332,7 +332,7 @@ export default function BatikGeneratorPage() {
                       {/* Checkmark */}
                       {isSelected && (
                         <div className="absolute top-2 right-2 bg-white text-purple-600 w-6 h-6 rounded-full flex items-center justify-center shadow-lg">
-                          ✓
+                          
                         </div>
                       )}
                       
@@ -361,7 +361,7 @@ export default function BatikGeneratorPage() {
               }`}
             >
               {selectedPatches.length === MAX_PATCHES && selectedModels.length > 0
-                ? `🚀 Generate Batik with ${selectedModels.length} Model${selectedModels.length > 1 ? "s" : ""}`
+                ? ` Generate Batik with ${selectedModels.length} Model${selectedModels.length > 1 ? "s" : ""}`
                 : selectedPatches.length !== MAX_PATCHES
                 ? `Select ${MAX_PATCHES - selectedPatches.length} more patch${MAX_PATCHES - selectedPatches.length > 1 ? "es" : ""}`
                 : "Select at least one model"}

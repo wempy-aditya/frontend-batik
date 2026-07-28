@@ -22,7 +22,7 @@ export default function FeaturesPage() {
       description:
         "Find similar images instantly using state-of-the-art computer vision algorithms, deep learning models, and semantic search capabilities.",
       category: "image-processing",
-      icon: "🔍",
+      icon: "",
       gradient: "from-amber-500 to-orange-500",
       features: [
         "Vector similarity search",
@@ -39,7 +39,7 @@ export default function FeaturesPage() {
       description:
         "AI-powered scene understanding with state-of-the-art neural networks for accurate categorization and object detection.",
       category: "machine-learning",
-      icon: "🧠",
+      icon: "",
       gradient: "from-orange-500 to-red-500",
       features: [
         "Multi-class classification",
@@ -56,7 +56,7 @@ export default function FeaturesPage() {
       description:
         "Create stunning visuals from text prompts using cutting-edge diffusion models and neural networks.",
       category: "generative-ai",
-      icon: "✨",
+      icon: "",
       gradient: "from-yellow-500 to-amber-500",
       features: [
         "Text-to-image generation",
@@ -73,7 +73,7 @@ export default function FeaturesPage() {
       description:
         "Lightning-fast object detection and tracking with optimized inference pipelines and cloud computing power.",
       category: "computer-vision",
-      icon: "👁️",
+      icon: "",
       gradient: "from-amber-600 to-orange-600",
       features: [
         "Real-time detection",
@@ -90,7 +90,7 @@ export default function FeaturesPage() {
       description:
         "Professional-grade image enhancement tools including super-resolution, denoising, and color correction.",
       category: "image-processing",
-      icon: "🎨",
+      icon: "",
       gradient: "from-red-500 to-orange-500",
       features: [
         "Super-resolution",
@@ -107,7 +107,7 @@ export default function FeaturesPage() {
       description:
         "Pixel-level understanding of images with advanced semantic segmentation models for precise analysis.",
       category: "computer-vision",
-      icon: "🖼️",
+      icon: "",
       gradient: "from-orange-600 to-amber-600",
       features: [
         "Pixel-level segmentation",
@@ -124,7 +124,7 @@ export default function FeaturesPage() {
       description:
         "Advanced facial recognition and analysis with privacy-focused design and high accuracy rates.",
       category: "computer-vision",
-      icon: "👤",
+      icon: "",
       gradient: "from-amber-500 to-yellow-500",
       features: [
         "Face detection",
@@ -141,7 +141,7 @@ export default function FeaturesPage() {
       description:
         "Extract text from documents and images with high accuracy optical character recognition technology.",
       category: "image-processing",
-      icon: "📄",
+      icon: "",
       gradient: "from-yellow-600 to-amber-600",
       features: [
         "Multi-language support",
@@ -158,7 +158,7 @@ export default function FeaturesPage() {
       description:
         "Transform images with artistic styles using neural style transfer and advanced deep learning techniques.",
       category: "generative-ai",
-      icon: "🎭",
+      icon: "",
       gradient: "from-orange-500 to-amber-500",
       features: [
         "Artistic style transfer",
@@ -175,7 +175,7 @@ export default function FeaturesPage() {
       description:
         "Automatically assess and score image quality using perceptual metrics and machine learning models.",
       category: "machine-learning",
-      icon: "⭐",
+      icon: "",
       gradient: "from-amber-400 to-orange-400",
       features: [
         "Quality scoring",
@@ -192,7 +192,7 @@ export default function FeaturesPage() {
       description:
         "Specialized tools for medical imaging analysis including X-ray, MRI, and CT scan processing.",
       category: "machine-learning",
-      icon: "🏥",
+      icon: "",
       gradient: "from-red-400 to-orange-400",
       features: [
         "DICOM support",
@@ -209,7 +209,7 @@ export default function FeaturesPage() {
       description:
         "Advanced processing and analysis of satellite imagery for environmental monitoring and urban planning.",
       category: "image-processing",
-      icon: "🛰️",
+      icon: "",
       gradient: "from-orange-400 to-yellow-400",
       features: [
         "Multi-spectral analysis",
@@ -226,7 +226,7 @@ export default function FeaturesPage() {
       description:
         "Recognize and analyze 3D objects from 2D images using advanced computer vision and depth estimation.",
       category: "machine-learning",
-      icon: "📦",
+      icon: "",
       gradient: "from-amber-600 to-red-500",
       features: [
         "3D pose estimation",
@@ -243,7 +243,7 @@ export default function FeaturesPage() {
       description:
         "Analyze video content for objects, scenes, and activities using temporal deep learning models.",
       category: "machine-learning",
-      icon: "🎬",
+      icon: "",
       gradient: "from-yellow-500 to-orange-500",
       features: [
         "Action recognition",
@@ -260,7 +260,7 @@ export default function FeaturesPage() {
       description:
         "Automatically generate annotations and labels for images to accelerate dataset creation.",
       category: "image-processing",
-      icon: "🏷️",
+      icon: "",
       gradient: "from-orange-500 to-red-400",
       features: [
         "Auto-labeling",
@@ -277,7 +277,7 @@ export default function FeaturesPage() {
       description:
         "Detect image manipulation and forgeries using advanced forensic analysis techniques.",
       category: "image-processing",
-      icon: "🕵️",
+      icon: "",
       gradient: "from-red-500 to-amber-500",
       features: [
         "Manipulation detection",

@@ -254,7 +254,7 @@ export default function CompareBatikPage() {
                       {model.name.split("_").slice(-2).join(" ").toUpperCase()}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {model.size_mb.toFixed(2)} MB • {model.loaded ? "✓ Loaded" : "Not loaded"}
+                      {model.size_mb.toFixed(2)} MB • {model.loaded ? " Loaded" : "Not loaded"}
                     </div>
                   </div>
                 </label>
@@ -375,7 +375,7 @@ export default function CompareBatikPage() {
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
-                      <span>📊 Compare Models</span>
+                      <span> Compare Models</span>
                     </div>
                   )}
                 </button>
@@ -462,12 +462,12 @@ export default function CompareBatikPage() {
                         {result.model_name.split("_").slice(-2).join(" ").toUpperCase()}
                         {isFastest && (
                           <span className="text-sm font-normal text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                            ⚡ Fastest
+                             Fastest
                           </span>
                         )}
                         {isSlowest && (
                           <span className="text-sm font-normal text-red-600 bg-red-50 px-3 py-1 rounded-full">
-                            🐢 Slowest
+                             Slowest
                           </span>
                         )}
                       </h3>
@@ -505,7 +505,7 @@ export default function CompareBatikPage() {
                                 <td className="py-2 font-medium text-gray-900">
                                   {className}
                                   {className === result.predicted_class && (
-                                    <span className="ml-2 text-green-600">✓</span>
+                                    <span className="ml-2 text-green-600"></span>
                                   )}
                                 </td>
                                 <td className="py-2 text-right">

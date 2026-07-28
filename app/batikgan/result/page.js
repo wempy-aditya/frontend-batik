@@ -143,7 +143,7 @@ function BatikGANResultContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">⚠️ Error</h2>
+          <h2 className="text-2xl font-bold text-red-600 mb-4"> Error</h2>
           <p className="text-gray-700 mb-6">{error}</p>
           <button
             onClick={handleBackToGenerator}
@@ -176,7 +176,7 @@ function BatikGANResultContent() {
           {/* Query Patches */}
           <div className="mb-12 bg-white rounded-2xl shadow-xl p-8 border border-teal-100">
             <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center flex items-center justify-center gap-3">
-              <span className="text-4xl">🎨</span>
+              <span className="text-4xl"></span>
               Query Patch Images
             </h2>
             <div className="flex justify-center items-center gap-8 flex-wrap">
@@ -224,7 +224,7 @@ function BatikGANResultContent() {
           {/* Generated Results */}
           <div className="mb-12">
             <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center flex items-center justify-center gap-3">
-              <span className="text-4xl">✨</span>
+              <span className="text-4xl"></span>
               Generated Batik Patterns
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -250,7 +250,7 @@ function BatikGANResultContent() {
                         </div>
                       ) : generatedImages[modelName] === "error" ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                          <span className="text-6xl mb-4">⚠️</span>
+                          <span className="text-6xl mb-4"></span>
                           <p className="text-red-600 font-medium text-center">
                             Failed to generate image
                           </p>
@@ -265,7 +265,7 @@ function BatikGANResultContent() {
                           {/* Inference Time Badge */}
                           {generatedImages[modelName].inferenceTime && (
                             <div className="absolute top-2 right-2 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-medium">
-                              ⏱️ {generatedImages[modelName].inferenceTime.toFixed(3)}s
+                               {generatedImages[modelName].inferenceTime.toFixed(3)}s
                             </div>
                           )}
                         </>
@@ -283,7 +283,7 @@ function BatikGANResultContent() {
                         download={`batik-${modelName}-${Date.now()}.png`}
                         className="mt-4 w-full block text-center px-4 py-3 bg-teal-100 text-teal-700 rounded-lg font-semibold hover:bg-teal-200 transition-colors"
                       >
-                        📥 Download Image
+                         Download Image
                       </a>
                     )}
                   </div>

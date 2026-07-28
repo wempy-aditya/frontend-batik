@@ -1755,7 +1755,7 @@ export default function Projects() {
                                   key={index}
                                   className="flex items-start gap-3 text-slate-600"
                                 >
-                                  <span className="text-green-500 mt-1">✓</span>
+                                  <span className="text-green-500 mt-1"></span>
                                   <span>{achievement}</span>
                                 </li>
                               )

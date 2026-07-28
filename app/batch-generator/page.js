@@ -874,7 +874,7 @@ export default function BatchGeneratorPage() {
                       onClick={downloadAllImages}
                       className="px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                     >
-                      ⬇️ Download All
+                       Download All
                     </button>
                   )}
                 </div>
@@ -1018,7 +1018,7 @@ export default function BatchGeneratorPage() {
           {/* Tips Section */}
           <div className="mt-16 bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12">
             <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              💡 Batch Generation Tips
+               Batch Generation Tips
             </h2>
             <p className="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
               Maximize your batch generation efficiency with these tips
@@ -1026,7 +1026,7 @@ export default function BatchGeneratorPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">🎯</span>
+                  <span className="text-white text-xl"></span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">
                   Choose Scenario
@@ -1038,7 +1038,7 @@ export default function BatchGeneratorPage() {
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">🔢</span>
+                  <span className="text-white text-xl"></span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">Image Count</h3>
                 <p className="text-gray-600 text-sm">
@@ -1048,7 +1048,7 @@ export default function BatchGeneratorPage() {
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">⚙️</span>
+                  <span className="text-white text-xl"></span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">
                   Fine-tune Parameters
@@ -1060,7 +1060,7 @@ export default function BatchGeneratorPage() {
               </div>
               <div className="text-center p-6 bg-white rounded-xl shadow-sm">
                 <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white text-xl">🎲</span>
+                  <span className="text-white text-xl"></span>
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">Random Prompts</h3>
                 <p className="text-gray-600 text-sm">

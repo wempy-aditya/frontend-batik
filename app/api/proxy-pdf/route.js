@@ -113,7 +113,7 @@ export async function GET(request) {
         const contentLength = response.headers.get('content-length');
         const totalElapsed = Date.now() - startTime;
         
-        console.log('✅ [PDF Proxy] SUCCESS:', {
+        console.log(' [PDF Proxy] SUCCESS:', {
           urlIndex: urlIndex + 1,
           retryCount: retry,
           fileId,
@@ -159,7 +159,7 @@ export async function GET(request) {
 
   // All attempts failed
   const totalElapsed = Date.now() - startTime;
-  console.error('❌ [PDF Proxy] ALL ATTEMPTS FAILED:', {
+  console.error(' [PDF Proxy] ALL ATTEMPTS FAILED:', {
     fileId,
     totalURLs: 2,
     retriesPerURL: 3,

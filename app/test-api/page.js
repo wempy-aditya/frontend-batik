@@ -260,7 +260,7 @@ export default function TestApiPage() {
               disabled={isGenerating}
             />
             <div className="text-sm text-gray-500 mt-3">
-              💡 Click &quot;Inspire Me&quot; for traditional examples, or describe
+               Click &quot;Inspire Me&quot; for traditional examples, or describe
               your own unique vision
             </div>
           </div>
@@ -306,7 +306,7 @@ export default function TestApiPage() {
                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                   />
                 </svg>
-                <span>✨ Create My Batik</span>
+                <span> Create My Batik</span>
               </div>
             )}
           </button>
@@ -372,7 +372,7 @@ export default function TestApiPage() {
                   />
                 </svg>
                 <div className="text-amber-800 font-bold text-xl mb-2">
-                  ✨ Weaving Your Masterpiece
+                   Weaving Your Masterpiece
                 </div>
                 <div className="text-amber-700 text-base">
                   Our AI artisan is carefully crafting your unique batik
@@ -449,7 +449,7 @@ export default function TestApiPage() {
                   />
                 </svg>
                 <div className="text-gray-700 font-bold text-xl mb-2">
-                  🎨 Ready to Create
+                   Ready to Create
                 </div>
                 <div className="text-gray-600 text-base">
                   Describe your dream batik design above

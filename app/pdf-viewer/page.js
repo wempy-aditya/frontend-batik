@@ -84,7 +84,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
     // Auto-load PDF saat pertama kali dan PDF.js sudah ready
     if (pdfLoaded && id && !hasAutoLoaded) {
-      console.log("🚀 Auto-loading PDF on mount:", id);
+      console.log(" Auto-loading PDF on mount:", id);
       setHasAutoLoaded(true);
       loadPDFWithRetry(id, page);
     }
@@ -110,12 +110,12 @@ function PDFViewerContent({ pdfLoaded }) {
       setUsingLocalFallback(false);
       await loadPDF(id, initialPage);
     } catch (err) {
-      console.error(`❌ Load attempt ${currentRetry + 1} failed:`, err);
+      console.error(` Load attempt ${currentRetry + 1} failed:`, err);
 
       if (currentRetry < maxRetries) {
         const delay = Math.min(1000 * Math.pow(2, currentRetry), 5000); // 1s, 2s, 4s max
         console.log(
-          `🔄 Retrying in ${delay}ms... (Attempt ${currentRetry + 2}/${maxRetries + 1})`,
+          ` Retrying in ${delay}ms... (Attempt ${currentRetry + 2}/${maxRetries + 1})`,
         );
         setStatus(
           `Loading failed. Retrying in ${delay / 1000}s... (${currentRetry + 2}/${maxRetries + 1})`,
@@ -128,7 +128,7 @@ function PDFViewerContent({ pdfLoaded }) {
       } else {
         // Semua retry gagal - Load dari local PDF sebagai fallback
         console.warn(
-          "❌ All proxy attempts failed. Loading local fallback PDF...",
+          " All proxy attempts failed. Loading local fallback PDF...",
         );
         setStatus("Loading local document...");
         setRetryCount(0);
@@ -140,7 +140,7 @@ function PDFViewerContent({ pdfLoaded }) {
           setShowRetryPrompt(false);
           setIsLoading(false);
         } catch (localErr) {
-          console.error("❌ Local PDF load also failed:", localErr);
+          console.error(" Local PDF load also failed:", localErr);
           setError(
             `Failed to load PDF after ${maxRetries + 1} attempts. Local fallback also failed.`,
           );
@@ -153,7 +153,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
   // Load PDF from local public folder (fallback)
   const loadLocalPDF = async (initialPage = LOCAL_PDF_DEFAULT_PAGE) => {
-    console.log("📁 Loading local PDF from:", LOCAL_PDF_PATH);
+    console.log(" Loading local PDF from:", LOCAL_PDF_PATH);
 
     setError("");
     setIsLoading(true);
@@ -181,7 +181,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
       const pdf = await loadingTask.promise;
 
-      console.log("✅ Local PDF loaded:", {
+      console.log(" Local PDF loaded:", {
         numPages: pdf.numPages,
         fingerprint: pdf.fingerprint,
         initialPage,
@@ -196,13 +196,13 @@ function PDFViewerContent({ pdfLoaded }) {
       setIsLoading(false);
 
       // Background load full PDF
-      console.log("🔄 Starting background full PDF load for local document...");
+      console.log(" Starting background full PDF load for local document...");
       setIsBackgroundLoading(true);
       backgroundLoadRef.current = setTimeout(() => {
         loadFullPDFInBackgroundLocal(pdf, startPage);
       }, 1000);
     } catch (err) {
-      console.error("❌ Local PDF Load Error:", err);
+      console.error(" Local PDF Load Error:", err);
       throw err; // Re-throw untuk di-catch oleh loadPDFWithRetry
     }
   };
@@ -210,7 +210,7 @@ function PDFViewerContent({ pdfLoaded }) {
   // Load Full Local PDF in Background
   const loadFullPDFInBackgroundLocal = async (currentPdf, currentPage) => {
     try {
-      console.log("🔄 Background loading full local PDF...");
+      console.log(" Background loading full local PDF...");
 
       const loadingTask = window.pdfjsLib.getDocument({
         url: LOCAL_PDF_PATH,
@@ -231,7 +231,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
       const pdf = await loadingTask.promise;
 
-      console.log("✅ Full local PDF loaded in background");
+      console.log(" Full local PDF loaded in background");
 
       setPdfDoc(pdf);
       setTotalPages(pdf.numPages);
@@ -242,7 +242,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
       await renderPage(pdf, currentPage);
     } catch (err) {
-      console.error("⚠️ Background local load failed:", err);
+      console.error(" Background local load failed:", err);
       setIsBackgroundLoading(false);
     }
   };
@@ -273,18 +273,18 @@ function PDFViewerContent({ pdfLoaded }) {
 
     // STRATEGY: Load hybrid mode first (single page, super fast!)
     try {
-      console.log("⚡ FAST LOAD: Loading single page", initialPage, "first");
+      console.log(" FAST LOAD: Loading single page", initialPage, "first");
       await loadPDFHybrid(id, initialPage);
       setIsLoading(false);
 
       // BACKGROUND: Setelah page pertama sukses, load full PDF di background
-      console.log("🔄 Starting background full PDF load...");
+      console.log(" Starting background full PDF load...");
       setIsBackgroundLoading(true);
       backgroundLoadRef.current = setTimeout(() => {
         loadFullPDFInBackground(id, initialPage);
       }, 1000); // Delay 1 detik biar page pertama smooth dulu
     } catch (err) {
-      console.error("❌ Fast Load Error:", err);
+      console.error(" Fast Load Error:", err);
       setError(`Failed to load PDF: ${err.message}`);
       setUseHybridMode(false);
       setIsLoading(false);
@@ -295,7 +295,7 @@ function PDFViewerContent({ pdfLoaded }) {
   const loadFullPDFInBackground = async (id, currentPage) => {
     try {
       const url = getProxyUrl(id);
-      console.log("🔄 Background loading full PDF...");
+      console.log(" Background loading full PDF...");
 
       const loadingTask = window.pdfjsLib.getDocument({
         url,
@@ -317,7 +317,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
       const pdf = await loadingTask.promise;
 
-      console.log("✅ Full PDF loaded in background:", {
+      console.log(" Full PDF loaded in background:", {
         numPages: pdf.numPages,
         fingerprint: pdf.fingerprint,
       });
@@ -333,7 +333,7 @@ function PDFViewerContent({ pdfLoaded }) {
       // Re-render current page dengan full PDF
       await renderPage(pdf, currentPage);
     } catch (err) {
-      console.error("⚠️ Background load failed (staying in hybrid mode):", err);
+      console.error(" Background load failed (staying in hybrid mode):", err);
       setIsBackgroundLoading(false);
       // Tetap pakai hybrid mode kalau background load gagal
     }
@@ -342,7 +342,7 @@ function PDFViewerContent({ pdfLoaded }) {
   // Load PDF in Hybrid Mode - metadata + on-demand page rendering
   const loadPDFHybrid = async (id, initialPage = 1) => {
     const url = getProxyUrl(id);
-    console.log("⚡ Loading PDF in HYBRID mode (single page first):", url);
+    console.log(" Loading PDF in HYBRID mode (single page first):", url);
 
     // Load dengan range request - hanya metadata + halaman yang dibutuhkan
     const loadingTask = window.pdfjsLib.getDocument({
@@ -356,7 +356,7 @@ function PDFViewerContent({ pdfLoaded }) {
 
     const pdf = await loadingTask.promise;
 
-    console.log("✅ PDF metadata + first page loaded:", {
+    console.log(" PDF metadata + first page loaded:", {
       numPages: pdf.numPages,
       fingerprint: pdf.fingerprint,
       initialPage,
@@ -408,7 +408,7 @@ function PDFViewerContent({ pdfLoaded }) {
       // Check cache first
       const cacheKey = `${pdf.fingerprint}-${pageNumber}-${scale}`;
       if (pageCache.current.has(cacheKey)) {
-        console.log("📦 Using cached page:", pageNumber);
+        console.log(" Using cached page:", pageNumber);
         const cachedData = pageCache.current.get(cacheKey);
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
@@ -739,7 +739,7 @@ function PDFViewerContent({ pdfLoaded }) {
                     </svg>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-amber-800">
-                        📁 Loading Local Document
+                         Loading Local Document
                       </p>
                       <p className="text-xs text-amber-700 mt-1">
                         Remote PDF unavailable. Displaying local SPMI UMM
@@ -893,7 +893,7 @@ function PDFViewerWrapper() {
           if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc =
               "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-            console.log("✅ PDF.js loaded and ready");
+            console.log(" PDF.js loaded and ready");
             setScriptLoaded(true);
           }
         }}
