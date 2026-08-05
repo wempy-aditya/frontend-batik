@@ -241,6 +241,7 @@ export default function CoffeeBeanPage() {
 
   const [samples, setSamples]           = useState([]);
   const [samplesLoading, setSamplesLoading] = useState(false);
+  const [loadingSample, setLoadingSample]  = useState(null);
 
   const resultRef = useRef(null);
 
@@ -295,6 +296,8 @@ export default function CoffeeBeanPage() {
       } catch {
         // Preview shown; file resolved on predict
       }
+    } finally {
+      setLoadingSample(null);
     }
   }
 
@@ -480,25 +483,28 @@ export default function CoffeeBeanPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {samples.map((s, idx) => (
-                          <button
-                            key={s.url || idx}
-                            onClick={() => handleSampleClick(s)}
-                            title={`${s.name} (${s.size_kb} KB)`}
-                            className="group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-amber-400 transition-all"
-                          >
-                            <img
-                              src={s.url}
-                              alt={s.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                              <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                          </button>
-                        ))}
+                        {samples.map((s, idx) => {
+                          const isSelected = imagePreview === s.url;
+                          const isFetching = loadingSample === s.url;
+                          return (
+                            <button
+                              key={s.url || idx}
+                              onClick={() => handleSampleClick(s)}
+                              disabled={!!loadingSample}
+                              title={`${s.name} (${s.size_kb} KB)`}
+                              className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                                isSelected ? "border-amber-500 ring-2 ring-amber-300" : "border-transparent hover:border-amber-400"
+                              } ${loadingSample && !isFetching ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                            >
+                              <img src={s.url} alt={s.name} className="w-full h-full object-cover pointer-events-none" />
+                              {isFetching && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
