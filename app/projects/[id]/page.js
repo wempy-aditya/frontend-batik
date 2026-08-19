@@ -147,11 +147,10 @@ function DemoModal({ isOpen, onClose, project, activeDemoIndex, setActiveDemoInd
             <div className="flex gap-1.5">
               {project.demo_url.map((url, index) => (
                 <button key={index} onClick={() => handleDemoChange(index)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
-                    activeDemoIndex === index
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${activeDemoIndex === index
                       ? "bg-amber-500 text-white"
                       : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                  }`}
+                    }`}
                 >
                   {getDemoLabel(url, index)}
                 </button>
@@ -707,7 +706,7 @@ export default function ProjectDetailPage() {
                       <div className="flex items-center gap-2.5">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center flex-shrink-0 shadow-md">
                           <svg className="w-4 h-4 md:w-5 md:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
                           </svg>
                         </div>
                         <div>
@@ -742,11 +741,10 @@ export default function ProjectDetailPage() {
                               setIframeError(false);
                               setDemoRefreshKey(Date.now().toString());
                             }}
-                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
-                              activeDemoIndex === index
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${activeDemoIndex === index
                                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm"
                                 : "bg-gray-100 text-gray-600 hover:bg-amber-100 hover:text-amber-700"
-                            }`}
+                              }`}
                           >
                             {getDemoLabel(url, index)}
                           </button>

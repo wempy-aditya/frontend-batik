@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 const API_URL = "https://rispro-kopi.wempyaw.com";
 
@@ -829,6 +830,9 @@ export default function CoffeeBeanPage() {
 
         </div>
       </section>
+
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="01a013cc-e6fd-7e2f-9e77-d9d330b299bb" />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -305,6 +307,9 @@ export default function BatikGANPage() {
           </div>
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019bbed3-bd9f-7e62-9df2-1ca95c0e9b81" />
+</div>
   );
 }

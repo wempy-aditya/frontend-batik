@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useEffect, useRef } from "react";
 
 export default function BatchGeneratorPage() {
@@ -1018,6 +1020,9 @@ export default function BatchGeneratorPage() {
           
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019bbed6-aed3-7951-aa77-34c31d5f3dd2" />
+</div>
   );
 }

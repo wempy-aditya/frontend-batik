@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useEffect } from "react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_CLASSIFY_API_URL || 'http://localhost:5002';
@@ -533,6 +535,9 @@ export default function CompareBatikPage() {
           )}
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019bbed1-2aa7-7cfa-abeb-9493a6464433" />
+</div>
   );
 }
