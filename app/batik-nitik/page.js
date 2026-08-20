@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const API_URL = "https://rispro-batik.wempyaw.com";
+const API_URL = "/api/rispro/9004";
 
 const LORA_VARIANTS = [
   {

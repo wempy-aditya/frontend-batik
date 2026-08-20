@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL = "https://rispro-brain-tumor.wempyaw.com";
+const API_URL = "/api/rispro/9203";
 
 // ─── 5 Model Scenarios ─────────────────────────────────────────────────────────
 const MODELS = [
@@ -232,7 +232,7 @@ export default function BrainTumorPage() {
       const data = await res.json();
       const list = (data.samples || []).map((s) => ({
         name: s.name,
-        url:  s.url,
+        url:  s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9203"),
       }));
       setSamples(list);
     } catch {

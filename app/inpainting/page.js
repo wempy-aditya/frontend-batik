@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const INPAINTING_API_URL = "https://inpainting.wempyaw.com";
+const INPAINTING_API_URL = "/api/rispro/8007";
 
 const MASK_PRESETS = [
   { id: "full", label: "Full Image", icon: "", description: "Edit entire image" },

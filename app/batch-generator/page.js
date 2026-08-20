@@ -133,7 +133,7 @@ export default function BatchGeneratorPage() {
       
       console.log(`[Batch API] Creating job with ${imageCount} prompts...`);
       
-      const response = await fetch('https://service-t2i.wempyaw.com/batik_product/devt2i/batch/generate/', {
+      const response = await fetch('/api/rispro/8002/batik_product/devt2i/batch/generate/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,7 +163,7 @@ export default function BatchGeneratorPage() {
   // Poll job status
   const pollJobStatus = async (jobId) => {
     try {
-      const response = await fetch(`https://service-t2i.wempyaw.com/batik_product/devt2i/batch/status/${jobId}`);
+      const response = await fetch(`/api/rispro/8002/batik_product/devt2i/batch/status/${jobId}`);
       const data = await response.json();
       
       console.log(`[Batch API] Status:`, data.status, `- Progress: ${data.completed}/${data.total}`);
@@ -187,7 +187,7 @@ export default function BatchGeneratorPage() {
       console.log(`[Batch API] Downloading results for job:`, jobId);
       
       // Trigger download
-      const downloadUrl = `https://service-t2i.wempyaw.com/batik_product/devt2i/batch/download/${jobId}`;
+      const downloadUrl = `/api/rispro/8002/batik_product/devt2i/batch/download/${jobId}`;
       window.location.href = downloadUrl;
       
       // Note: Individual images can't be displayed in generatedImages array

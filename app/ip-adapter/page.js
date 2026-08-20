@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const IPADAPTER_API_URL = "https://ip-adapter.wempyaw.com/";
+const IPADAPTER_API_URL = "/api/rispro/8006/";
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },

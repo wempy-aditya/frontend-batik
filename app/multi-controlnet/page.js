@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 
-const MULTI_CONTROLNET_API_URL = "https://multi-controlnet.wempyaw.com";
+const MULTI_CONTROLNET_API_URL = "/api/rispro/8004";
 
 const SCENARIO_OPTIONS = [
   { value: "scenario1", label: "Scenario 1", description: "Basic batik dataset" },

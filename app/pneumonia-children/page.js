@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL = "https://rispro-paru-anak.wempyaw.com";
+const API_URL = "/api/rispro/9009";
 
 // ─── Model Schemas ─────────────────────────────────────────────────────────────
 const MODELS = [
@@ -180,7 +180,7 @@ export default function PneumoniaChildrenPage() {
       // API returns { "samples": [{ "name": "...", "url": "...", "size_kb": ... }] }
       const list = (data.samples || []).map((s) => ({
         name: s.name,
-        url:  s.url,
+        url:  s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9009"),
       }));
       setSamples(list);
     } catch {

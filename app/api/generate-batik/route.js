@@ -75,7 +75,7 @@ export async function POST(request) {
     
     // Use retry logic with timeout
     const response = await fetchWithRetry(
-      'https://service-t2i.wempyaw.com/batik_product/devt2i/generate/v2/',
+      'http://192.168.14.245:8002/batik_product/devt2i/generate/v2/',
       {
         method: 'POST',
         headers: {

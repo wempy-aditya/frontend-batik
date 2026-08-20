@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL = "https://rispro-kopi.wempyaw.com";
+const API_URL = "/api/rispro/9007";
 
 const COFFEE_CLASSES = [
   {
@@ -251,7 +251,11 @@ export default function CoffeeBeanPage() {
     try {
       const res  = await fetch(`${API_URL}/samples`, { signal: AbortSignal.timeout(8000) });
       const data = await res.json();
-      setSamples(data.samples || []);
+      // Normalisasi url absolut service → relatif lewat proxy Next (biar same-origin)
+      setSamples((data.samples || []).map(s => ({
+        ...s,
+        url: s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9007"),
+      })));
     } catch {
       // samples not critical — silently ignore
     } finally {

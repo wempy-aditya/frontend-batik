@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL   = "https://rispro-brain-threshold.wempyaw.com";
+const API_URL = "/api/rispro/9204";
 const MODEL_ID  = "N/A";  // thresholding mode, no specific model
 
 // ─── Class info helper ─────────────────────────────────────────────────────────
@@ -290,7 +290,7 @@ export default function BrainThresholdPage() {
       const data = await res.json();
       const list = (data.samples || []).map((s) => ({
         name: s.name,
-        url:  s.url,
+        url:  s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9204"),
       }));
       setSamples(list);
     } catch {

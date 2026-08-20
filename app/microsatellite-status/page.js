@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL = "https://rispro-mikrosatelit.wempyaw.com";
+const API_URL = "/api/rispro/9207";
 
 // ─── Models ────────────────────────────────────────────────────────────────────
 const MODELS = [
@@ -246,7 +246,7 @@ export default function MicrosatelliteStatusPage() {
       const data = await res.json();
       const list = (data.samples || []).map((s) => ({
         name: s.name,
-        url:  s.url,
+        url:  s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9207"),
       }));
       setSamples(list);
     } catch {

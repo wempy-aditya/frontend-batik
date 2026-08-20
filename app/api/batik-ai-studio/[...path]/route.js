@@ -3,12 +3,12 @@ import dns from "node:dns";
 import { randomUUID } from "node:crypto";
 
 const API_ROOT =
-  "https://batik-studio.wempyaw.com";
+  process.env.BATIK_STUDIO_API_URL || "http://192.168.14.245:5000";
 
 // Prefer IPv4 to avoid intermittent IPv6 routing/DNS issues in some servers.
 dns.setDefaultResultOrder("ipv4first");
 
-const DEFAULT_TIMEOUT_MS = 20000;
+const DEFAULT_TIMEOUT_MS = 120000;  // 2 menit — Stage 3 /apply-flux bisa ~30-90 detik via HF API
 const MAX_RETRIES = 2;
 
 function shouldRetryStatus(status) {

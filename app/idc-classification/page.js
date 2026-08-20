@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL  = "https://rispro-idc-classification.wempyaw.com";
+const API_URL = "/api/rispro/9105";
 const MODEL_ID = "MobileNet_model";
 
 // ─── Class info helper ─────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ export default function IdcClassificationPage() {
       const data = await res.json();
       const list = (data.samples || []).map((s) => ({
         name: s.name,
-        url:  s.url,
+        url:  s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9105"),
       }));
       setSamples(list);
     } catch {

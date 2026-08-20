@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const API_URL = "https://rispro-hama.wempyaw.com";
+const API_URL = "/api/rispro/9005";
 
 // ─── 11 Hama Classes ───────────────────────────────────────────────────────────
 const PEST_CLASSES = [
@@ -185,7 +185,11 @@ export default function RicePestPage() {
     try {
       const res  = await fetch(`${API_URL}/samples`, { signal: AbortSignal.timeout(8000) });
       const data = await res.json();
-      setSamples(data.samples || []);
+      // Normalisasi url absolut service → relatif lewat proxy Next (biar same-origin)
+      setSamples((data.samples || []).map(s => ({
+        ...s,
+        url: s.url.replace(/^https?:\/\/[^/]+/, "/api/rispro/9005"),
+      })));
     } catch {
       // samples not critical — silently ignore
     } finally {
