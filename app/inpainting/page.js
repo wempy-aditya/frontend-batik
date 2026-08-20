@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useRef, useCallback } from "react";
 
 const INPAINTING_API_URL = "/api/rispro/8007";
@@ -908,6 +910,9 @@ export default function InpaintingPage() {
           </div>
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019cf595-2665-7da1-b2d1-344508351c9f" />
+</div>
   );
 }

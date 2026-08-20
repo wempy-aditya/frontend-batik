@@ -175,6 +175,7 @@ export default function RicePestPage() {
 
   const [samples, setSamples]           = useState([]);
   const [samplesLoading, setSamplesLoading] = useState(false);
+  const [loadingSample, setLoadingSample]  = useState(null);
 
   const resultRef = useRef(null);
 
@@ -198,13 +199,46 @@ export default function RicePestPage() {
   }
 
   async function handleSampleClick(sample) {
+    if (loadingSample) return;
+    setLoadingSample(sample.url);
+
+    // Show preview immediately for instant UI feedback
+    setImagePreview(sample.url);
+    setImageFile(null);
+    setResult(null);
+    setError("");
+
     try {
-      const res  = await fetch(sample.url);
+      const res = await fetch(sample.url, { cache: "force-cache" });
+      if (!res.ok) throw new Error();
       const blob = await res.blob();
       const file = new File([blob], sample.name, { type: blob.type || "image/jpeg" });
-      handleFile(file);
+      setImageFile(file);
     } catch {
-      // ignore
+      // CORS fallback: canvas approach
+      try {
+        await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext("2d").drawImage(img, 0, 0);
+            canvas.toBlob((blob) => {
+              if (!blob) return reject();
+              setImageFile(new File([blob], sample.name, { type: "image/jpeg" }));
+              resolve();
+            }, "image/jpeg", 0.95);
+          };
+          img.onerror = reject;
+          img.src = sample.url;
+        });
+      } catch {
+        // Preview is shown, file will be resolved during predict
+      }
+    } finally {
+      setLoadingSample(null);
     }
   }
 
@@ -465,25 +499,28 @@ export default function RicePestPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                        {samples.map((s, idx) => (
-                          <button
-                            key={s.url || idx}
-                            onClick={() => handleSampleClick(s)}
-                            title={`${s.name} (${s.size_kb} KB)`}
-                            className="group relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-green-500 transition-all"
-                          >
-                            <img
-                              src={s.url}
-                              alt={s.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                              <svg className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                              </svg>
-                            </div>
-                          </button>
-                        ))}
+                        {samples.map((s, idx) => {
+                          const isSelected = imagePreview === s.url;
+                          const isFetching = loadingSample === s.url;
+                          return (
+                            <button
+                              key={s.url || idx}
+                              onClick={() => handleSampleClick(s)}
+                              disabled={!!loadingSample}
+                              title={`${s.name} (${s.size_kb} KB)`}
+                              className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${
+                                isSelected ? "border-green-500 ring-2 ring-green-300" : "border-transparent hover:border-green-500"
+                              } ${loadingSample && !isFetching ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                            >
+                              <img src={s.url} alt={s.name} className="w-full h-full object-cover pointer-events-none" />
+                              {isFetching && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

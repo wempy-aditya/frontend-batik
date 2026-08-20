@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -369,6 +371,9 @@ export default function BatikGeneratorPage() {
           </div>
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019bbed4-bbe7-7072-bf9d-849f21ce7b1d" />
+</div>
   );
 }

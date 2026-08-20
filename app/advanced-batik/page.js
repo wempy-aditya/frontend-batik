@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useEffect } from "react";
 
 export default function AdvancedBatikPage() {
@@ -635,6 +637,9 @@ export default function AdvancedBatikPage() {
 
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019bbed6-aed3-7951-aa77-34c31d5f3dd2" />
+</div>
   );
 }

@@ -222,6 +222,7 @@ export default function DiabeticRetinopathyPage() {
   const [serverStatus, setServerStatus]   = useState("checking");
   const [samples, setSamples]             = useState([]);
   const [samplesLoading, setSamplesLoading] = useState(true);
+  const [loadingSample, setLoadingSample]  = useState(null);
 
   const resultRef = useRef(null);
 
@@ -249,6 +250,8 @@ export default function DiabeticRetinopathyPage() {
   }
 
   async function handleSampleClick(sample) {
+    if (loadingSample) return;
+    setLoadingSample(sample.url);
     setImagePreview(sample.url);
     setImageFile(null);
     setResult(null);
@@ -281,6 +284,8 @@ export default function DiabeticRetinopathyPage() {
       } catch {
         // Preview shown; file resolved on predict
       }
+    } finally {
+      setLoadingSample(null);
     }
   }
 
@@ -498,20 +503,26 @@ export default function DiabeticRetinopathyPage() {
                       ? Array.from({ length: 6 }).map((_, i) => (
                           <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />
                         ))
-                      : samples.map((s, idx) => (
-                          <button
-                            key={s.url || idx}
-                            onClick={() => handleSampleClick(s)}
-                            className="aspect-square rounded-full overflow-hidden border-2 border-transparent hover:border-amber-400 transition-all hover:scale-105 focus:outline-none focus:border-amber-500 bg-black"
-                            title={s.name}
-                          >
-                            <img
-                              src={s.url}
-                              alt={s.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </button>
-                        ))}
+                      : samples.map((s, idx) => {
+                          const isSelected = imagePreview === s.url;
+                          const isFetching = loadingSample === s.url;
+                          return (
+                            <button
+                              key={s.url || idx}
+                              onClick={() => handleSampleClick(s)}
+                              disabled={!!loadingSample}
+                              className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all active:scale-95 focus:outline-none ${isSelected ? 'border-amber-500 ring-2 ring-amber-300' : 'border-transparent hover:border-amber-400'} ${loadingSample && !isFetching ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                              title={s.name}
+                            >
+                              <img src={s.url} alt={s.name} className="w-full h-full object-cover pointer-events-none" />
+                              {isFetching && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                   </div>
                 </div>
               )}

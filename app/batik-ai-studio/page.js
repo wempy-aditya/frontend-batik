@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const API_PROXY_BASE = "/api/batik-ai-studio";
@@ -1141,6 +1143,9 @@ export default function BatikAIStudioPage() {
           </div>
         </div>
       )}
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019e2df1-8907-7354-af61-13ad7c2d5107" />
+</div>
   );
 }

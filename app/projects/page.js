@@ -3,8 +3,71 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
+// ── Manual mapping: project ID → internal demo page route ──
+// Nilai bisa berupa string (1 demo) atau array string (multi demo)
+const DEMO_PAGE_MAP = {
+  // Arabica Coffee Bean Quality Classification
+  "01a013cc-e6fd-7e2f-9e77-d9d330b299bb": "/coffee-bean",
+
+  // Batik Ai Flux
+  "019e2df1-8907-7354-af61-13ad7c2d5107": "/batik-ai-studio",
+
+  // Batik Inpainting (Mask-Based Motif Editor)
+  "019cf595-2665-7da1-b2d1-344508351c9f": "/inpainting",
+
+  // Batik Text To Image — 4 demo pages
+  "019bbed6-aed3-7951-aa77-34c31d5f3dd2": [
+    { label: "Advanced Batik",   route: "/advanced-batik" },
+    { label: "Parang Batik",     route: "/parang-batik" },
+    { label: "Batch Generator",  route: "/batch-generator" },
+    { label: "Test API",         route: "/test-api" },
+  ],
+
+  // Batik RVGAN
+  "019bbed4-bbe7-7072-bf9d-849f21ce7b1d": "/batik-generator",
+
+  // Batik GAN
+  "019bbed3-bd9f-7e62-9df2-1ca95c0e9b81": "/batikgan",
+
+  // Batik GAN CL
+  "019bbed2-2106-799a-b49b-7008d555f69b": "/batikgan",
+
+  // Batik Classification — 2 demo pages
+  "019bbed1-2aa7-7cfa-abeb-9493a6464433": [
+    { label: "Classify Batik",  route: "/classify-batik" },
+    { label: "Compare Batik",   route: "/compare-batik" },
+  ],
+
+  // Batik Retrieval
+  "019bbed0-222c-76b1-af2d-676c2fc6668a": "/batik-retrieval",
+};
+
+// Helper: ambil mapping project, return { type: 'single'|'multi', route?, options? }
+function getDemoMapping(projectId) {
+  const map = DEMO_PAGE_MAP[projectId];
+  if (!map) return null;
+  if (typeof map === "string") return { type: "single", route: map };
+  if (Array.isArray(map)) return { type: "multi", options: map };
+  return null;
+}
+
 export default function ProjectsPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  
+  // Helper to check if current user can access a project
+  const canAccessProject = (project) => {
+    const level = project.access_level || "public";
+    if (level === "public") return true;
+    if (!user) return false;
+    if (level === "registered") {
+      return user.access_level === "registered" || user.access_level === "premium";
+    }
+    if (level === "premium") {
+      return user.access_level === "premium";
+    }
+    return false;
+  };
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isFeatured, setIsFeatured] = useState(false);
   const [sortBy, setSortBy] = useState("latest");
@@ -17,7 +80,21 @@ export default function ProjectsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [apiError, setApiError] = useState("");
+  const [demoPickerOpen, setDemoPickerOpen] = useState(null); // project.id yang picker-nya terbuka
   const router = useRouter();
+
+  // Handle click-away to close the picker
+  useEffect(() => {
+    if (!demoPickerOpen) return;
+    const handleDocumentClick = () => {
+      setDemoPickerOpen(null);
+    };
+    document.addEventListener("click", handleDocumentClick);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick);
+    };
+  }, [demoPickerOpen]);
+
 
   const sortOptions = [
     { id: "latest", name: "Latest" },
@@ -523,10 +600,22 @@ export default function ProjectsPage() {
                   className="group relative cursor-pointer"
                   onMouseEnter={() => setHoveredProject(project.id)}
                   onMouseLeave={() => setHoveredProject(null)}
-                  onClick={() => router.push(`/projects/${project.id}`)}
+                  onClick={(e) => {
+                    if (!canAccessProject(project)) return;
+                    const mapping = getDemoMapping(project.id);
+                    if (!mapping) {
+                      router.push(`/projects/${project.id}`);
+                    } else if (mapping.type === "single") {
+                      router.push(mapping.route);
+                    } else {
+                      // multi — toggle picker
+                      e.stopPropagation();
+                      setDemoPickerOpen(prev => prev === project.id ? null : project.id);
+                    }
+                  }}
                 >
                   {/* Project Card */}
-                  <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 hover:scale-105 h-full flex flex-col">
+                  <div className={`relative bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-200/50 transition-all duration-500 transform h-full flex flex-col ${canAccessProject(project) ? "hover:shadow-2xl hover:-translate-y-3 hover:scale-105" : "opacity-80 grayscale-[20%]"}`}>
 
                     {/* Thumbnail/Hero Image */}
                     <div className="relative h-48 overflow-hidden">
@@ -644,25 +733,83 @@ export default function ProjectsPage() {
                       )}
 
                       {/* Action Button - Sticky Bottom */}
-                      <div className="mt-auto pt-4">
-                        <div className="w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 group-hover:from-amber-400 group-hover:to-orange-400 group-hover:shadow-lg">
-                          <div className="flex items-center justify-center gap-2">
-                            <span>View Details</span>
-                            <svg
-                              className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </div>
-                        </div>
+                      <div className="mt-auto pt-4 relative">
+                        {(() => {
+                          const mapping = getDemoMapping(project.id);
+                          const isMulti = mapping?.type === "multi";
+                          const isPickerOpen = demoPickerOpen === project.id;
+
+                          return (
+                            <>
+                              {/* Demo Picker Popover */}
+                              {isMulti && isPickerOpen && (
+                                <div
+                                  className="absolute bottom-full mb-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                                  style={{ animation: "fadeUp 0.15s ease-out" }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-gray-600">Pilih Demo</span>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setDemoPickerOpen(null); }}
+                                      className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                                    >
+                                      <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  {mapping.options.map((opt, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={(e) => { e.stopPropagation(); router.push(opt.route); }}
+                                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-amber-50 transition-colors border-b border-gray-50 last:border-0 group/opt"
+                                    >
+                                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center flex-shrink-0 group-hover/opt:from-amber-500 group-hover/opt:to-orange-500 transition-all">
+                                        <svg className="w-3.5 h-3.5 text-amber-600 group-hover/opt:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                                        </svg>
+                                      </div>
+                                      <span className="text-sm font-semibold text-gray-700 group-hover/opt:text-amber-700 transition-colors">{opt.label}</span>
+                                      <svg className="w-4 h-4 text-gray-300 group-hover/opt:text-amber-500 ml-auto transition-all group-hover/opt:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Main button */}
+                              {canAccessProject(project) ? (
+                                <div className={`w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 group-hover:from-amber-400 group-hover:to-orange-400 group-hover:shadow-lg ${isPickerOpen ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}>
+                                  <div className="flex items-center justify-center gap-2">
+                                    <span>{isMulti ? "Pilih Demo" : "View Details"}</span>
+                                    <svg
+                                      className={`w-4 h-4 transition-all duration-300 ${isMulti ? (isPickerOpen ? "rotate-180" : "rotate-90") : "group-hover:translate-x-1"}`}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d={isMulti ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"}
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-full py-3 px-4 bg-gray-100 text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                  <span>{isMulti ? "Pilih Demo" : "View Details"}</span>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -752,6 +899,13 @@ export default function ProjectsPage() {
           </div>
         </div>
       </section>
+
+      <style jsx global>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

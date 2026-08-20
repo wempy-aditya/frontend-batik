@@ -1,4 +1,6 @@
 "use client";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -132,7 +134,7 @@ export default function BatikRetrievalPage() {
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 font-medium"> {error}</p>
+                <p className="text-red-800 font-medium">️ {error}</p>
               </div>
             )}
 
@@ -191,7 +193,6 @@ export default function BatikRetrievalPage() {
             {patches.length > 0 && (
               <div className="mt-8 p-6 bg-orange-50 rounded-xl border border-orange-200">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl"></span>
                   <h3 className="font-bold text-orange-900">About Random Patches</h3>
                 </div>
                 <p className="text-orange-800 text-sm leading-relaxed">
@@ -204,6 +205,9 @@ export default function BatikRetrievalPage() {
           </div>
         </div>
       </section>
-    </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019bbed0-222c-76b1-af2d-676c2fc6668a" />
+</div>
   );
 }
