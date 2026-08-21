@@ -52,18 +52,30 @@ function getDemoMapping(projectId) {
 }
 
 export default function ProjectsPage() {
-  const { token, user } = useAuth();
+  const { token, user, getUserInfo, isLoading: authLoading } = useAuth();
+
+  // Fetch user info on mount so `user` is populated for access checks
+  useEffect(() => {
+    if (token && !user) {
+      getUserInfo().catch((err) => {
+        if (err.message !== "UNAUTHORIZED") {
+          console.error("Failed to get user info:", err);
+        }
+      });
+    }
+  }, [token, user, getUserInfo]);
   
   // Helper to check if current user can access a project
   const canAccessProject = (project) => {
     const level = project.access_level || "public";
     if (level === "public") return true;
     if (!user) return false;
+    const role = user.role;
     if (level === "registered") {
-      return user.access_level === "registered" || user.access_level === "premium";
+      return role === "registered" || role === "premium" || role === "admin";
     }
     if (level === "premium") {
-      return user.access_level === "premium";
+      return role === "premium" || role === "admin";
     }
     return false;
   };
