@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/components/AuthProvider";
+import Link from "next/link";
 
-// Usage: <ProjectInfoPanel projectId="your-uuid" />
-
+// Usage: <ProjectInfoPanel projectId=\"your-uuid\" />
+// On demo pages, this panel is informational only — it does NOT enforce
+// access control. If the project fetch fails the panel still renders a
+// placeholder so users aren't blocked from using the demo.
 export default function ProjectInfoPanel({ projectId }) {
   const [open, setOpen]                 = useState(false);
   const [project, setProject]           = useState(null);
@@ -11,8 +13,6 @@ export default function ProjectInfoPanel({ projectId }) {
   const [loading, setLoading]           = useState(true);
   const [activeTab, setActiveTab]       = useState("overview");
   const [imgErr, setImgErr]             = useState(false);
-  
-  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!projectId) return;
@@ -43,7 +43,7 @@ export default function ProjectInfoPanel({ projectId }) {
   if (!projectId) return null;
 
   // ── Access Control ───────────────────────────────────────────────────────────
-  if (loading || authLoading) {
+  if (loading) {
     return (
       <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center">
         <div className="relative w-12 h-12 mb-4">
@@ -55,49 +55,20 @@ export default function ProjectInfoPanel({ projectId }) {
     );
   }
 
-  if (!project && !loading) {
+  const level = project?.access_level || "public";
+
+  if (!project) {
     return (
       <div className="fixed inset-0 z-[9999] bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-2xl font-black text-gray-900 mb-2">Project Not Found</h1>
         <p className="text-gray-500 mb-8">Data project tidak dapat ditemukan atau telah dihapus.</p>
-        <a href="/projects" className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">Kembali ke Projects</a>
-      </div>
-    );
-  }
-
-  const level = project.access_level || "public";
-  let hasAccess = false;
-  if (level === "public") {
-    hasAccess = true;
-  } else if (user) {
-    if (level === "registered" && (user.access_level === "registered" || user.access_level === "premium")) {
-      hasAccess = true;
-    } else if (level === "premium" && user.access_level === "premium") {
-      hasAccess = true;
-    }
-  }
-
-  if (!hasAccess) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center mb-6">
-          <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Akses Terbatas</h1>
-        <p className="text-gray-500 max-w-sm mb-8 leading-relaxed text-sm">
-          Project ini berstatus <span className="font-bold text-amber-600 capitalize">{level}</span> dan membutuhkan hak akses yang sesuai untuk melihat demo.
-        </p>
-        <a href="/projects" className="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:scale-105 hover:shadow-lg hover:shadow-amber-500/30 transition-all duration-300">
-          Kembali ke Daftar Project
-        </a>
+        <Link href="/projects" className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">Kembali ke Projects</Link>
       </div>
     );
   }
 
   // ── Tabs ─────────────────────────────────────────────────────────────────────
-  const TABS = project ? [
+  const TABS = [
     {
       key: "overview", label: "Overview",
       icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />,
@@ -137,7 +108,7 @@ export default function ProjectInfoPanel({ projectId }) {
     },
     {
       key: "achievements", label: "Achievements",
-      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
+      icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 0 11-18 0 9 9 0 0118 0z" />,
       show: project.achievements?.length > 0, badge: project.achievements?.length || 0,
       accent: "#22c55e",
       render: () => (
@@ -239,7 +210,7 @@ export default function ProjectInfoPanel({ projectId }) {
         </div>
       ),
     },
-  ].filter(t => t.show) : [];
+  ].filter(t => t.show);
 
   const currentTab = TABS.find(t => t.key === activeTab) || TABS[0];
 
@@ -396,7 +367,7 @@ export default function ProjectInfoPanel({ projectId }) {
         ) : (
           <>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Project Info</span>
             <svg className="w-3 h-3 opacity-60 transition-transform duration-300 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
