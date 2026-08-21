@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 const CONTROLNET_API_URL = "/api/rispro/8004";
 
@@ -900,6 +901,9 @@ export default function ControlNetPage() {
           </div>
         </div>
       </section>
+
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019cf5ad-b55d-7b7c-b1a0-435526d9904f" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 const API_URL = "/api/rispro/9204";
 const MODEL_ID  = "N/A";  // thresholding mode, no specific model
@@ -870,6 +871,10 @@ export default function BrainThresholdPage() {
           </div>
         </div>
       </div>
+
+
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd06f-79bf-7cd5-b46e-c29bec0c7499" />
     </div>
   );
 }

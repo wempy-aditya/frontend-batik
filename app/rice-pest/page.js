@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 const API_URL = "/api/rispro/9005";
 
@@ -878,6 +879,9 @@ export default function RicePestPage() {
 
         </div>
       </section>
+
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="01a013c3-01bf-712a-93d0-43b826fba531" />
     </div>
   );
 }

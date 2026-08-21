@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 const API_URL = "/api/rispro/9207";
 
@@ -815,6 +816,10 @@ export default function MicrosatelliteStatusPage() {
           </div>
         </div>
       </div>
+
+
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd072-cc24-7ee2-bafb-4d70e0c744bb" />
     </div>
   );
 }
