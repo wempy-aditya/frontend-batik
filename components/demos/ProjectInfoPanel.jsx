@@ -18,7 +18,10 @@ export default function ProjectInfoPanel({ projectId }) {
     if (!projectId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/projects/public/${projectId}`);
+        const token = localStorage.getItem("access_token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const url = token ? `/api/projects/${projectId}` : `/api/projects/public/${projectId}`;
+        const res = await fetch(url, { headers });
         if (res.ok) setProject(await res.json());
       } catch {/* silent */} finally { setLoading(false); }
     })();
@@ -28,7 +31,9 @@ export default function ProjectInfoPanel({ projectId }) {
     if (!projectId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/contributors/project/${projectId}/contributors`);
+        const token = localStorage.getItem("access_token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`/api/contributors/project/${projectId}/contributors`, { headers });
         if (res.ok) { const d = await res.json(); setContributors(d.data || []); }
       } catch { setContributors([]); }
     })();
@@ -70,9 +75,11 @@ export default function ProjectInfoPanel({ projectId }) {
   if (level === "public") {
     hasAccess = true;
   } else if (user) {
-    if (level === "registered" && (user.access_level === "registered" || user.access_level === "premium")) {
+    if (user.role === "admin" || user.is_superuser) {
       hasAccess = true;
-    } else if (level === "premium" && user.access_level === "premium") {
+    } else if (level === "registered" && (user.role === "registered" || user.role === "premium")) {
+      hasAccess = true;
+    } else if (level === "premium" && user.role === "premium") {
       hasAccess = true;
     }
   }

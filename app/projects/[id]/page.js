@@ -323,7 +323,10 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await fetch(`/api/projects/public/${id}`);
+        const token = localStorage.getItem("access_token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const url = token ? `/api/projects/${id}` : `/api/projects/public/${id}`;
+        const response = await fetch(url, { headers });
         if (response.ok) {
           const data = await response.json();
           setProject(data);

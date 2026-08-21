@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL  = "https://rispro-idc-classification.wempyaw.com";
 const MODEL_ID = "MobileNet_model";
@@ -682,6 +684,9 @@ export default function IdcClassificationPage() {
           </div>
         </div>
       </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd061-84cf-7d5c-907c-de8a04fb74e1" />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-paru-anak.wempyaw.com";
 
@@ -683,6 +685,9 @@ export default function PneumoniaChildrenPage() {
           </div>
         </div>
       </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd052-4127-79f4-bce7-6d30af26f925" />
     </div>
   );
 }

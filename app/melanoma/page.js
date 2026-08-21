@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-lesi.wempyaw.com";
 
@@ -864,6 +866,9 @@ export default function MelanomaPage() {
 
         </div>
       </section>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="01a013ca-fe37-708c-a7a6-927f28d0cb0e" />
     </div>
   );
 }

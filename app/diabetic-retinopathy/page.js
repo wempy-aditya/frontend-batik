@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-diabetic-retinopathy.wempyaw.com";
 
@@ -806,6 +808,9 @@ export default function DiabeticRetinopathyPage() {
           </div>
         </div>
       </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd065-f9b1-7d82-9b3c-21aae77414f3" />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-brain-tumor.wempyaw.com";
 
@@ -857,6 +859,9 @@ export default function BrainTumorPage() {
           </div>
         </div>
       </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd06d-6780-77f3-91e2-5d3ccc2fa16b" />
     </div>
   );
 }

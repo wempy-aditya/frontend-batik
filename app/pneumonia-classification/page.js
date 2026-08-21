@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-klasifikasi-paru.wempyaw.com";
 
@@ -758,6 +760,9 @@ export default function PneumoniaClassificationPage() {
           </div>
         </div>
       </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd05e-739a-7800-ba43-8272777c51bc" />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-otak-ganda.wempyaw.com";
 
@@ -800,6 +802,9 @@ export default function BrainTumorPage() {
           </div>
         </div>
       </div>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="019fd059-65fc-7543-89c1-4c829d46bfbf" />
     </div>
   );
 }

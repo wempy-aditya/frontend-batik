@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
+
 
 const API_URL = "https://rispro-batik.wempyaw.com";
 
@@ -767,6 +769,9 @@ export default function BatikNitikPage() {
           </div>
         </div>
       </section>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="01a013bd-f682-730f-b6d6-7fc644f15215" />
     </div>
   );
 }
