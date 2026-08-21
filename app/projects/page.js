@@ -892,7 +892,7 @@ export default function ProjectsPage() {
               </h2>
               <p className="text-xl text-gray-600 mb-8">
                 Join our team of researchers and developers working on
-                cutting-edge AI projects.
+                cutting-edge AI projects
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <div

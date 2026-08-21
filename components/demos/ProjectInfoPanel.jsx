@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
 
 // Usage: <ProjectInfoPanel projectId=\"your-uuid\" />
 // On demo pages, this panel is informational only — it does NOT enforce
 // access control. If the project fetch fails the panel still renders a
 // placeholder so users aren't blocked from using the demo.
 export default function ProjectInfoPanel({ projectId }) {
+  const { token } = useAuth();
   const [open, setOpen]                 = useState(false);
   const [project, setProject]           = useState(null);
   const [contributors, setContributors] = useState([]);
@@ -18,11 +20,14 @@ export default function ProjectInfoPanel({ projectId }) {
     if (!projectId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/projects/public/${projectId}`);
+        // Use authenticated endpoint when token is available; public endpoint
+        // only sees public projects. Premium/registered projects require auth.
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`/api/projects/${projectId}`, { headers });
         if (res.ok) setProject(await res.json());
       } catch {/* silent */} finally { setLoading(false); }
     })();
-  }, [projectId]);
+  }, [projectId, token]);
 
   useEffect(() => {
     if (!projectId) return;
