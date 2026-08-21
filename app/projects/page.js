@@ -3,51 +3,56 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
-// ── Manual mapping: project ID → internal demo page route ──
-// Nilai bisa berupa string (1 demo) atau array string (multi demo)
-const DEMO_PAGE_MAP = {
-  // Arabica Coffee Bean Quality Classification
-  "01a013cc-e6fd-7e2f-9e77-d9d330b299bb": "/coffee-bean",
+// ── Derive demo routes from project.demo_url (API-provided) ──────────
+// Returns { type: 'single'|'multi'|'external', route?, options?, url? }
+// or null when no demo_url present (falls back to project detail page).
+function getDemoRoutes(project) {
+  const urls = project?.demo_url;
+  if (!Array.isArray(urls) || urls.length === 0) return null;
 
-  // Batik Ai Flux
-  "019e2df1-8907-7354-af61-13ad7c2d5107": "/batik-ai-studio",
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
 
-  // Batik Inpainting (Mask-Based Motif Editor)
-  "019cf595-2665-7da1-b2d1-344508351c9f": "/inpainting",
+  const internal = urls
+    .map((url) => {
+      try {
+        const u = new URL(url, appOrigin);
+        // Same-origin URLs map to internal Next.js routes
+        if (u.origin === appOrigin) return u.pathname;
+        // External URLs keep as-is
+        return url;
+      } catch {
+        // Relative path or non-URL string — treat as internal route
+        return url.startsWith("/") ? url : `/${url}`;
+      }
+    })
+    .filter(Boolean);
 
-  // Batik Text To Image — 4 demo pages
-  "019bbed6-aed3-7951-aa77-34c31d5f3dd2": [
-    { label: "Advanced Batik",   route: "/advanced-batik" },
-    { label: "Parang Batik",     route: "/parang-batik" },
-    { label: "Batch Generator",  route: "/batch-generator" },
-    { label: "Test API",         route: "/test-api" },
-  ],
+  const internalRoutes = internal.filter(
+    (r) => !r.startsWith("http") && !r.startsWith("https")
+  );
+  const externalRoutes = internal.filter(
+    (r) => r.startsWith("http") || r.startsWith("https")
+  );
 
-  // Batik RVGAN
-  "019bbed4-bbe7-7072-bf9d-849f21ce7b1d": "/batik-generator",
+  if (internalRoutes.length > 1) {
+    return {
+      type: "multi",
+      options: internalRoutes.map((route) => ({
+        label: route.replace(/^\/+/, "").replace(/\/+$/, "") || "Demo",
+        route,
+      })),
+    };
+  }
 
-  // Batik GAN
-  "019bbed3-bd9f-7e62-9df2-1ca95c0e9b81": "/batikgan",
+  if (internalRoutes.length === 1) {
+    return { type: "single", route: internalRoutes[0] };
+  }
 
-  // Batik GAN CL
-  "019bbed2-2106-799a-b49b-7008d555f69b": "/batikgan",
+  // No internal routes — open first external URL directly
+  if (externalRoutes.length > 0) {
+    return { type: "external", url: externalRoutes[0] };
+  }
 
-  // Batik Classification — 2 demo pages
-  "019bbed1-2aa7-7cfa-abeb-9493a6464433": [
-    { label: "Classify Batik",  route: "/classify-batik" },
-    { label: "Compare Batik",   route: "/compare-batik" },
-  ],
-
-  // Batik Retrieval
-  "019bbed0-222c-76b1-af2d-676c2fc6668a": "/batik-retrieval",
-};
-
-// Helper: ambil mapping project, return { type: 'single'|'multi', route?, options? }
-function getDemoMapping(projectId) {
-  const map = DEMO_PAGE_MAP[projectId];
-  if (!map) return null;
-  if (typeof map === "string") return { type: "single", route: map };
-  if (Array.isArray(map)) return { type: "multi", options: map };
   return null;
 }
 
@@ -614,9 +619,11 @@ export default function ProjectsPage() {
                   onMouseLeave={() => setHoveredProject(null)}
                   onClick={(e) => {
                     if (!canAccessProject(project)) return;
-                    const mapping = getDemoMapping(project.id);
+                    const mapping = getDemoRoutes(project);
                     if (!mapping) {
                       router.push(`/projects/${project.id}`);
+                    } else if (mapping.type === "external") {
+                      window.open(mapping.url, "_blank");
                     } else if (mapping.type === "single") {
                       router.push(mapping.route);
                     } else {
@@ -747,7 +754,7 @@ export default function ProjectsPage() {
                       {/* Action Button - Sticky Bottom */}
                       <div className="mt-auto pt-4 relative">
                         {(() => {
-                          const mapping = getDemoMapping(project.id);
+                          const mapping = getDemoRoutes(project);
                           const isMulti = mapping?.type === "multi";
                           const isPickerOpen = demoPickerOpen === project.id;
 
