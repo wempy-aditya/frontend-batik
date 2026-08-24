@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Riset dan Produk Informatika",
+  title: "Batik AI Studio",
   description:
-    "An integrated platform supporting Data Science, Software Engineering, Computer Networks, and Smart Game Development for research, development, and advanced computing innovation.",
+    "Integrated platform for Batik pattern AI research, generative models, and creative computing — Data Science, Computer Vision, and Software Engineering.",
 };
 
 export default function RootLayout({ children }) {
