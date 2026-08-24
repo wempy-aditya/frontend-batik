@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9004";
+
+const API_URL = "https://batik-batik.wempyaw.com";
 
 const LORA_VARIANTS = [
   {
@@ -768,7 +769,7 @@ export default function BatikNitikPage() {
           </div>
         </div>
       </section>
-
+    
       {/* Floating Project Info Panel */}
       <ProjectInfoPanel projectId="01a013bd-f682-730f-b6d6-7fc644f15215" />
     </div>

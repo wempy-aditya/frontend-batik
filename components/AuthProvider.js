@@ -14,14 +14,28 @@ export function AuthProvider({ children }) {
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = () => {
+  const checkAuthStatus = async () => {
     try {
       const accessToken = localStorage.getItem('access_token');
       setToken(accessToken);
       if (accessToken) {
         setIsAuthenticated(true);
-        // Only get user info after successful login, not on every page load
         console.log('Token found, user authenticated');
+        try {
+          const response = await fetch('/api/user/me', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          }
+        } catch (err) {
+          console.error('Failed to fetch initial user info:', err);
+        }
       } else {
         setIsAuthenticated(false);
         setUser(null);

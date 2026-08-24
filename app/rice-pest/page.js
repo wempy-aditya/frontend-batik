@@ -2,7 +2,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9005";
+
+const API_URL = "https://batik-hama.wempyaw.com";
 
 // ─── 11 Hama Classes ───────────────────────────────────────────────────────────
 const PEST_CLASSES = [
@@ -879,7 +880,7 @@ export default function RicePestPage() {
 
         </div>
       </section>
-
+    
       {/* Floating Project Info Panel */}
       <ProjectInfoPanel projectId="01a013c3-01bf-712a-93d0-43b826fba531" />
     </div>

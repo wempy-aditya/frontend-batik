@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9007";
+const API_URL = "https://batik-kopi.wempyaw.com";
 
 const COFFEE_CLASSES = [
   {

@@ -10,22 +10,53 @@ function getDemoRoutes(project) {
   const urls = project?.demo_url;
   if (!Array.isArray(urls) || urls.length === 0) return null;
 
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  // Melanoma Skin Cancer Classification
+  "01a013ca-fe37-708c-a7a6-927f28d0cb0e": "/melanoma",
 
-  const internal = urls
-    .map((url) => {
-      try {
-        const u = new URL(url, appOrigin);
-        // Same-origin URLs map to internal Next.js routes
-        if (u.origin === appOrigin) return u.pathname;
-        // External URLs keep as-is
-        return url;
-      } catch {
-        // Relative path or non-URL string — treat as internal route
-        return url.startsWith("/") ? url : `/${url}`;
-      }
-    })
-    .filter(Boolean);
+  // Rice Pest Classification
+  "01a013c3-01bf-712a-93d0-43b826fba531": "/rice-pest",
+
+  // Generative AI Batik Nitik 960
+  "01a013bd-f682-730f-b6d6-7fc644f15215": "/batik-nitik",
+
+  // Car Damage Detection
+  "01a013b0-9afd-735f-8317-0e1f5a1d4e19": "/car-damage",
+
+  // Microsatellite Instability (MSI/MSS) Classification
+  "019fd072-cc24-7ee2-bafb-4d70e0c744bb": "/microsatellite-status",
+
+  // Brain MRI Image Thresholding
+  "019fd06f-79bf-7cd5-b46e-c29bec0c7499": "/brain-threshold",
+
+  // Brain Tumor Classification (5 Skenario)
+  "019fd06d-6780-77f3-91e2-5d3ccc2fa16b": "/brain-tumor",
+
+  // Diabetic Retinopathy Severity Classification
+  "019fd065-f9b1-7d82-9b3c-21aae77414f3": "/diabetic-retinopathy",
+
+  // Invasive Ductal Carcinoma Detection
+  "019fd061-84cf-7d5c-907c-de8a04fb74e1": "/idc-classification",
+
+  // Pneumonia Classification from Chest X-Ray
+  "019fd05e-739a-7800-ba43-8272777c51bc": "/pneumonia-classification",
+
+  // Multi-Model Brain Tumor Classification
+  "019fd059-65fc-7543-89c1-4c829d46bfbf": "/multi-brain-tumor",
+
+  // Pneumonia Detection in Children
+  "019fd052-4127-79f4-bce7-6d30af26f925": "/pneumonia-children",
+
+  // Batik Ai Flux
+  "019e2df1-8907-7354-af61-13ad7c2d5107": "/batik-ai-studio",
+
+  // ControlNet Structure-Preserving Batik Editing
+  "019cf5ad-b55d-7b7c-b1a0-435526d9904f": "/controlnet",
+
+  // IP-Adapter Motif Blending (Style Transfer Batik)
+  "019cf5a6-fb9a-7398-af39-dfa3a8aab5be": "/ip-adapter",
+
+  // Batik Inpainting (Mask-Based Motif Editor)
+  "019cf595-2665-7da1-b2d1-344508351c9f": "/inpainting",
 
   const internalRoutes = internal.filter(
     (r) => !r.startsWith("http") && !r.startsWith("https")
@@ -75,12 +106,15 @@ export default function ProjectsPage() {
     const level = project.access_level || "public";
     if (level === "public") return true;
     if (!user) return false;
-    const role = user.role;
+    
+    // Admins and superusers always have access
+    if (user.role === "admin" || user.is_superuser) return true;
+
     if (level === "registered") {
-      return role === "registered" || role === "premium" || role === "admin";
+      return user.role === "registered" || user.role === "premium";
     }
     if (level === "premium") {
-      return role === "premium" || role === "admin";
+      return user.role === "premium";
     }
     return false;
   };

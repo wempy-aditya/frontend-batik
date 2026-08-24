@@ -20,10 +20,10 @@ export default function ProjectInfoPanel({ projectId }) {
     if (!projectId) return;
     (async () => {
       try {
-        // Use authenticated endpoint when token is available; public endpoint
-        // only sees public projects. Premium/registered projects require auth.
+        const token = localStorage.getItem("access_token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const res = await fetch(`/api/projects/${projectId}`, { headers });
+        const url = token ? `/api/projects/${projectId}` : `/api/projects/public/${projectId}`;
+        const res = await fetch(url, { headers });
         if (res.ok) setProject(await res.json());
       } catch {/* silent */} finally { setLoading(false); }
     })();
@@ -33,7 +33,9 @@ export default function ProjectInfoPanel({ projectId }) {
     if (!projectId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/contributors/project/${projectId}/contributors`);
+        const token = localStorage.getItem("access_token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(`/api/contributors/project/${projectId}/contributors`, { headers });
         if (res.ok) { const d = await res.json(); setContributors(d.data || []); }
       } catch { setContributors([]); }
     })();
@@ -67,7 +69,40 @@ export default function ProjectInfoPanel({ projectId }) {
       <div className="fixed inset-0 z-[9999] bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
         <h1 className="text-2xl font-black text-gray-900 mb-2">Project Not Found</h1>
         <p className="text-gray-500 mb-8">Data project tidak dapat ditemukan atau telah dihapus.</p>
-        <Link href="/projects" className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">Kembali ke Projects</Link>
+        <a href="/projects" className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">Kembali ke Projects</a>
+      </div>
+    );
+  }
+
+  const level = project.access_level || "public";
+  let hasAccess = false;
+  if (level === "public") {
+    hasAccess = true;
+  } else if (user) {
+    if (user.role === "admin" || user.is_superuser) {
+      hasAccess = true;
+    } else if (level === "registered" && (user.role === "registered" || user.role === "premium")) {
+      hasAccess = true;
+    } else if (level === "premium" && user.role === "premium") {
+      hasAccess = true;
+    }
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center mb-6">
+          <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Akses Terbatas</h1>
+        <p className="text-gray-500 max-w-sm mb-8 leading-relaxed text-sm">
+          Project ini berstatus <span className="font-bold text-amber-600 capitalize">{level}</span> dan membutuhkan hak akses yang sesuai untuk melihat demo.
+        </p>
+        <a href="/projects" className="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold hover:scale-105 hover:shadow-lg hover:shadow-amber-500/30 transition-all duration-300">
+          Kembali ke Daftar Project
+        </a>
       </div>
     );
   }

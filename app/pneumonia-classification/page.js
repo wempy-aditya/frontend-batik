@@ -2,7 +2,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9011";
+
+const API_URL = "https://batik-klasifikasi-paru.wempyaw.com";
 
 // ─── Single model ──────────────────────────────────────────────────────────────
 const MODEL_ID    = "Skneario_model";
@@ -759,8 +760,7 @@ export default function PneumoniaClassificationPage() {
           </div>
         </div>
       </div>
-
-
+    
       {/* Floating Project Info Panel */}
       <ProjectInfoPanel projectId="019fd05e-739a-7800-ba43-8272777c51bc" />
     </div>

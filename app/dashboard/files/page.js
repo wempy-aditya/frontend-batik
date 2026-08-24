@@ -336,7 +336,7 @@ export default function FileManager() {
                     {file.file_type === "image" ? (
                       <img 
                         // src={`https://spmb1.wempyaw.com${file.file_url}`} 
-                        src={`https://rispro.umm.ac.id${file.file_url}`} 
+                        src={`https://batik.umm.ac.id${file.file_url}`} 
                         alt={file.original_filename}
                         className="w-full h-full object-cover"
                       />
@@ -366,7 +366,7 @@ export default function FileManager() {
                   {/* Actions */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => copyToClipboard(`https://rispro.umm.ac.id${file.file_url}`)}
+                      onClick={() => copyToClipboard(`https://batik.umm.ac.id${file.file_url}`)}
                       className="flex-1 text-xs px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
                     >
                       Copy URL

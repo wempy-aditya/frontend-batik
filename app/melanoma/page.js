@@ -1,7 +1,9 @@
 "use client";
 import { useState, useRef, useCallback, useEffect } from "react";
+import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9006";
+
+const API_URL = "https://batik-lesi.wempyaw.com";
 
 // ─── Sub-model definitions ─────────────────────────────────────────────────────
 const SUB_MODELS = [
@@ -868,6 +870,9 @@ export default function MelanomaPage() {
 
         </div>
       </section>
+    
+      {/* Floating Project Info Panel */}
+      <ProjectInfoPanel projectId="01a013ca-fe37-708c-a7a6-927f28d0cb0e" />
     </div>
   );
 }

@@ -2,7 +2,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9003";
+
+const API_URL = "https://batik-crash.wempyaw.com";
 
 const DAMAGE_CLASSES = [
   { id: 0, name: "dent",         label: "Penyok",      color: "#ef4444" },
@@ -828,7 +829,7 @@ export default function CarDamagePage() {
 
         </div>
       </section>
-
+    
       {/* Floating Project Info Panel */}
       <ProjectInfoPanel projectId="01a013b0-9afd-735f-8317-0e1f5a1d4e19" />
     </div>

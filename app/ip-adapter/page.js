@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
+
 const IPADAPTER_API_URL = "/api/rispro/8006/";
 
 const SCENARIO_OPTIONS = [
@@ -901,7 +902,7 @@ export default function IPAdapterPage() {
           </div>
         </div>
       </section>
-
+    
       {/* Floating Project Info Panel */}
       <ProjectInfoPanel projectId="019cf5a6-fb9a-7398-af39-dfa3a8aab5be" />
     </div>

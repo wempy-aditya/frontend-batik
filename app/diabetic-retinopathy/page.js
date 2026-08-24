@@ -2,7 +2,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
-const API_URL = "/api/rispro/9106";
+
+const API_URL = "https://batik-diabetic-retinopathy.wempyaw.com";
 
 // ─── Models ────────────────────────────────────────────────────────────────────
 const MODELS = [
@@ -807,8 +808,7 @@ export default function DiabeticRetinopathyPage() {
           </div>
         </div>
       </div>
-
-
+    
       {/* Floating Project Info Panel */}
       <ProjectInfoPanel projectId="019fd065-f9b1-7d82-9b3c-21aae77414f3" />
     </div>
