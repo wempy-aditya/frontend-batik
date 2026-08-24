@@ -6,62 +6,41 @@ import { useAuth } from "@/components/AuthProvider";
 // ── Derive demo routes from project.demo_url (API-provided) ──────────
 // Returns { type: 'single'|'multi'|'external', route?, options?, url? }
 // or null when no demo_url present (falls back to project detail page).
+// ── Demo route map: project UUID -> demo route ─────────────────────
+const DEMO_PAGE_MAP = {
+  "01a013ca-fe37-708c-a7a6-927f28d0cb0e": "/melanoma",
+  "01a013c3-01bf-712a-93d0-43b826fba531": "/rice-pest",
+  "01a013bd-f682-730f-b6d6-7fc644f15215": "/batik-nitik",
+  "01a013b0-9afd-735f-8317-0e1f5a1d4e19": "/car-damage",
+  "019fd072-cc24-7ee2-bafb-4d70e0c744bb": "/microsatellite-status",
+  "019fd06f-79bf-7cd5-b46e-c29bec0c7499": "/brain-threshold",
+  "019fd06d-6780-77f3-91e2-5d3ccc2fa16b": "/brain-tumor",
+  "019fd065-f9b1-7d82-9b3c-21aae77414f3": "/diabetic-retinopathy",
+  "019fd061-84cf-7d5c-907c-de8a04fb74e1": "/idc-classification",
+  "019fd05e-739a-7800-ba43-8272777c51bc": "/pneumonia-classification",
+  "019fd059-65fc-7543-89c1-4c829d46bfbf": "/multi-brain-tumor",
+  "019fd052-4127-79f4-bce7-6d30af26f925": "/pneumonia-children",
+  "019e2df1-8907-7354-af61-13ad7c2d5107": "/batik-ai-studio",
+  "019cf5ad-b55d-7b7c-b1a0-435526d9904f": "/controlnet",
+  "019cf5a6-fb9a-7398-af39-dfa3a8aab5be": "/ip-adapter",
+  "019cf595-2665-7da1-b2d1-344508351c9f": "/inpainting",
+};
+
 function getDemoRoutes(project) {
   const urls = project?.demo_url;
-  if (!Array.isArray(urls) || urls.length === 0) return null;
+  if (!Array.isArray(urls) || urls.length === 0) {
+    // Fallback: try UUID-based lookup
+    const mappedRoute = DEMO_PAGE_MAP[project?.id];
+    if (mappedRoute) {
+      return { type: "single", route: mappedRoute };
+    }
+    return null;
+  }
 
-  // Melanoma Skin Cancer Classification
-  "01a013ca-fe37-708c-a7a6-927f28d0cb0e": "/melanoma",
-
-  // Rice Pest Classification
-  "01a013c3-01bf-712a-93d0-43b826fba531": "/rice-pest",
-
-  // Generative AI Batik Nitik 960
-  "01a013bd-f682-730f-b6d6-7fc644f15215": "/batik-nitik",
-
-  // Car Damage Detection
-  "01a013b0-9afd-735f-8317-0e1f5a1d4e19": "/car-damage",
-
-  // Microsatellite Instability (MSI/MSS) Classification
-  "019fd072-cc24-7ee2-bafb-4d70e0c744bb": "/microsatellite-status",
-
-  // Brain MRI Image Thresholding
-  "019fd06f-79bf-7cd5-b46e-c29bec0c7499": "/brain-threshold",
-
-  // Brain Tumor Classification (5 Skenario)
-  "019fd06d-6780-77f3-91e2-5d3ccc2fa16b": "/brain-tumor",
-
-  // Diabetic Retinopathy Severity Classification
-  "019fd065-f9b1-7d82-9b3c-21aae77414f3": "/diabetic-retinopathy",
-
-  // Invasive Ductal Carcinoma Detection
-  "019fd061-84cf-7d5c-907c-de8a04fb74e1": "/idc-classification",
-
-  // Pneumonia Classification from Chest X-Ray
-  "019fd05e-739a-7800-ba43-8272777c51bc": "/pneumonia-classification",
-
-  // Multi-Model Brain Tumor Classification
-  "019fd059-65fc-7543-89c1-4c829d46bfbf": "/multi-brain-tumor",
-
-  // Pneumonia Detection in Children
-  "019fd052-4127-79f4-bce7-6d30af26f925": "/pneumonia-children",
-
-  // Batik Ai Flux
-  "019e2df1-8907-7354-af61-13ad7c2d5107": "/batik-ai-studio",
-
-  // ControlNet Structure-Preserving Batik Editing
-  "019cf5ad-b55d-7b7c-b1a0-435526d9904f": "/controlnet",
-
-  // IP-Adapter Motif Blending (Style Transfer Batik)
-  "019cf5a6-fb9a-7398-af39-dfa3a8aab5be": "/ip-adapter",
-
-  // Batik Inpainting (Mask-Based Motif Editor)
-  "019cf595-2665-7da1-b2d1-344508351c9f": "/inpainting",
-
-  const internalRoutes = internal.filter(
+  const internalRoutes = urls.filter(
     (r) => !r.startsWith("http") && !r.startsWith("https")
   );
-  const externalRoutes = internal.filter(
+  const externalRoutes = urls.filter(
     (r) => r.startsWith("http") || r.startsWith("https")
   );
 
@@ -86,7 +65,6 @@ function getDemoRoutes(project) {
 
   return null;
 }
-
 export default function ProjectsPage() {
   const { token, user, getUserInfo, isLoading: authLoading } = useAuth();
 

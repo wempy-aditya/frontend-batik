@@ -8,7 +8,7 @@ import { useAuth } from "@/components/AuthProvider";
 // access control. If the project fetch fails the panel still renders a
 // placeholder so users aren't blocked from using the demo.
 export default function ProjectInfoPanel({ projectId }) {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const [open, setOpen]                 = useState(false);
   const [project, setProject]           = useState(null);
   const [contributors, setContributors] = useState([]);
@@ -63,18 +63,6 @@ export default function ProjectInfoPanel({ projectId }) {
   }
 
   const level = project?.access_level || "public";
-
-  if (!project) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-gray-50 flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-2xl font-black text-gray-900 mb-2">Project Not Found</h1>
-        <p className="text-gray-500 mb-8">Data project tidak dapat ditemukan atau telah dihapus.</p>
-        <a href="/projects" className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">Kembali ke Projects</a>
-      </div>
-    );
-  }
-
-  const level = project.access_level || "public";
   let hasAccess = false;
   if (level === "public") {
     hasAccess = true;
