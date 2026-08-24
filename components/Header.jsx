@@ -112,8 +112,8 @@ const Header = () => {
               <div className="relative">
                 <div className="w-12 h-12 rounded-xl overflow-hidden transform group-hover:scale-110 transition-transform duration-300 shadow-lg bg-white">
                   <Image
-                    src="/logo_rispro.png"
-                    alt="RISPRO Logo"
+                    src="/logo_batik.png"
+                    alt="Batik Logo"
                     width={48}
                     height={48}
                     className="w-full h-full object-cover"
@@ -129,7 +129,7 @@ const Header = () => {
                       : "text-white"
                   }`}
                 >
-                  RISPRO
+                  batik
                 </div>
                 <div
                   className={`text-xs transition-colors duration-300 ${

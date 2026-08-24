@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL = "https://rispro-lesi.wempyaw.com";
+const API_URL = "https://batik-lesi.wempyaw.com";
 
 // ─── Sub-model definitions ─────────────────────────────────────────────────────
 const SUB_MODELS = [

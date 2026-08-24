@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL   = "https://rispro-brain-threshold.wempyaw.com";
+const API_URL   = "https://batik-brain-threshold.wempyaw.com";
 const MODEL_ID  = "N/A";  // thresholding mode, no specific model
 
 // ─── Class info helper ─────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL = "https://rispro-batik.wempyaw.com";
+const API_URL = "https://batik-batik.wempyaw.com";
 
 const LORA_VARIANTS = [
   {

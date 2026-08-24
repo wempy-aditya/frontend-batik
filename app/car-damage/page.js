@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL = "https://rispro-crash.wempyaw.com";
+const API_URL = "https://batik-crash.wempyaw.com";
 
 const DAMAGE_CLASSES = [
   { id: 0, name: "dent",         label: "Penyok",      color: "#ef4444" },

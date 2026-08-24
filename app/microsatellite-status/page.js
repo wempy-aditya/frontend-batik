@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL = "https://rispro-mikrosatelit.wempyaw.com";
+const API_URL = "https://batik-mikrosatelit.wempyaw.com";
 
 // ─── Models ────────────────────────────────────────────────────────────────────
 const MODELS = [

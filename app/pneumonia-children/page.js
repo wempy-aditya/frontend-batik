@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL = "https://rispro-paru-anak.wempyaw.com";
+const API_URL = "https://batik-paru-anak.wempyaw.com";
 
 // ─── Model Schemas ─────────────────────────────────────────────────────────────
 const MODELS = [

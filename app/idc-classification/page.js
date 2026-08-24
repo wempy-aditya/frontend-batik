@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL  = "https://rispro-idc-classification.wempyaw.com";
+const API_URL  = "https://batik-idc-classification.wempyaw.com";
 const MODEL_ID = "MobileNet_model";
 
 // ─── Class info helper ─────────────────────────────────────────────────────────

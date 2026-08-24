@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 
-const API_URL = "https://rispro-hama.wempyaw.com";
+const API_URL = "https://batik-hama.wempyaw.com";
 
 // ─── 11 Hama Classes ───────────────────────────────────────────────────────────
 const PEST_CLASSES = [
