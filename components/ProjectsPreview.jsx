@@ -376,21 +376,20 @@ const ProjectsPreview = () => {
                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
               />
             </svg>
-            Featured AI Projects
+            Proyek Batik Unggulan
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">
             <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
-              Innovative
+              Inovasi
             </span>
             <br />
             <span className="bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              AI Projects
+              Proyek Batik AI
             </span>
           </h2>
           <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-            Discover our cutting-edge research and development projects
-            showcasing the latest advances in computer vision and machine
-            learning technology.
+            Temukan proyek penelitian dan pengembangan mutakhir kami yang menampilkan
+            kemajuan terbaru dalam teknologi AI untuk analisis dan pelestarian Batik.
           </p>
         </div>
 

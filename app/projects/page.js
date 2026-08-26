@@ -126,9 +126,9 @@ export default function ProjectsPage() {
 
 
   const sortOptions = [
-    { id: "latest", name: "Latest" },
-    { id: "oldest", name: "Oldest" },
-    { id: "title", name: "Title (A-Z)" },
+    { id: "latest", name: "Terbaru" },
+    { id: "oldest", name: "Terlama" },
+    { id: "title", name: "Judul (A-Z)" },
   ];
 
   // Fetch categories
@@ -141,7 +141,7 @@ export default function ProjectsPage() {
           if (Array.isArray(data)) {
             // Add "All" category at the beginning
             const allCategories = [
-              { id: "all", name: "All Projects", slug: "all" },
+              { id: "all", name: "Semua Proyek", slug: "all" },
               ...data,
             ];
             setCategories(allCategories);
@@ -150,7 +150,7 @@ export default function ProjectsPage() {
       } catch (error) {
         console.error("Error fetching categories:", error);
         // Set default categories if API fails
-        setCategories([{ id: "all", name: "All Projects", slug: "all" }]);
+        setCategories([{ id: "all", name: "Semua Proyek", slug: "all" }]);
       }
     };
     fetchCategories();
@@ -327,7 +327,7 @@ export default function ProjectsPage() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span className="text-white">Projects</span>
+            <span className="text-white">Proyek Batik</span>
           </div>
 
           <div className="text-center max-w-4xl mx-auto">
@@ -346,20 +346,20 @@ export default function ProjectsPage() {
                 />
               </svg>
               <span className="text-sm font-semibold text-amber-200">
-                Complete Project Portfolio
+                Portofolio Proyek Batik
               </span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
               <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
-                All AI Projects
+                Semua Proyek Batik AI
               </span>
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
-              Explore our comprehensive collection of AI and computer vision
-              projects. From research prototypes to production-ready solutions,
-              discover innovation at every level.
+              Jelajahi koleksi komprehensif proyek AI dan visi komputer kami. 
+              Dari prototipe penelitian hingga solusi siap pakai, temukan 
+              inovasi pelestarian Batik di setiap tingkatan.
             </p>
           </div>
         </div>
@@ -383,7 +383,7 @@ export default function ProjectsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearch}
-                  placeholder="Search projects..."
+                  placeholder="Cari proyek..."
                   className="w-full px-6 py-3 pl-12 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all"
                 />
                 <svg
@@ -478,7 +478,7 @@ export default function ProjectsPage() {
                     : "bg-gray-50 text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
                 }`}
               >
-                Featured
+                Unggulan
               </button>
             </div>
 
@@ -583,13 +583,13 @@ export default function ProjectsPage() {
               {/* Results Count */}
               <div className="lg:border-l lg:border-gray-200 lg:pl-6">
                 <p className="text-gray-600 text-sm whitespace-nowrap">
-                  Showing{" "}
+                  Menampilkan{" "}
                   <span className="font-bold text-gray-900">
                     {displayProjects.length}
                   </span>{" "}
                   of{" "}
                   <span className="font-bold text-gray-900">{totalItems}</span>{" "}
-                  projects
+                  proyek
                 </p>
               </div>
             </div>

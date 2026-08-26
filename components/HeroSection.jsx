@@ -32,16 +32,14 @@ const HeroSection = () => {
           <div className="text-center lg:text-left space-y-8">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent leading-tight">
-                Integrated Informatics
+                Pusat Inovasi & Eksplorasi
                 <span className="block bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                  Innovation Platform
+                  Batik Nusantara
                 </span>
               </h1>
 
               <p className="text-xl md:text-2xl text-gray-300 max-w-2xl leading-relaxed">
-                Explore Data Science, Software Engineering, Computer Networks,
-                and Smart Game Development in a unified environment designed for
-                research, innovation, and real-world applications.
+                Jelajahi keindahan, sejarah, dan teknologi di balik Batik Nusantara melalui platform terintegrasi untuk penelitian, inovasi AI, dan pelestarian budaya.
               </p>
             </div>
 
@@ -93,10 +91,10 @@ const HeroSection = () => {
                 {/* Mock Gallery Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   {[
-                    "/data_science.png",
-                    "/software_development.png",
-                    "/computer_network.png",
-                    "/smart_game.png",
+                    "/batik_0003.png",
+                    "/batik_motif_named_Sekar_Tanjung_featuring_a_centra_seed42_1.png",
+                    "/batik_with_flower_motifs_seed42_5.png",
+                    "/batik_with_flower_motifs_seed42_7.png",
                   ].map((src, i) => (
                     <div
                       key={i}

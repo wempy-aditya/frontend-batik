@@ -23,14 +23,14 @@ export default function DatasetsPage() {
   const router = useRouter();
 
   const accessTypes = [
-    { id: "all", name: "All Access" },
-    { id: "Public", name: "Public" },
-    { id: "Registered", name: "Registered" },
+    { id: "all", name: "Semua Akses" },
+    { id: "Public", name: "Publik" },
+    { id: "Registered", name: "Terdaftar" },
     { id: "Premium", name: "Premium" },
   ];
 
   const formatOptions = [
-    { id: "all", name: "All Formats" },
+    { id: "all", name: "Semua Format" },
     { id: "CSV", name: "CSV" },
     { id: "JSON", name: "JSON" },
     { id: "Parquet", name: "Parquet" },
@@ -41,20 +41,20 @@ export default function DatasetsPage() {
   ];
 
   const licenseOptions = [
-    { id: "all", name: "All Licenses" },
+    { id: "all", name: "Semua Lisensi" },
     { id: "MIT", name: "MIT" },
     { id: "Apache-2.0", name: "Apache 2.0" },
     { id: "GPL-3.0", name: "GPL 3.0" },
     { id: "BSD", name: "BSD" },
     { id: "CC-BY-4.0", name: "CC BY 4.0" },
-    { id: "Public Domain", name: "Public Domain" },
+    { id: "Public Domain", name: "Domain Publik" },
   ];
 
   const sortOptions = [
-    { id: "latest", name: "Latest" },
-    { id: "oldest", name: "Oldest" },
-    { id: "name", name: "Name (A-Z)" },
-    { id: "downloads", name: "Most Downloads" },
+    { id: "latest", name: "Terbaru" },
+    { id: "oldest", name: "Terlama" },
+    { id: "name", name: "Nama (A-Z)" },
+    { id: "downloads", name: "Paling Banyak Diunduh" },
   ];
 
   // Fetch categories
@@ -66,7 +66,7 @@ export default function DatasetsPage() {
           const data = await response.json();
           if (Array.isArray(data)) {
             const allCategories = [
-              { id: "all", name: "All Datasets", slug: "all" },
+              { id: "all", name: "Semua Dataset", slug: "all" },
               ...data,
             ];
             setCategories(allCategories);
@@ -74,7 +74,7 @@ export default function DatasetsPage() {
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
-        setCategories([{ id: "all", name: "All Datasets", slug: "all" }]);
+        setCategories([{ id: "all", name: "Semua Dataset", slug: "all" }]);
       }
     };
     fetchCategories();
@@ -278,7 +278,7 @@ export default function DatasetsPage() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span className="text-white">Datasets</span>
+            <span className="text-white">Dataset Batik</span>
           </div>
 
           <div className="text-center max-w-4xl mx-auto">
@@ -297,20 +297,21 @@ export default function DatasetsPage() {
                 />
               </svg>
               <span className="text-sm font-semibold text-amber-200">
-                Complete Dataset Library
+                Perpustakaan Dataset Batik Lengkap
               </span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
               <span className="bg-gradient-to-r from-white via-gray-100 to-blue-100 bg-clip-text text-transparent">
-                Research Datasets
+                Dataset Penelitian Batik
               </span>
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
-              Explore our comprehensive collection of curated datasets for
-              machine learning research. From computer vision to NLP, find the
-              perfect data for your next breakthrough.
+              Jelajahi koleksi komprehensif dataset pilihan untuk penelitian
+              machine learning dan pelestarian Batik Nusantara. Dari klasifikasi
+              hingga segmentasi citra, temukan data yang tepat untuk
+              terobosan Anda berikutnya.
             </p>
           </div>
         </div>
@@ -329,7 +330,7 @@ export default function DatasetsPage() {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearch}
-                  placeholder="Search datasets..."
+                  placeholder="Cari dataset..."
                   className="w-full px-6 py-3 pl-12 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:bg-white focus:outline-none transition-all"
                 />
                 <svg
@@ -508,13 +509,12 @@ export default function DatasetsPage() {
                   setIsFeatured(!isFeatured);
                   setCurrentPage(1);
                 }}
-                className={`px-5 py-3 rounded-xl font-semibold transition-all duration-300 border-2 whitespace-nowrap ${
-                  isFeatured
+                className={`px-5 py-3 rounded-xl font-semibold transition-all duration-300 border-2 whitespace-nowrap ${isFeatured
                     ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-transparent shadow-md"
                     : "bg-gray-50 text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-                }`}
+                  }`}
               >
-                Featured
+                Unggulan
               </button>
             </div>
 
@@ -652,22 +652,22 @@ export default function DatasetsPage() {
                   isFeatured ||
                   sortBy !== "latest" ||
                   searchQuery) && (
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("all");
-                      setSelectedFormat("all");
-                      setSelectedLicense("all");
-                      setSelectedAccess("all");
-                      setIsFeatured(false);
-                      setSortBy("latest");
-                      setSearchQuery("");
-                      setCurrentPage(1);
-                    }}
-                    className="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors border border-red-200"
-                  >
-                    Clear All
-                  </button>
-                )}
+                    <button
+                      onClick={() => {
+                        setSelectedCategory("all");
+                        setSelectedFormat("all");
+                        setSelectedLicense("all");
+                        setSelectedAccess("all");
+                        setIsFeatured(false);
+                        setSortBy("latest");
+                        setSearchQuery("");
+                        setCurrentPage(1);
+                      }}
+                      className="px-4 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors border border-red-200"
+                    >
+                      Clear All
+                    </button>
+                  )}
               </div>
 
               {/* Results Count */}
@@ -727,9 +727,8 @@ export default function DatasetsPage() {
                       <div
                         className={`absolute inset-0 bg-gradient-to-br ${getGradientClass(
                           dataset.gradient,
-                        )} transition-transform duration-700 ${
-                          hoveredDataset === dataset.id ? "scale-110" : ""
-                        }`}
+                        )} transition-transform duration-700 ${hoveredDataset === dataset.id ? "scale-110" : ""
+                          }`}
                       ></div>
 
                       {/* Sample Grid Overlay */}
@@ -907,11 +906,10 @@ export default function DatasetsPage() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  currentPage === 1
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === 1
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : "bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
-                }`}
+                  }`}
               >
                 Previous
               </button>
@@ -921,11 +919,10 @@ export default function DatasetsPage() {
                   <button
                     key={index + 1}
                     onClick={() => setCurrentPage(index + 1)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                      currentPage === index + 1
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === index + 1
                         ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
                         : "bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
-                    }`}
+                      }`}
                   >
                     {index + 1}
                   </button>
@@ -937,11 +934,10 @@ export default function DatasetsPage() {
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  currentPage === totalPages
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${currentPage === totalPages
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : "bg-white text-gray-700 hover:bg-blue-50 border border-gray-200"
-                }`}
+                  }`}
               >
                 Next
               </button>

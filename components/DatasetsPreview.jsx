@@ -197,16 +197,16 @@ const DatasetsPreview = () => {
               />
             </svg>
             <span className="text-sm font-semibold text-amber-800">
-              Research Datasets
+              Dataset Penelitian Batik
             </span>
           </div>
 
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Curated Datasets
+            Kumpulan Dataset Pilihan
           </h2>
           <p className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Access high-quality, well-annotated datasets for training and
-            benchmarking your computer vision models with confidence.
+            Akses dataset berkualitas tinggi beranotasi lengkap untuk melatih model Anda dalam
+            menganalisis dan mengenali berbagai corak Batik Nusantara.
           </p>
         </div>
 
@@ -612,7 +612,7 @@ const DatasetsPreview = () => {
             }}
             className="group inline-flex items-center px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
           >
-            <span>Browse All Datasets</span>
+            <span>Jelajahi Semua Dataset</span>
             <svg
               className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1"
               fill="none"

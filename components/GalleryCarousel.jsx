@@ -162,16 +162,15 @@ const GalleryCarousel = () => {
               />
             </svg>
             <span className="text-sm font-semibold text-amber-200">
-              AI Generated Gallery
+              Galeri Batik AI
             </span>
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Generative Showcase
+            Karya Generatif Batik
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Explore stunning AI-generated artwork created with state-of-the-art
-            generative models and creative prompting techniques.
+            Jelajahi karya seni Batik memukau yang dihasilkan oleh AI dengan model generatif mutakhir dan teknik prompting kreatif.
           </p>
         </div>
 
@@ -379,7 +378,7 @@ const GalleryCarousel = () => {
             onClick={() => router.push("/gallery")}
             className="group inline-flex items-center px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
           >
-            <span>View Full Gallery</span>
+            <span>Lihat Semua Galeri</span>
             <svg
               className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1"
               fill="none"

@@ -35,12 +35,10 @@ const Footer = () => {
                   />
                 </svg>
               </div>
-              <span className="text-xl font-bold">batik</span>
+              <span className="text-xl font-bold">Batik</span>
             </div>
             <p className="text-gray-400 leading-relaxed text-sm md:text-base">
-              Advancing the frontiers of informatics through innovative research
-              and cutting-edge technology in Data Science, Software Engineering,
-              Computer Networks, and Smart Game Development.
+              Memajukan inovasi melalui penelitian dan teknologi mutakhir dalam pelestarian Batik Nusantara, Visi Komputer, dan Kecerdasan Buatan.
             </p>
           </div>
 
@@ -173,7 +171,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-gray-400 text-xs md:text-sm text-center md:text-left">
-               2025 Batik. All rights reserved.
+              2025 Batik. All rights reserved.
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs md:text-sm">
               <a

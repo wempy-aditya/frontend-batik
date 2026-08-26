@@ -25,18 +25,18 @@ export default function PublicationsPage() {
   const availableYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
 
   const fallbackCategories = [
-    { id: "all", name: "All Publications", count: 25 },
-    { id: "conference", name: "Conference Papers", count: 15 },
-    { id: "journal", name: "Journal Articles", count: 8 },
-    { id: "survey", name: "Survey Papers", count: 2 },
+    { id: "all", name: "Semua Publikasi", count: 25 },
+    { id: "conference", name: "Makalah Konferensi", count: 15 },
+    { id: "journal", name: "Artikel Jurnal", count: 8 },
+    { id: "survey", name: "Makalah Survei", count: 2 },
   ];
 
   const sortOptions = [
-    { id: "latest", name: "Latest" },
-    { id: "oldest", name: "Oldest" },
-    { id: "title", name: "Title (A-Z)" },
-    { id: "year", name: "Year (Newest)" },
-    { id: "views", name: "Most Viewed" },
+    { id: "latest", name: "Terbaru" },
+    { id: "oldest", name: "Terlama" },
+    { id: "title", name: "Judul (A-Z)" },
+    { id: "year", name: "Tahun (Terbaru)" },
+    { id: "views", name: "Paling Banyak Dilihat" },
   ];
 
   // Fetch categories from API
@@ -48,7 +48,7 @@ export default function PublicationsPage() {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
             const formattedCategories = [
-              { id: "all", name: "All Publications", count: 0 },
+              { id: "all", name: "Semua Publikasi", count: 0 },
               ...data.map((cat) => ({
                 id: cat.id,
                 name: cat.name,
@@ -326,7 +326,7 @@ export default function PublicationsPage() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-            <span className="text-white">Publications</span>
+            <span className="text-white">Publikasi Batik</span>
           </div>
 
           <div className="text-center max-w-4xl mx-auto">
@@ -345,20 +345,20 @@ export default function PublicationsPage() {
                 />
               </svg>
               <span className="text-sm font-semibold text-amber-200">
-                Complete Research Portfolio
+                Portofolio Riset Batik Lengkap
               </span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8">
               <span className="bg-gradient-to-r from-white via-amber-100 to-orange-100 bg-clip-text text-transparent">
-                Research Publications
+                Publikasi Riset Batik
               </span>
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-300 leading-relaxed">
-              Explore our comprehensive collection of research publications
-              advancing the frontiers of artificial intelligence, computer
-              vision, and machine learning.
+              Jelajahi koleksi komprehensif publikasi penelitian kami yang 
+              memajukan inovasi teknologi kecerdasan buatan dan visi komputer 
+              dalam pelestarian Batik Nusantara.
             </p>
           </div>
         </div>
@@ -375,7 +375,7 @@ export default function PublicationsPage() {
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="Search publications..."
+                  placeholder="Cari publikasi..."
                   defaultValue={searchQuery}
                   onKeyDown={handleSearch}
                   className="w-full px-6 py-3 pl-12 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all"
@@ -405,7 +405,7 @@ export default function PublicationsPage() {
                   }}
                   className="w-full lg:w-48 px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
                 >
-                  <option value="all">All Types</option>
+                  <option value="all">Semua Tipe</option>
                   {displayCategories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -437,7 +437,7 @@ export default function PublicationsPage() {
                   }}
                   className="w-full lg:w-40 px-4 py-3 bg-gray-50 rounded-xl border-2 border-gray-200 focus:border-amber-500 focus:bg-white focus:outline-none transition-all appearance-none cursor-pointer font-medium text-gray-700"
                 >
-                  <option value="all">All Years</option>
+                  <option value="all">Semua Tahun</option>
                   {availableYears.map((year) => (
                     <option key={year} value={year}>
                       {year === "older" ? "Lebih dari 5 tahun" : year}
@@ -516,7 +516,7 @@ export default function PublicationsPage() {
                     : "bg-gray-50 text-gray-700 border-gray-200 hover:border-amber-300 hover:bg-amber-50"
                 }`}
               >
-                Featured
+                Unggulan
               </button>
             </div>
 

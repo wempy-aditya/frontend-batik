@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -74,7 +74,7 @@ export default function GalleryPage() {
             <svg className="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-            <span className="text-amber-400">Gallery</span>
+            <span className="text-amber-400">Galeri Batik</span>
           </div>
 
           <div className="text-center mb-12">
@@ -82,11 +82,11 @@ export default function GalleryPage() {
               <svg className="w-4 h-4 text-amber-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-sm font-semibold text-amber-200">AI Art Collection</span>
+              <span className="text-sm font-semibold text-amber-200">Koleksi Seni AI</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Gallery Showcase</h1>
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Galeri Karya Generatif Batik</h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Explore our curated collection of AI-generated artwork from various styles and models
+              Jelajahi koleksi pilihan karya seni Batik yang dihasilkan oleh AI dari berbagai gaya dan model
             </p>
           </div>
 
@@ -99,7 +99,7 @@ export default function GalleryPage() {
                 <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
-                Grid View
+                Tampilan Grid
               </button>
               <button
                 onClick={() => setViewMode("masonry")}
@@ -108,7 +108,7 @@ export default function GalleryPage() {
                 <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 12a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z" />
                 </svg>
-                Masonry View
+                Tampilan Masonry
               </button>
             </div>
           </div>
@@ -143,9 +143,9 @@ export default function GalleryPage() {
                 <svg className="w-16 h-16 text-white/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <h3 className="text-white/80 text-lg font-semibold mb-2">No Gallery Images</h3>
+                <h3 className="text-white/80 text-lg font-semibold mb-2">Tidak Ada Gambar Galeri</h3>
                 <p className="text-white/50">
-                  {selectedCategory === "all" ? "Check back later for exciting AI-generated artwork!" : "No images found in this category."}
+                  {selectedCategory === "all" ? "Silakan periksa kembali nanti untuk karya seni Batik yang dihasilkan oleh AI!" : "Tidak ada gambar yang ditemukan dalam kategori ini."}
                 </p>
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function GalleryPage() {
                         <svg className="w-12 h-12 text-white mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
-                        <p className="text-white font-semibold">View Details</p>
+                        <p className="text-white font-semibold">Lihat Detail</p>
                       </div>
                     </div>
                   </div>
@@ -208,7 +208,7 @@ export default function GalleryPage() {
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Load More Images
+                Muat Lebih Banyak Gambar
               </button>
             </div>
           )}
