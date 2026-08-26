@@ -181,6 +181,9 @@ export default function ProjectsPage() {
           params.append("category_id", selectedCategory);
         }
 
+        // Prefix slug filter — default to "batik"
+        params.append("prefix_slug", "batik");
+
         // Featured filter
         if (isFeatured) {
           params.append("is_featured", "true");

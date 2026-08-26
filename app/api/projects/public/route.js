@@ -40,6 +40,12 @@ export async function GET(request) {
     const sortBy = searchParams.get("sort_by") || "latest";
     params.append("sort_by", sortBy);
 
+    // Prefix slug filter — backend uses hyphenated param name
+    const prefixSlug = searchParams.get("prefix_slug");
+    if (prefixSlug) {
+      params.append("prefix-slug", prefixSlug);
+    }
+
     const url = `${apiBaseUrl}/api/v1/public/projects/?${params.toString()}`;
 
     const response = await fetch(url, {
