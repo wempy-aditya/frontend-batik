@@ -235,30 +235,7 @@ const Header = () => {
                   </svg>
                   Dashboard
                 </button>
-              ) : (
-                <button
-                  onClick={() => (window.location.href = "https://rispro.umm.ac.id/login")}
-                  className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${isScrolled || needsSolidHeader
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
-                    }`}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  Login
-                </button>
-              )}
+              ) : null}
             </div>
 
             {/* Mobile Menu Button */}
@@ -382,30 +359,7 @@ const Header = () => {
                   </svg>
                   Dashboard
                 </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    window.location.href = "https://rispro.umm.ac.id/login";
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all duration-300"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
-                  Masuk
-                </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
