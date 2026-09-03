@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { useParams, useRouter } from "next/navigation";
@@ -346,7 +347,7 @@ export default function ProjectDetailPage() {
       if (id) {
         setLoadingContributors(true);
         try {
-          const response = await fetch(`/api/contributors/project/${id}/contributors`);
+          const response = await fetch(withBasePath(`/api/contributors/project/${id}/contributors`));
           if (response.ok) {
             const data = await response.json();
             setContributors(data.data || []);
@@ -409,7 +410,7 @@ export default function ProjectDetailPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-2">Project Not Found</h2>
           <p className="text-gray-500 mb-6 text-sm">The project you&#39;re looking for doesn&#39;t exist.</p>
           <button
-            onClick={() => router.push("/projects")}
+            onClick={() => router.push(withBasePath("/projects"))}
             className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
           >
             Back to Projects

@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import { useState, useRef, useCallback } from "react";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
@@ -308,7 +309,7 @@ export default function MultiControlNetPage() {
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex items-center text-sm text-orange-200 mb-8">
-            <button onClick={() => (window.location.href = "/")} className="hover:text-white transition-colors">
+            <button onClick={() => (window.location.href = withBasePath("/"))} className="hover:text-white transition-colors">
               Home
             </button>
             <svg className="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

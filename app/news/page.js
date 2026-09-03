@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { withBasePath } from "@/lib/basePath";
 
 export default function NewsPage() {
   const { token } = useAuth();
@@ -18,7 +19,7 @@ export default function NewsPage() {
       try {
         const localToken = localStorage.getItem("access_token");
         const activeToken = localToken || token;
-        const response = await fetch("/api/news/public", {
+        const response = await fetch(withBasePath("/api/news/public"), {
           headers: {
             ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
           },
@@ -43,7 +44,7 @@ export default function NewsPage() {
       try {
         const localToken = localStorage.getItem("access_token");
         const activeToken = localToken || token;
-        const response = await fetch("/api/news/public/featured?limit=2", {
+        const response = await fetch(withBasePath("/api/news/public/featured?limit=2"), {
           headers: {
             ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
           },
@@ -293,7 +294,7 @@ export default function NewsPage() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
           <div className="flex items-center text-xs md:text-sm text-amber-200 mb-5 md:mb-8">
-            <button onClick={() => router.push("/")} className="hover:text-white transition-colors">
+            <button onClick={() => router.push(withBasePath("/"))} className="hover:text-white transition-colors">
               Home
             </button>
             <svg className="w-3 h-3 md:w-4 md:h-4 mx-1.5 md:mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

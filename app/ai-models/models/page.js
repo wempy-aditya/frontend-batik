@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function PublicAiModelsPage() {
@@ -186,7 +187,7 @@ export default function PublicAiModelsPage() {
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex items-center text-sm text-cyan-200 mb-8">
-            <button onClick={() => router.push("/")} className="hover:text-white transition-colors">
+            <button onClick={() => router.push(withBasePath("/"))} className="hover:text-white transition-colors">
               Home
             </button>
             <svg className="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

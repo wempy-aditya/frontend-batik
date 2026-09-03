@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 import { useState, useEffect } from "react";
@@ -172,7 +173,7 @@ export default function ClassifyBatikPage() {
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex items-center text-sm text-blue-200 mb-8">
             <button
-              onClick={() => (window.location.href = "/")}
+              onClick={() => window.location.href = withBasePath("/")}
               className="hover:text-white transition-colors"
             >
               Home
@@ -499,7 +500,7 @@ export default function ClassifyBatikPage() {
             </div>
             <div className="text-center mt-6">
               <button
-                onClick={() => window.location.href = "/compare-batik"}
+                onClick={() => window.location.href = withBasePath("/compare-batik")}
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
               >
                 Compare Multiple Models →

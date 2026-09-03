@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  fe-web-batik-root:
+    image: 10.10.11.235:5000/fe-web-batik-root:latest
+    container_name: fe-web-batik-root
+    restart: unless-stopped
+    pull_policy: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://rispro.umm.ac.id
+      - NEXT_PUBLIC_APP_URL=https://rispro.umm.ac.id
+      - NEXT_PUBLIC_CLASSIFY_API_URL=https://rispro.umm.ac.id/model/klasifikasi-batik
+      - NEXT_PUBLIC_RVGAN_API_URL=https://rispro.umm.ac.id/model/rvgan
+      - NEXT_PUBLIC_BATIKGAN_API_URL=https://rispro.umm.ac.id/model/gancl
+      - NEXT_PUBLIC_RETRIEVAL_API_URL=https://rispro.umm.ac.id/model/pattern-generator
+    expose:
+      - "3050"
+    networks:
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-proxy"
+      - "traefik.http.routers.batik-frontend-root.rule=Host(`batik.umm.ac.id`) && !PathPrefix(`/v1`) && !PathPrefix(`/v2`)"
+      - "traefik.http.routers.batik-frontend-root.entrypoints=websecure"
+      - "traefik.http.routers.batik-frontend-root.tls=true"
+      - "traefik.http.routers.batik-frontend-root.priority=50"
+      - "traefik.http.services.batik-frontend-root.loadbalancer.server.port=3050"
+      - "traefik.http.services.batik-frontend-root.loadbalancer.server.scheme=http"
+
+networks:
+  traefik-proxy:
+    external: true

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 import CitationExportModal from "@/components/CitationExportModal";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -43,7 +44,7 @@ export default function PublicationsPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/publications/categories");
+        const response = await fetch(withBasePath("/api/publications/categories"));
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data) && data.length > 0) {
@@ -116,7 +117,7 @@ export default function PublicationsPage() {
         }
         params.append("sort_by", sortValue);
 
-        const url = `/api/publications/public?${params.toString()}`;
+        const url = withBasePath(`/api/publications/public?${params.toString()}`);
 
         const localToken = localStorage.getItem("access_token");
         const activeToken = localToken || token;

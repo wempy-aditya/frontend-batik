@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { withBasePath } from "@/lib/basePath";
 import { useRouter, useParams } from "next/navigation";
 
 // Helper functions
@@ -320,7 +321,7 @@ export default function DatasetDetailPage() {
             The dataset you're looking for doesn't exist.
           </p>
           <button
-            onClick={() => router.push("/datasets")}
+            onClick={() => router.push(withBasePath("/datasets"))}
             className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl cursor-pointer hover:shadow-xl transition-all duration-300"
           >
             Back to Datasets
@@ -365,7 +366,7 @@ export default function DatasetDetailPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-white/80 mb-8">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home
@@ -384,7 +385,7 @@ export default function DatasetDetailPage() {
               />
             </svg>
             <button
-              onClick={() => router.push("/datasets")}
+              onClick={() => router.push(withBasePath("/datasets"))}
               className="hover:text-white transition-colors"
             >
               Datasets

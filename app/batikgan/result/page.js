@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BATIKGAN_API_URL || 'http://localhost:5001';
 
@@ -136,7 +137,7 @@ function BatikGANResultContent() {
   };
 
   const handleBackToGenerator = () => {
-    router.push("/batikgan");
+    router.push(withBasePath("/batikgan"));
   };
 
   if (error) {
@@ -301,7 +302,7 @@ function BatikGANResultContent() {
               ← Generate Another
             </button>
             <button
-              onClick={() => router.push("/batikgan/gallery")}
+              onClick={() => router.push(withBasePath("/batikgan/gallery"))}
               className="px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 shadow-lg"
             >
               View Gallery →

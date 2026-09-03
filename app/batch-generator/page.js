@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 import { useState, useEffect, useRef } from "react";
@@ -386,7 +387,7 @@ export default function BatchGeneratorPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
-              onClick={() => (window.location.href = "/")}
+              onClick={() => (window.location.href = withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home

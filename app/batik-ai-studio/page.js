@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -433,7 +434,7 @@ export default function BatikAIStudioPage() {
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex items-center text-sm text-orange-200 mb-8">
             <button
-              onClick={() => (window.location.href = "/")}
+              onClick={() => (window.location.href = withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home

@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 export default function AboutPage() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function AboutPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-xs md:text-sm text-gray-400 mb-6 md:mb-8">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(withBasePath("/"))}
               className="hover:text-amber-400 transition-colors"
             >
               Home
@@ -276,13 +277,13 @@ export default function AboutPage() {
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4">
                 <button
-                  onClick={() => router.push("/contact")}
+                  onClick={() => router.push(withBasePath("/contact"))}
                   className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white text-amber-900 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 text-sm md:text-base"
                 >
                   Hubungi Kami
                 </button>
                 <button
-                  onClick={() => router.push("/projects")}
+                  onClick={() => router.push(withBasePath("/projects"))}
                   className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/30 transition-all duration-300 border border-white/30 text-sm md:text-base"
                 >
                   Lihat Proyek

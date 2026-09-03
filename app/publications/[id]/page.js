@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 import {
   fetchCitation,
   fetchMultipleCitations,
@@ -302,7 +303,7 @@ export default function PublicationDetailPage() {
             The publication you're looking for doesn't exist.
           </p>
           <button
-            onClick={() => router.push("/publications")}
+            onClick={() => router.push(withBasePath("/publications"))}
             className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-600 transition-colors duration-300"
           >
             Back to Publications

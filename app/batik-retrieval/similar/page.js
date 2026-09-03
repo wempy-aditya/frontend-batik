@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 // Use local proxy to avoid CORS issues
 const API_BASE_URL = '/api/batik-retrieval';
@@ -127,7 +128,7 @@ function SimilarPatchesContent() {
       patchB: selectedPatch,
       models: selectedModels.join(","),
     });
-    router.push(`/batik-retrieval/result?${params.toString()}`);
+    router.push(withBasePath(`/batik-retrieval/result?${params.toString()}`));
   };
 
   if (error && !queryIndex) {
@@ -137,7 +138,7 @@ function SimilarPatchesContent() {
           <h2 className="text-2xl font-bold text-red-600 mb-4"> Error</h2>
           <p className="text-gray-700 mb-6">{error}</p>
           <button
-            onClick={() => router.push("/batik-retrieval")}
+            onClick={() => router.push(withBasePath("/batik-retrieval"))}
             className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors"
           >
             Back to Home
@@ -334,7 +335,7 @@ function SimilarPatchesContent() {
           {/* Generate Button */}
           <div className="mt-12 flex justify-center gap-4">
             <button
-              onClick={() => router.push("/batik-retrieval")}
+              onClick={() => router.push(withBasePath("/batik-retrieval"))}
               className="px-8 py-4 bg-white text-orange-600 rounded-xl font-bold text-lg border-2 border-orange-600 hover:bg-orange-50 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               ← Back to Search

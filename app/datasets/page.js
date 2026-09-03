@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function DatasetsPage() {
@@ -61,7 +62,7 @@ export default function DatasetsPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/datasets/categories");
+        const response = await fetch(withBasePath("/api/datasets/categories"));
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
@@ -127,7 +128,7 @@ export default function DatasetsPage() {
         // Sort
         params.append("sort_by", sortBy);
 
-        const url = `/api/datasets/public?${params.toString()}`;
+        const url = withBasePath(`/api/datasets/public?${params.toString()}`);
 
         const localToken = localStorage.getItem("access_token");
         const activeToken = localToken || token;
@@ -260,7 +261,7 @@ export default function DatasetsPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home

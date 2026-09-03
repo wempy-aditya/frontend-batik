@@ -237,7 +237,7 @@ const Header = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => router.push("/login")}
+                  onClick={() => (window.location.href = "https://rispro.umm.ac.id/login")}
                   className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 flex items-center gap-2 ${isScrolled || needsSolidHeader
                       ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg hover:shadow-xl"
                       : "bg-emerald-600 text-white hover:bg-emerald-700"
@@ -385,7 +385,7 @@ const Header = () => {
               ) : (
                 <button
                   onClick={() => {
-                    router.push("/login");
+                    window.location.href = "https://rispro.umm.ac.id/login";
                     setIsMobileMenuOpen(false);
                   }}
                   className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all duration-300"

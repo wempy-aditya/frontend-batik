@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 // Helper function to truncate text by character count
 const truncateText = (text, maxLength = 150) => {
@@ -21,7 +22,7 @@ const DatasetsPreview = () => {
   useEffect(() => {
     const fetchDatasets = async () => {
       try {
-        const response = await fetch("/api/datasets/featured?limit=6");
+        const response = await fetch(withBasePath("/api/datasets/featured?limit=6"));
         if (response.ok) {
           const data = await response.json();
           // Ensure data is array and add default gradient

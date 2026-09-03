@@ -2,6 +2,7 @@
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 import { useState, useEffect } from "react";
+import { withBasePath } from "@/lib/basePath";
 
 export default function TestApiPage() {
   const [prompt, setPrompt] = useState("");

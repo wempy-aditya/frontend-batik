@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 export default function FeaturesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -345,7 +346,7 @@ export default function FeaturesPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home
@@ -581,13 +582,13 @@ export default function FeaturesPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
-                  onClick={() => router.push("/pricing")}
+                  onClick={() => router.push(withBasePath("/pricing"))}
                   className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                 >
                   Start Free Trial
                 </button>
                 <button
-                  onClick={() => router.push("/pricing")}
+                  onClick={() => router.push(withBasePath("/pricing"))}
                   className="px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-200 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300"
                 >
                   View Pricing

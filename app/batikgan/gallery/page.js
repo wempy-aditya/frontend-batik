@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BATIKGAN_API_URL || 'http://localhost:5001';
 
@@ -91,7 +92,7 @@ export default function BatikGANGalleryPage() {
             Explore batik patterns created by multiple GAN models
           </p>
           <button
-            onClick={() => router.push("/batikgan")}
+            onClick={() => router.push(withBasePath("/batikgan"))}
             className="px-8 py-4 bg-white text-teal-600 rounded-xl font-bold text-lg hover:bg-teal-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
              Create New Batik
@@ -144,7 +145,7 @@ export default function BatikGANGalleryPage() {
                 Start generating batik patterns to build your collection
               </p>
               <button
-                onClick={() => router.push("/batikgan")}
+                onClick={() => router.push(withBasePath("/batikgan"))}
                 className="px-8 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 inline-block"
               >
                 Generate First Batik

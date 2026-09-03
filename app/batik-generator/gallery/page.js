@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -91,7 +92,7 @@ export default function BatikGalleryPage() {
             Explore our collection of AI-generated batik patterns
           </p>
           <button
-            onClick={() => router.push("/batik-generator")}
+            onClick={() => router.push(withBasePath("/batik-generator"))}
             className="px-8 py-4 bg-white text-purple-600 rounded-xl font-bold text-lg hover:bg-purple-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
              Create Your Own Batik
@@ -154,7 +155,7 @@ export default function BatikGalleryPage() {
                 Start generating batik patterns to build your collection
               </p>
               <button
-                onClick={() => router.push("/batik-generator")}
+                onClick={() => router.push(withBasePath("/batik-generator"))}
                 className="px-8 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 inline-block"
               >
                 Generate First Batik

@@ -1,7 +1,12 @@
 /** @type {import('next').NextConfig} */
+const basePath = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/$/, "");
+
 const nextConfig = {
-  output: "standalone", // Enables the optimized build
+  output: "standalone",
+  basePath: basePath || undefined,
+  assetPrefix: basePath || undefined,
   env: {
+    NEXT_PUBLIC_BASE_PATH: basePath,
     NEXT_PUBLIC_BACKEND_URL:
       process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000",
     NEXT_PUBLIC_API_URL:

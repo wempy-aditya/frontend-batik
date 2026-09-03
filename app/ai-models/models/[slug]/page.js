@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { withBasePath } from "@/lib/basePath";
 
 export default function AiModelDetailPage() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function AiModelDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/40 to-slate-50 py-12">
       <div className="container mx-auto px-6 lg:px-8">
         <button
-          onClick={() => router.push("/ai-models/models")}
+          onClick={() => router.push(withBasePath("/ai-models/models"))}
           className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

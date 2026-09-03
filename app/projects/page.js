@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { withBasePath } from "@/lib/basePath";
 
 // ── Derive demo routes from project.demo_url (API-provided) ──────────
 // Returns { type: 'single'|'multi'|'external', route?, options?, url? }
@@ -135,7 +136,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/projects/categories");
+        const response = await fetch(withBasePath("/api/projects/categories"));
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
@@ -192,7 +193,7 @@ export default function ProjectsPage() {
         // Sort
         params.append("sort_by", sortBy);
 
-        const url = `/api/projects/public?${params.toString()}`;
+        const url = withBasePath(`/api/projects/public?${params.toString()}`);
 
         const localToken = localStorage.getItem("access_token");
         const activeToken = localToken || token;
@@ -312,7 +313,7 @@ export default function ProjectsPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-amber-200 mb-8">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 // Helper function to truncate text by character count
 const truncateText = (text, maxLength = 100) => {
@@ -21,7 +22,7 @@ const GalleryCarousel = () => {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const response = await fetch("/api/gallery/featured?limit=8");
+        const response = await fetch(withBasePath("/api/gallery/featured?limit=8"));
         if (response.ok) {
           const data = await response.json();
           // Ensure data is array

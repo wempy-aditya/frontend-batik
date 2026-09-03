@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 // Use local proxy to avoid CORS issues
 const API_BASE_URL = '/api/batik-retrieval';
@@ -109,7 +110,7 @@ function RetrievalResultContent() {
   };
 
   const handleBackToSearch = () => {
-    router.push("/batik-retrieval");
+    router.push(withBasePath("/batik-retrieval"));
   };
 
   if (error) {

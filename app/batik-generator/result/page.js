@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -130,7 +131,7 @@ function ResultContent() {
   };
 
   const handleBackToGenerator = () => {
-    router.push("/batik-generator");
+    router.push(withBasePath("/batik-generator"));
   };
 
   if (error) {
@@ -287,7 +288,7 @@ function ResultContent() {
               ← Generate Another
             </button>
             <button
-              onClick={() => router.push("/batik-generator/gallery")}
+              onClick={() => router.push(withBasePath("/batik-generator/gallery"))}
               className="px-8 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 shadow-lg"
             >
               View Gallery →

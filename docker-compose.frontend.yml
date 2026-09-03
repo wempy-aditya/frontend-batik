@@ -1,24 +1,33 @@
 version: "3.8"
+
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: my-app-frontend:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - PORT=3000
-      # Default backend URL — override via env or use backend service name when connected to same docker network
-      - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL:-http://backend:8000}
+  fe-web-batik:
+    image: 10.10.11.235:5000/fe-web-batik:latest
+    container_name: fe-web-batik
     restart: unless-stopped
+    pull_policy: always
+    environment:
+      - NEXT_PUBLIC_BASE_PATH=/v1
+      - BACKEND_API_URL=https://batik.umm.ac.id
+      - NEXT_PUBLIC_BACKEND_URL=https://batik.umm.ac.id
+      - NEXT_PUBLIC_API_URL=https://batik.umm.ac.id
+    expose:
+      - "3050"
     networks:
-      - frontend_net
-      - backend_network
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-proxy"
+
+      - "traefik.http.routers.batik-frontend-v1.rule=Host(`batik.umm.ac.id`) && PathPrefix(`/v1`)"
+      - "traefik.http.routers.batik-frontend-v1.entrypoints=websecure"
+      - "traefik.http.routers.batik-frontend-v1.tls=true"
+      - "traefik.http.routers.batik-frontend-v1.priority=100"
+
+      # No strip-prefix: Next.js basePath=/v1 expects prefix preserved
+      - "traefik.http.services.batik-frontend-v1.loadbalancer.server.port=3050"
+      - "traefik.http.services.batik-frontend-v1.loadbalancer.server.scheme=http"
 
 networks:
-  frontend_net:
-    driver: bridge
-  # External network (set this to the network used by your backend docker-compose)
-  backend_network:
+  traefik-proxy:
     external: true

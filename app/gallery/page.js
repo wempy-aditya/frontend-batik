@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 
 export default function GalleryPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function GalleryPage() {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const response = await fetch("/api/gallery");
+        const response = await fetch(withBasePath("/api/gallery"));
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
@@ -68,7 +69,7 @@ export default function GalleryPage() {
 
         <div className="container mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex items-center text-sm text-gray-400 mb-8">
-            <button onClick={() => router.push("/")} className="hover:text-amber-400 transition-colors">
+            <button onClick={() => router.push(withBasePath("/"))} className="hover:text-amber-400 transition-colors">
               Home
             </button>
             <svg className="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

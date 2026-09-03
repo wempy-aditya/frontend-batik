@@ -1,11 +1,12 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // Use local proxy to avoid CORS issues
-const API_BASE_URL = '/api/batik-retrieval';
+const API_BASE_URL = withBasePath("/api/batik-retrieval");
 
 export default function BatikRetrievalPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function BatikRetrievalPage() {
   };
 
   const handlePatchSelect = (patchIndex) => {
-    router.push(`/batik-retrieval/similar?index=${patchIndex}`);
+    router.push(withBasePath("/batik-retrieval/similar?index=" + patchIndex));
   };
 
   return (

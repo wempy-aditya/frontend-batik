@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { withBasePath } from "@/lib/basePath";
 import { useParams, useRouter } from "next/navigation";
 
 export default function NewsDetailPage() {
@@ -872,7 +873,7 @@ export default function NewsDetailPage() {
           {/* Breadcrumb */}
           <div className="flex items-center text-sm text-white/80 mb-8">
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(withBasePath("/"))}
               className="hover:text-white transition-colors"
             >
               Home
@@ -891,7 +892,7 @@ export default function NewsDetailPage() {
               />
             </svg>
             <button
-              onClick={() => router.push("/news")}
+              onClick={() => router.push(withBasePath("/news"))}
               className="hover:text-white transition-colors"
             >
               News
@@ -1033,7 +1034,7 @@ export default function NewsDetailPage() {
             {/* Back to News Button */}
             <div className="text-center mb-12">
               <button
-                onClick={() => router.push("/news")}
+                onClick={() => router.push(withBasePath("/news"))}
                 className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 ← Back to All News

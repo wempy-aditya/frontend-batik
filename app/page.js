@@ -3,6 +3,7 @@ import ProjectsPreview from "../components/ProjectsPreview";
 import DatasetsPreview from "../components/DatasetsPreview";
 import ResearchSection from "../components/ResearchSection";
 import GalleryCarousel from "../components/GalleryCarousel";
+import { withBasePath } from "@/lib/basePath";
 
 export default function Home() {
   return (

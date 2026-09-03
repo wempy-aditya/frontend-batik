@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
@@ -39,7 +40,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(withBasePath('/api/auth/login'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ export default function LoginPage() {
         login(data.access_token, data.token_type, data.refresh_token);
         
         // Redirect to dashboard
-        router.push('/dashboard');
+        router.push(withBasePath('/dashboard'));
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
       }
@@ -95,7 +96,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(withBasePath('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -144,7 +145,7 @@ export default function LoginPage() {
         {/* Back to Home */}
         <div className="mb-6 sm:mb-8">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push(withBasePath('/'))}
             className="text-amber-600 hover:text-amber-800 transition-colors duration-300 flex items-center gap-2 cursor-pointer text-sm sm:text-base"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

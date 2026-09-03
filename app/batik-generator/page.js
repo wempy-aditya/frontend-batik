@@ -1,4 +1,5 @@
 "use client";
+import { withBasePath } from "@/lib/basePath";
 import ProjectInfoPanel from "@/components/demos/ProjectInfoPanel";
 
 import { useState, useEffect } from "react";
@@ -115,7 +116,7 @@ export default function BatikGeneratorPage() {
       patches: selectedPatches.join(","),
       models: selectedModels.join(","),
     });
-    router.push(`/batik-generator/result?${params.toString()}`);
+    router.push(withBasePath(`/batik-generator/result?${params.toString()}`));
   };
 
   const currentPatches = activeDataset === "nitik" ? nitikPatches : itbPatches;

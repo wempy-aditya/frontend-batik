@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 import PublicationModal from "./PublicationModal";
 import CitationExportModal from "./CitationExportModal";
 
@@ -25,7 +26,7 @@ const ResearchSection = () => {
   useEffect(() => {
     const fetchPublications = async () => {
       try {
-        const response = await fetch("/api/publications/featured?limit=5");
+        const response = await fetch(withBasePath("/api/publications/featured?limit=5"));
         if (response.ok) {
           const data = await response.json();
           // Ensure data is array

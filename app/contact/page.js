@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { withBasePath } from "@/lib/basePath";
 import dynamic from "next/dynamic";
 
 // Dynamic import for Map component to avoid SSR issues
@@ -96,7 +97,7 @@ export default function ContactPage() {
         <div className="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
           {/* Breadcrumb */}
           <div className="flex items-center text-xs md:text-sm text-gray-400 mb-6 md:mb-8">
-            <button onClick={() => router.push("/")} className="hover:text-amber-400 transition-colors">
+            <button onClick={() => router.push(withBasePath("/"))} className="hover:text-amber-400 transition-colors">
               Home
             </button>
             <svg className="w-3 h-3 md:w-4 md:h-4 mx-1.5 md:mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
